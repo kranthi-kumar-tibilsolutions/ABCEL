@@ -3,13 +3,10 @@ import { AppContext } from '../../context/AppContext';
 
 const DIMENSIONS = [
   { id: 'overall',    label: 'Business Unit' },
-  { id: 'business',  label: 'Business' },
-  { id: 'function',  label: 'Function' },
-  { id: 'location',  label: 'Location' },
-  { id: 'gender',    label: 'Gender' },
-  { id: 'generation',label: 'Age Group' },
-  { id: 'tenure',    label: 'Tenure' },
-  { id: 'manager',   label: 'Manager' },
+  { id: 'gender',     label: 'Gender' },
+  { id: 'generation', label: 'Age Group' },
+  { id: 'tenure',     label: 'Tenure' },
+  { id: 'job_band',   label: 'Job Band' },
 ];
 
 export default function ExploreBy() {

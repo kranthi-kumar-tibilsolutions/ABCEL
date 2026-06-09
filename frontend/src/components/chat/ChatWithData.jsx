@@ -64,14 +64,18 @@ export default function ChatWithData() {
 
       const reader  = res.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const lines = decoder.decode(value).split('\n').filter(l => l.startsWith('data: '));
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // keep incomplete tail for next chunk
         for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
           const payload = line.slice(6).trim();
-          if (payload === '[DONE]') continue;
+          if (!payload || payload === '[DONE]') continue;
           try {
             const { text: tok } = JSON.parse(payload);
             if (tok) {

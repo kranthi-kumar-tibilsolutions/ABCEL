@@ -29,14 +29,19 @@ export default function AiInsightsPage() {
 
           {insightsData && (
             <div style={{ marginTop: 24 }}>
-              {insightsData.trends?.length > 0 && (
+              {insightsData.topTrends?.length > 0 && (
                 <div className="ai-summary-card">
                   <div className="ai-summary-header">
                     <span className="ai-badge">AI</span>
                     <span>Top Trends</span>
                   </div>
                   <ul className="ai-bullets">
-                    {insightsData.trends.map((t, i) => <li key={i}>{t}</li>)}
+                    {insightsData.topTrends.map((t, i) => (
+                      <li key={i}>
+                        <span style={{ marginRight: 6 }}>{t.direction === 'up' ? '↑' : '↓'}</span>
+                        {t.text}
+                      </li>
+                    ))}
                   </ul>
                 </div>
               )}
@@ -48,7 +53,12 @@ export default function AiInsightsPage() {
                     <span>Outliers & Alerts</span>
                   </div>
                   <ul className="ai-bullets">
-                    {insightsData.outliers.map((o, i) => <li key={i}>{o}</li>)}
+                    {insightsData.outliers.map((o, i) => (
+                      <li key={i}>
+                        <span style={{ marginRight: 6 }}>{o.direction === 'up' ? '↑' : '↓'}</span>
+                        {o.text}
+                      </li>
+                    ))}
                   </ul>
                 </div>
               )}

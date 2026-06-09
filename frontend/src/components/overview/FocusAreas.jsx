@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useId } from 'react';
+import { useState, useContext, useEffect, useRef } from 'react';
 import { AppContext } from '../../context/AppContext';
 import Skeleton from '../shared/Skeleton';
 
@@ -48,30 +48,32 @@ const CARD_CONFIG = {
   },
 };
 
-/* Jagged sparkline — line only, no fill, many data points */
-function Sparkline({ direction = 'volatile-down', color }) {
-  const uid = useId().replace(/:/g, '');
-  const W = 140, H = 70;
+/* Generate sparkline points seeded by BU name, trending toward actual score */
+function makeSparkPoints(buName = '', score = 4.4) {
+  const W = 140;
+  const scoreToY = s => Math.max(6, Math.min(64, (5 - s) * 28));
+  let seed = [...buName].reduce((a, c) => a + c.charCodeAt(0), 42);
+  const rand = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const groupAvg = 4.44;
+  const startY = scoreToY(groupAvg);
+  const endY   = scoreToY(score);
+  const n = 10;
+  return Array.from({ length: n }, (_, i) => {
+    const t = i / (n - 1);
+    const base = startY + (endY - startY) * t;
+    const jitter = (rand() - 0.5) * 18;
+    return [Math.round((i / (n - 1)) * W), Math.max(6, Math.min(64, Math.round(base + jitter)))];
+  });
+}
 
-  const VOLATILE_DOWN = [
-    [0,28],[10,20],[20,32],[30,18],[40,38],[52,24],[62,42],[74,30],
-    [84,46],[96,34],[106,50],[118,38],[130,52],[140,42],
-  ];
-  const VOLATILE_UP = [
-    [0,52],[10,44],[20,56],[30,36],[40,50],[52,30],[62,44],[74,24],
-    [84,38],[96,18],[106,32],[118,14],[130,24],[140,12],
-  ];
-
-  const pts = direction === 'volatile-up' ? VOLATILE_UP : VOLATILE_DOWN;
+function Sparkline({ buName, score, color }) {
+  const pts = makeSparkPoints(buName, score);
   const linePath = pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x},${y}`).join(' ');
-
   return (
-    <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`}
+    <svg width="100%" height="100%" viewBox="0 0 140 70"
       fill="none" preserveAspectRatio="none" style={{ display: 'block' }}>
       <path d={linePath} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      {pts.map(([x, y], i) => (
-        <circle key={i} cx={x} cy={y} r="2.5" fill={color}/>
-      ))}
+      {pts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.5" fill={color}/>)}
     </svg>
   );
 }
@@ -118,7 +120,11 @@ function FocusCard({ cardKey, data, navigate }) {
 
         {/* Sparkline panel */}
         <div className="fac-body-right">
-          <Sparkline direction={cfg.sparkDir} color={cfg.color} />
+          <Sparkline
+            buName={data.buName}
+            score={parseFloat(data.stat?.match(/[\d.]+/)?.[0] ?? '4.4')}
+            color={cfg.color}
+          />
         </div>
       </div>
     </div>
@@ -129,9 +135,12 @@ export default function FocusAreas() {
   const { focusAreasData, setFocusAreasData, dimension, navigate } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(null);
+  const prevDim = useRef(null);
 
   useEffect(() => {
-    if (focusAreasData) return;
+    if (dimension === prevDim.current && focusAreasData) return;
+    prevDim.current = dimension;
+    setFocusAreasData(null);
     setLoading(true);
     setError(null);
     fetch('/api/focus-areas', {

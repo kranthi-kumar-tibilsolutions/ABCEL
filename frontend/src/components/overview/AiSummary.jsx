@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useRef } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import Skeleton from '../shared/Skeleton';
@@ -76,13 +76,19 @@ function DashboardIllustration() {
 }
 
 export default function AiSummary() {
-  const { summaryData, setSummaryData, dimension } = useContext(AppContext);
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState(null);
-  const [genTime, setGenTime] = useState(null);
+  const { summaryData, setSummaryData, dimension, navigate } = useContext(AppContext);
+  const [loading,   setLoading]   = useState(false);
+  const [error,     setError]     = useState(null);
+  const [genTime,   setGenTime]   = useState(null);
+  const [showWhy,   setShowWhy]   = useState(false);
+  const prevDim = useRef(null);
 
   useEffect(() => {
-    if (summaryData) return;
+    // re-fetch whenever dimension changes, or on first load
+    if (dimension === prevDim.current && summaryData) return;
+    prevDim.current = dimension;
+    setSummaryData(null);
+    setShowWhy(false);
     setLoading(true);
     setError(null);
     fetch('/api/summary', {
@@ -172,7 +178,7 @@ export default function AiSummary() {
               <p className="ais-intro-text">Here&rsquo;s what I found from this survey wave.</p>
             </div>
             <div style={{ flex: 1 }} />
-            <button className="ais-view-btn">View full summary &rarr;</button>
+            <button className="ais-view-btn" onClick={() => navigate && navigate('ai-insights')}>View full summary &rarr;</button>
           </div>
 
           {/* Col 2: bullet list */}
@@ -196,7 +202,16 @@ export default function AiSummary() {
               </>
             )}
             {whyMatters && (
-              <button className="ais-why-link">Why this matters &rarr;</button>
+              <>
+                <button className="ais-why-link" onClick={() => setShowWhy(v => !v)}>
+                  {showWhy ? 'Hide ↑' : 'Why this matters →'}
+                </button>
+                {showWhy && (
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, marginTop: 8, padding: '8px 10px', background: '#EFF6FF', borderRadius: 6 }}>
+                    {whyMatters}
+                  </p>
+                )}
+              </>
             )}
           </div>
 

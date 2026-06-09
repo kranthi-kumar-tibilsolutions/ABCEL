@@ -42,7 +42,7 @@ export default function BusinessDetail() {
       body:    JSON.stringify({ business: selectedBusiness, dimension }),
     })
       .then(r => r.json())
-      .then(d => { setInsight(d); setLoadInsight(false); })
+      .then(d => { setInsight(d.error ? null : d); setLoadInsight(false); })
       .catch(() => setLoadInsight(false));
   }, [selectedBusiness]);
 

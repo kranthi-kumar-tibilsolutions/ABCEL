@@ -67,13 +67,10 @@ def parse_cq_lookup_sheet(df_raw):
     """Parse WTW CQ lookup sheet (read with header=None).
     Standard format (3 cols): rows 0-3 metadata, row 4 = 'Coding Value / Coding Definition / Level 1',
                                rows 5+ = (int_code, 'CQN:N', 'human_label').
-    Multi-column (>3 cols) sheets are hierarchical org charts — skip them.
+    Multi-column (>3 cols): hierarchical org chart — range references like 'CQ2:N-M' in col 1
+                             expand to all codes N..M mapping to Level 1 label in col 2.
     Returns dict[int_code -> human_label].
     """
-    # Multi-column sheets (CQ2, CQ6, CQ7) are hierarchical — cannot parse as simple lookup
-    if df_raw.shape[1] > 3:
-        return {}
-
     start_row = None
     for i in range(min(10, len(df_raw))):
         vals = [str(v).strip().lower() for v in df_raw.iloc[i] if pd.notna(v)]
@@ -84,24 +81,40 @@ def parse_cq_lookup_sheet(df_raw):
         return {}
 
     mapping = {}
+    is_hierarchical = df_raw.shape[1] > 3
+
     for i in range(start_row, len(df_raw)):
         row      = df_raw.iloc[i]
         code_val = row.iloc[0]
-        if pd.isna(code_val):
-            continue
-        # Prefer col 2 (Level 1 = human label), fall back to col 1
-        label = None
+        label    = None
+
+        # Prefer col 2 (Level 1) as human label, fall back to col 1
         if len(row) > 2 and pd.notna(row.iloc[2]) and str(row.iloc[2]).strip():
             label = str(row.iloc[2]).strip()
-        elif len(row) > 1 and pd.notna(row.iloc[1]) and str(row.iloc[1]).strip():
+        elif not is_hierarchical and len(row) > 1 and pd.notna(row.iloc[1]) and str(row.iloc[1]).strip():
             raw = str(row.iloc[1]).strip()
             if not re.match(r'^CQ\d+:\d+$', raw):
                 label = raw
-        if label:
+
+        if not label:
+            continue
+
+        if pd.notna(code_val):
+            # Direct single code in column 0
             try:
                 mapping[int(float(code_val))] = label
             except (ValueError, TypeError):
                 pass
+        elif is_hierarchical and len(row) > 1 and pd.notna(row.iloc[1]):
+            # Range reference in col 1: "CQN:start-end" or "CQN:code"
+            ref = str(row.iloc[1]).strip()
+            m   = re.search(r':(\d+)(?:-(\d+))?$', ref)
+            if m:
+                start = int(m.group(1))
+                end   = int(m.group(2)) if m.group(2) else start
+                for code in range(start, end + 1):
+                    mapping[code] = label
+
     return mapping
 
 
@@ -112,7 +125,8 @@ def build_cq_decode_map(raw_df, cq_lookup_maps):
         m = re.search(r'\bCQ(\d+)\b', str(col), re.IGNORECASE)
         if m:
             key = f'CQ{m.group(1)}'
-            if key in cq_lookup_maps:
+            # Only include non-empty mappings; applying {} would null-out the column
+            if cq_lookup_maps.get(key):
                 decode_map[col] = cq_lookup_maps[key]
     return decode_map
 
@@ -144,12 +158,14 @@ def strip_wtw_metadata_rows(raw_df):
 
 
 def coerce_numeric_columns(df):
-    """Convert object columns that are mostly numeric (Likert responses) to float64."""
+    """Convert object columns that are mostly numeric (Likert responses) to float64.
+    WTW Vibes embeds category-name strings in OP cells throughout the data sheet,
+    so threshold is checked against total row count, not non-NaN count."""
     for col in df.columns:
         if df[col].dtype != object:
             continue
         converted = pd.to_numeric(df[col], errors='coerce')
-        if converted.notna().sum() > 0.8 * df[col].notna().sum():
+        if converted.notna().sum() > 0.5 * len(df[col]):
             df[col] = converted
     return df
 
@@ -254,6 +270,11 @@ def detect_dimensions(decoded_df, decode_map):
         col_lower = str(col).strip().lower()
         n = decoded_df[col].nunique()
         if not (2 < n < 5000):
+            continue
+
+        # Skip OP question columns — their question text can contain BU signal words
+        # (e.g., "organization", "department") and must not be mistaken for BU identifiers.
+        if re.match(r'^\s*OP\d+', str(col), re.IGNORECASE):
             continue
 
         # Only decoded text columns are valid BU candidates.
