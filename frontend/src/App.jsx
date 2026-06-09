@@ -100,14 +100,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Pre-load data silently — but never skip the upload page automatically.
+    // UploadPage will show a "Continue" button when data is already present.
     fetch('/api/status')
       .then(r => r.json())
-      .then(d => {
-        if (d.ready) {
-          fetchData();
-          setPage('overview');
-        }
-      })
+      .then(d => { if (d.ready) fetchData(); })
       .catch(() => {});
   }, []);
 
