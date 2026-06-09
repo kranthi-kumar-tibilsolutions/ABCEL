@@ -1,0 +1,13 @@
+node_modules/
+backend/uploads/
+backend/data/
+!backend/data/sample/
+dist/
+.env
+*.xlsx
+*.xls
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.log

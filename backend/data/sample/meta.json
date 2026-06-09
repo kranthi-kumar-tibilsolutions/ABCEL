@@ -1,0 +1,22 @@
+{
+  "survey_name": "ABG Vibes 2026",
+  "total_businesses": 22,
+  "total_units": 415,
+  "total_respondents": 55457,
+  "group_avg": 4.46,
+  "top_business": "Grasim Industries",
+  "top_score": 4.57,
+  "lowest_business": "ABG Headquarters",
+  "lowest_score": 4.39,
+  "strongest_category": "Onboarding",
+  "weakest_category": "Performance Culture",
+  "category_averages": {
+    "Engagement": 4.46,
+    "Leadership": 4.48,
+    "Performance Culture": 4.32,
+    "Development & Career": 4.44,
+    "Manager Effectiveness": 4.45,
+    "Onboarding": 4.56
+  },
+  "dimensions_detected": ["business_unit", "generation", "gender", "job_band", "tenure"]
+}
