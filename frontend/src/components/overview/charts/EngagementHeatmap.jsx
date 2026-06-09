@@ -43,8 +43,13 @@ export default function EngagementHeatmap({ onCellClick }) {
 
   return (
     <div className="chart-card">
-      <div className="chart-title">Category Heatmap</div>
-      <div style={{ overflowX: 'auto' }}>
+      <div className="chart-section-header">
+        <div>
+          <div className="chart-section-title">Competency Heatmap</div>
+          <div className="chart-section-sub">Score by business × category</div>
+        </div>
+      </div>
+      <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 260 }}>
         <table className="heatmap-table">
           <thead>
             <tr>

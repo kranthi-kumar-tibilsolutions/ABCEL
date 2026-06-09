@@ -38,8 +38,13 @@ export default function DecompositionTree() {
 
   return (
     <div className="chart-card">
-      <div className="chart-title">Decomposition Tree — Business × Category</div>
-      <div className="decomp-tree">
+      <div className="chart-section-header">
+        <div>
+          <div className="chart-section-title">Score Decomposition</div>
+          <div className="chart-section-sub">Expand any BU to see category breakdown</div>
+        </div>
+      </div>
+      <div className="decomp-tree" style={{ maxHeight: 270, overflowY: 'auto' }}>
         <div className="decomp-root">
           <div className="decomp-root-label">ABG Group</div>
           {sorted[0] && (

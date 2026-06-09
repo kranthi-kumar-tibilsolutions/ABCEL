@@ -2,51 +2,70 @@ import { useContext } from 'react';
 import { AppContext } from '../../context/AppContext';
 
 const CLUSTER_CONFIG = {
-  thriving:  {
-    label: 'Thriving',
+  thriving: {
+    label:    'THRIVING',
     subtitle: 'United & Engaged',
-    color: '#16A34A', bg: '#F0FDF4', border: '#86EFAC',
-    desc: 'High engagement, low variance. Employees are positive and aligned.',
+    color:    '#16A34A',
+    border:   '#86EFAC',
+    desc:     'High engagement, low variance. Employees are positive and aligned.',
     icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="9" stroke="#16A34A" strokeWidth="1.5" fill="#DCFCE7"/>
-        <path d="M6 10l3 3 5-5" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+        <circle cx="21" cy="21" r="20" fill="#16A34A"/>
+        {/* Two people — left person */}
+        <circle cx="15.5" cy="15" r="3.8" fill="white"/>
+        <path d="M7 28c0-4.42 3.81-8 8.5-8s8.5 3.58 8.5 8" fill="white"/>
+        {/* Right person (partially behind) */}
+        <circle cx="27" cy="15" r="3" fill="white" opacity="0.75"/>
+        <path d="M22 28c0-3.31 2.24-6 5-6s5 2.69 5 6" fill="white" opacity="0.75"/>
       </svg>
     ),
   },
-  atrisk:    {
-    label: 'At Risk',
+  atrisk: {
+    label:    'AT RISK',
     subtitle: 'United but Disengaged',
-    color: '#D97706', bg: '#FFFBEB', border: '#FCD34D',
-    desc: 'Consistently low scores with low variance. Structural issues need attention.',
+    color:    '#EA580C',
+    border:   '#FDBA74',
+    desc:     'Consistently low scores with low variance. Structural issues need attention.',
     icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="9" stroke="#D97706" strokeWidth="1.5" fill="#FEF3C7"/>
-        <path d="M10 6v5M10 13v1" stroke="#D97706" strokeWidth="2" strokeLinecap="round"/>
+      <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+        <circle cx="21" cy="21" r="20" fill="#EA580C"/>
+        {/* Single person body */}
+        <circle cx="21" cy="13.5" r="4" fill="white"/>
+        {/* Torso */}
+        <path d="M21 18.5c-4 0-7 2.5-7 5.5h14c0-3-3-5.5-7-5.5z" fill="white"/>
+        {/* Raised arms */}
+        <path d="M14 22l-3.5-3.5M28 22l3.5-3.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        {/* Legs */}
+        <path d="M18 24v5M24 24v5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
       </svg>
     ),
   },
   polarised: {
-    label: 'Polarised',
+    label:    'POLARISED',
     subtitle: 'Polarised with Strong Core',
-    color: '#7C3AED', bg: '#F5F3FF', border: '#C4B5FD',
-    desc: 'Strong core positive, but a dissatisfied minority.',
+    color:    '#7C3AED',
+    border:   '#C4B5FD',
+    desc:     'Strong core positive, but a dissatisfied minority.',
     icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="9" stroke="#7C3AED" strokeWidth="1.5" fill="#EDE9FE"/>
-        <path d="M7 7l6 6M13 7l-6 6" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round"/>
+      <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+        <circle cx="21" cy="21" r="20" fill="#7C3AED"/>
+        {/* Bold lightning bolt */}
+        <path d="M23.5 9L12 22.5h9.5L18 33l12-14h-9.5L23.5 9z" fill="white"/>
       </svg>
     ),
   },
-  critical:  {
-    label: 'Critical',
+  critical: {
+    label:    'CRITICAL',
     subtitle: 'Open Conflict',
-    color: '#DC2626', bg: '#FEF2F2', border: '#FCA5A5',
-    desc: 'Low scores with high variance. Employees are unhappy and divided.',
+    color:    '#DC2626',
+    border:   '#FCA5A5',
+    desc:     'Low scores with high variance. Employees are unhappy and divided.',
     icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="9" stroke="#DC2626" strokeWidth="1.5" fill="#FEE2E2"/>
-        <path d="M10 5v7M10 14v1" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round"/>
+      <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+        <circle cx="21" cy="21" r="20" fill="#DC2626"/>
+        {/* Letter "i" — dot + stem */}
+        <circle cx="21" cy="13.5" r="2.2" fill="white"/>
+        <rect x="18.8" y="18" width="4.4" height="12" rx="2.2" fill="white"/>
       </svg>
     ),
   },
@@ -58,62 +77,83 @@ export default function ClusterCards() {
   if (!clusters) return null;
 
   const total = Object.values(clusters).reduce((s, arr) => s + (arr?.length ?? 0), 0);
-  const clusterEntries = Object.entries(CLUSTER_CONFIG).filter(([key]) => clusters[key] !== undefined);
+  const entries = Object.entries(CLUSTER_CONFIG).filter(([key]) => clusters[key] !== undefined);
 
   return (
     <div className="cluster-section">
       <div className="section-header">
         <div>
-          <h3 className="section-title">BU Health by Cluster</h3>
-          <p className="section-sub">Understand variance and prioritise attention</p>
+          <h3 className="cluster-section-title">
+            BU Health by Cluster
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" title="Business units grouped by engagement score and variance" style={{cursor:'default',flexShrink:0}}>
+              <circle cx="6.5" cy="6.5" r="6" stroke="#9CA3AF" strokeWidth="1.2"/>
+              <circle cx="6.5" cy="4.2" r="0.7" fill="#9CA3AF"/>
+              <rect x="5.9" y="5.8" width="1.2" height="3.2" rx="0.6" fill="#9CA3AF"/>
+            </svg>
+          </h3>
+          <p className="cluster-section-sub">Understand variance and prioritise attention</p>
         </div>
         <button className="see-all-btn" onClick={() => navigate('cluster-detail', { cluster: 'all' })}>
-          View all BUs →
+          View all BUs &rarr;
         </button>
       </div>
 
       <div className="cluster-cards-grid">
-        {clusterEntries.map(([key, cfg]) => {
+        {entries.map(([key, cfg]) => {
           const items = clusters[key] || [];
           const pct   = total > 0 ? Math.round((items.length / total) * 100) : 0;
+
           return (
             <div
               key={key}
               className="cluster-card"
-              style={{ borderTop: `3px solid ${cfg.color}`, background: cfg.bg, cursor: 'pointer' }}
+              style={{  }}
               onClick={() => navigate('cluster-detail', { cluster: key })}
             >
-              <div className="cluster-card-header">
-                {cfg.icon}
-                <span className="cluster-label" style={{ color: cfg.color }}>{cfg.label}</span>
+              {/* Header: icon + title stack */}
+              <div className="cc-header-row">
+                <div className="cc-icon">{cfg.icon}</div>
+                <div className="cc-title-block">
+                  <div className="cc-label" style={{ color: cfg.color }}>{cfg.label}</div>
+                  <div className="cc-subtitle">{cfg.subtitle}</div>
+                </div>
               </div>
-              <div className="cluster-subtitle">{cfg.subtitle}</div>
-              <div className="cluster-count-row">
-                <span className="cluster-count" style={{ color: cfg.color }}>{items.length} BUs</span>
-                <span className="cluster-pct" style={{ color: cfg.color }}>{pct}%</span>
-              </div>
-              <div className="cluster-card-desc">{cfg.desc}</div>
 
+              {/* Count row */}
+              <div className="cc-count-line">
+                <span className="cc-count-num">{items.length} BUs</span>
+                <span className="cc-count-sep">|</span>
+                <span className="cc-count-pct">{pct}%</span>
+              </div>
+
+              {/* Description */}
+              <p className="cc-desc">{cfg.desc}</p>
+
+              {/* Top BUs */}
               {items.length > 0 && (
-                <div className="cluster-previews">
-                  <div className="cluster-preview-header">Top BUs</div>
-                  {items.slice(0, 3).map((bu, i) => (
-                    <div key={i} className="cluster-preview-item">
-                      <span className="cluster-preview-name">{bu.name || bu}</span>
-                      <span className="cluster-preview-score" style={{ color: cfg.color }}>
-                        {(bu.overall ?? bu.score) ? Number(bu.overall ?? bu.score).toFixed(2) : '—'}
-                      </span>
-                    </div>
-                  ))}
+                <div className="cc-bu-list">
+                  <div className="cc-bu-list-label">Top BUs</div>
+                  {items.slice(0, 3).map((bu, i) => {
+                    const score = bu.overall ?? bu.score;
+                    return (
+                      <div key={i} className="cc-bu-row">
+                        <span className="cc-bu-name">{bu.name || bu}</span>
+                        <span className="cc-bu-score" style={{ color: cfg.color, background: cfg.border }}>
+                          {score ? Number(score).toFixed(2) : '—'}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
+              {/* Footer */}
               <button
-                className="cluster-view-all"
+                className="cc-footer-link"
                 style={{ color: cfg.color }}
                 onClick={e => { e.stopPropagation(); navigate('cluster-detail', { cluster: key }); }}
               >
-                View all {items.length} BUs →
+                View all {items.length} BUs &rarr;
               </button>
             </div>
           );

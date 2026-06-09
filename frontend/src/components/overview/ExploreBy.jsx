@@ -3,13 +3,13 @@ import { AppContext } from '../../context/AppContext';
 
 const DIMENSIONS = [
   { id: 'overall',    label: 'Business Unit' },
-  { id: 'business',   label: 'Business' },
-  { id: 'function',   label: 'Function' },
-  { id: 'location',   label: 'Location' },
-  { id: 'gender',     label: 'Gender' },
-  { id: 'generation', label: 'Age Group' },
-  { id: 'tenure',     label: 'Tenure' },
-  { id: 'job_band',   label: 'Manager' },
+  { id: 'business',  label: 'Business' },
+  { id: 'function',  label: 'Function' },
+  { id: 'location',  label: 'Location' },
+  { id: 'gender',    label: 'Gender' },
+  { id: 'generation',label: 'Age Group' },
+  { id: 'tenure',    label: 'Tenure' },
+  { id: 'manager',   label: 'Manager' },
 ];
 
 export default function ExploreBy() {
@@ -18,14 +18,14 @@ export default function ExploreBy() {
   return (
     <div className="explore-by-section">
       <div className="explore-by-label">
-        <span className="explore-label-title">Explore by</span>
-        <span className="explore-label-sub">Choose a dimension to analyse engagement</span>
+        <div className="explore-by-title">EXPLORE BY</div>
+        <div className="explore-by-sub">Choose a dimension to analyse engagement</div>
       </div>
       <div className="explore-pills">
         {DIMENSIONS.map((d) => (
           <button
             key={d.id}
-            className={`explore-pill ${dimension === d.id ? 'active' : ''}`}
+            className={`explore-pill${dimension === d.id ? ' active' : ''}`}
             onClick={() => setDimension(d.id)}
           >
             {d.label}

@@ -1,11 +1,36 @@
 import { useContext, useState } from 'react';
+import abgLogo from '../../assets/abg.avif';
 import { AppContext } from '../../context/AppContext';
 
 const NAV = [
-  { id: 'overview',          label: 'Overview' },
-  { id: 'business-overview', label: 'Business Overview' },
   {
-    id: 'explore', label: 'Explore', collapsible: true,
+    id: 'overview', label: 'Overview',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M2 6.5L8 2l6 4.5V13a1 1 0 01-1 1H3a1 1 0 01-1-1V6.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+        <path d="M6 14v-4h4v4" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'business-overview', label: 'Business Overview',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="6" width="5" height="8" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+        <rect x="9" y="2" width="5" height="12" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'explore', label: 'Explore', collapsible: true, divider: true,
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+        <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+        <rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+        <rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.4"/>
+      </svg>
+    ),
     children: [
       { id: 'bu-explorer',     label: 'BU Explorer' },
       { id: 'insights-studio', label: 'Insights Studio' },
@@ -15,31 +40,51 @@ const NAV = [
       { id: 'employee-voice',  label: 'Employee Voice' },
     ],
   },
-  { id: 'reports',    label: 'Reports' },
-  { id: 'benchmarks', label: 'Benchmarks' },
+  {
+    id: 'reports', label: 'Reports',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="3" y="1.5" width="10" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+        <path d="M6 5.5h4M6 8h4M6 10.5h2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'benchmarks', label: 'Benchmarks',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M2 12l3.5-4 3 2.5L12 5l2 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M2 14h12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+];
+
+const BOTTOM_NAV = [
+  {
+    id: 'help', label: 'Help',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/>
+        <path d="M6.5 6c0-1 .67-1.5 1.5-1.5s1.5.67 1.5 1.5c0 .83-.67 1.33-1.5 1.67V9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        <circle cx="8" cy="11" r=".6" fill="currentColor"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'settings', label: 'Settings',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.4"/>
+        <path d="M8 1.5v1M8 13.5v1M1.5 8h1M13.5 8h1M3.4 3.4l.7.7M11.9 11.9l.7.7M3.4 12.6l.7-.7M11.9 4.1l.7-.7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
 ];
 
 function AbgLogo() {
-  // Geometric approximation of the Aditya Birla Group mosaic logo
-  // Rectangle divided into ~8 faceted triangular/polygonal sections
-  // Colours: dark maroon → red → orange-red → amber (left→right, top→bottom)
   return (
-    <svg width="44" height="36" viewBox="0 0 44 36" style={{ flexShrink: 0 }}>
-      {/* Top-left dark maroon corner */}
-      <polygon points="2,2 20,2 2,16" fill="#5C0B0B"/>
-      {/* Top strip — deep red */}
-      <polygon points="20,2 42,2 28,14 2,16" fill="#9B1C1C"/>
-      {/* Top-right — orange-red */}
-      <polygon points="42,2 42,14 28,14" fill="#C84B11"/>
-      {/* Left side — dark red */}
-      <polygon points="2,16 2,34 16,34 28,14" fill="#7B1313"/>
-      {/* Centre — rich red */}
-      <polygon points="16,34 28,14 28,34" fill="#B91C1C"/>
-      {/* Right upper — orange */}
-      <polygon points="28,14 42,14 42,26 28,34" fill="#D97706"/>
-      {/* Bottom-right — warm amber */}
-      <polygon points="28,34 42,26 42,34" fill="#F59E0B"/>
-    </svg>
+    <img src={abgLogo} alt="ABG" width="36" height="36" style={{ flexShrink: 0, objectFit: 'contain', borderRadius: 4 }} />
   );
 }
 
@@ -53,31 +98,38 @@ export default function Sidebar() {
 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+
       {/* Logo */}
       <div className="sidebar-logo">
         <AbgLogo />
         {!collapsed && (
-          <div>
+          <div className="sidebar-brand-block">
             <div className="sidebar-brand">ABG VIBES 2025</div>
             <div className="sidebar-subbrand">Employee Engagement</div>
           </div>
         )}
       </div>
 
-      {/* Nav */}
+      {/* Main nav */}
       <nav className="sidebar-nav">
         {NAV.map(item => {
           if (item.collapsible) {
             return (
               <div key={item.id}>
+                {item.divider && !collapsed && <div className="nav-divider" />}
                 <div
                   className={`nav-item ${exploreActive ? 'active' : ''}`}
                   onClick={() => setExploreOpen(o => !o)}
                 >
+                  <span className="nav-icon">{item.icon}</span>
                   {!collapsed && (
                     <>
                       <span className="nav-label">{item.label}</span>
-                      <span className="nav-chevron">{exploreOpen ? '▼' : '▶'}</span>
+                      <span className={`nav-chevron ${exploreOpen ? 'open' : ''}`}>
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                          <path d="M2.5 3.5L5 6l2.5-2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </span>
                     </>
                   )}
                 </div>
@@ -97,12 +149,14 @@ export default function Sidebar() {
               </div>
             );
           }
+
           return (
             <div
               key={item.id}
               className={`nav-item ${page === item.id ? 'active' : ''}`}
               onClick={() => navigate(item.id)}
             >
+              <span className="nav-icon">{item.icon}</span>
               {!collapsed && <span className="nav-label">{item.label}</span>}
             </div>
           );
@@ -111,12 +165,12 @@ export default function Sidebar() {
 
       {/* Bottom */}
       <div className="sidebar-bottom">
-        {!collapsed && (
-          <>
-            <div className="nav-item"><span className="nav-label">Help</span></div>
-            <div className="nav-item"><span className="nav-label">Settings</span></div>
-          </>
-        )}
+        {BOTTOM_NAV.map(item => (
+          <div key={item.id} className="nav-item">
+            <span className="nav-icon">{item.icon}</span>
+            {!collapsed && <span className="nav-label">{item.label}</span>}
+          </div>
+        ))}
         <div className="collapse-btn" onClick={() => setCollapsed(c => !c)}>
           {collapsed ? '»' : '«'}
         </div>

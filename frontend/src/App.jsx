@@ -147,11 +147,13 @@ export default function App() {
         <Sidebar />
         <div className="main-area">
           <TopBar />
-          <div className="content">
-            <PageComponent />
+          <div className="content-with-panel">
+            <div className="content">
+              <PageComponent />
+            </div>
+            <RightPanel />
           </div>
         </div>
-        <RightPanel />
       </div>
     </AppContext.Provider>
   );

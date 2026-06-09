@@ -1,108 +1,137 @@
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
 
-function ScoreIcon() {
+function SparkleIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-        stroke="#7C3AED" strokeWidth="1.5" strokeLinejoin="round" fill="#EDE9FE"/>
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <path d="M13 2 L14.8 10.2 L23 12 L14.8 13.8 L13 22 L11.2 13.8 L3 12 L11.2 10.2 Z"
+        fill="#A78BFA" stroke="#7C3AED" strokeWidth="0.8" strokeLinejoin="round"/>
+      <circle cx="20" cy="5" r="1.4" fill="#7C3AED" opacity="0.5"/>
+      <circle cx="5" cy="20" r="1" fill="#7C3AED" opacity="0.4"/>
     </svg>
   );
 }
 
 function ResponseIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-      <circle cx="9" cy="7" r="3" stroke="#16A34A" strokeWidth="1.5"/>
-      <circle cx="15" cy="7" r="3" stroke="#16A34A" strokeWidth="1.5"/>
-      <path d="M3 21c0-3.31 2.69-6 6-6" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M21 21c0-3.31-2.69-6-6-6" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M9 21c0-3.31 1.34-6 3-6s3 2.69 3 6" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round"/>
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <circle cx="9" cy="8.5" r="3" fill="#BBF7D0" stroke="#16A34A" strokeWidth="1.4"/>
+      <circle cx="17" cy="8.5" r="3" fill="#BBF7D0" stroke="#16A34A" strokeWidth="1.4"/>
+      <path d="M2 22c0-3.5 3-6 7-6" stroke="#16A34A" strokeWidth="1.4" strokeLinecap="round"/>
+      <path d="M24 22c0-3.5-3-6-7-6" stroke="#16A34A" strokeWidth="1.4" strokeLinecap="round"/>
+      <path d="M10 22c0-3.5 1.3-6 3-6s3 2.5 3 6" stroke="#16A34A" strokeWidth="1.4" strokeLinecap="round"/>
     </svg>
   );
 }
 
 function TrophyIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-      <path d="M8 21h8M12 17v4M5 4H3v5c0 2.21 1.79 4 4 4M19 4h2v5c0 2.21-1.79 4-4 4" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M7 4h10v6a5 5 0 01-10 0V4z" stroke="#D97706" strokeWidth="1.5"/>
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <path d="M9 23h8M13 19v4" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M6 5H4v5c0 2.5 2 4.5 4.5 4.5" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M20 5h2v5c0 2.5-2 4.5-4.5 4.5" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M8 5h10v6.5a5 5 0 01-10 0V5z" fill="#FEF3C7" stroke="#D97706" strokeWidth="1.5"/>
     </svg>
   );
 }
 
 function TrendDownIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-      <polyline points="22,7 13.5,15.5 8.5,10.5 2,17" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <polyline points="16,17 22,17 22,11" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <polyline points="3,8 10,15 15,10 23,18" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <polyline points="17,18 23,18 23,12" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function TrendUpArrow() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }}>
+      <path d="M2 8L5.5 4 9 8" fill="#16A34A"/>
+    </svg>
+  );
+}
+
+function TrendDownArrow() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }}>
+      <path d="M2 4L5.5 8 9 4" fill="#DC2626"/>
     </svg>
   );
 }
 
 export default function KpiCards() {
   const { meta } = useContext(AppContext);
+  const [expanded, setExpanded] = useState(null);
+
+  const delta = meta?.group_avg_delta;
+  const deltaPositive = delta != null ? delta >= 0 : null;
 
   const cards = [
     {
       label: 'Overall Engagement Score',
       value: meta?.group_avg ? `${meta.group_avg.toFixed(2)} / 5` : '— / 5',
-      sub:   meta?.group_avg_delta != null
-        ? `${meta.group_avg_delta >= 0 ? '▲' : '▼'} ${Math.abs(meta.group_avg_delta).toFixed(2)} vs last wave`
+      sub: delta != null
+        ? { trend: deltaPositive, text: `${Math.abs(delta).toFixed(2)} vs last wave` }
         : `${meta?.total_units ?? '—'} business units`,
-      subColor: meta?.group_avg_delta != null
-        ? (meta.group_avg_delta >= 0 ? '#16A34A' : '#DC2626')
-        : undefined,
-      icon:  <ScoreIcon />,
-      color: '#7C3AED',
-      bg:    '#EDE9FE',
-      valueFontSize: 26,
+      icon: <SparkleIcon />,
+      bg: '#EDE9FE',
     },
     {
-      label: 'Respondents',
-      value: meta?.total_respondents?.toLocaleString() ?? '—',
-      sub:   `${meta?.total_units ?? '—'} business units`,
-      icon:  <ResponseIcon />,
-      color: '#16A34A',
-      bg:    '#DCFCE7',
-      valueFontSize: 26,
+      label: 'Response Rate',
+      value: meta?.response_rate
+        ? `${Math.round(meta.response_rate * 100)}%`
+        : (meta?.total_respondents ? `${meta.total_respondents.toLocaleString()}` : '—'),
+      sub: meta?.total_respondents && meta?.total_units
+        ? `${meta.total_respondents.toLocaleString()} / ${(meta.total_units * 500).toLocaleString()}`
+        : `${meta?.total_units ?? '—'} business units`,
+      icon: <ResponseIcon />,
+      bg: '#DCFCE7',
     },
     {
       label: 'Top Performing Business',
       value: meta?.top_business ?? '—',
-      sub:   meta?.top_score ? `${meta.top_score} / 5` : '—',
-      icon:  <TrophyIcon />,
-      color: '#D97706',
-      bg:    '#FEF3C7',
-      valueFontSize: 15,
+      sub: meta?.top_score ? `${meta.top_score.toFixed(2)} / 5` : '—',
+      icon: <TrophyIcon />,
+      bg: '#FEF3C7',
     },
     {
       label: 'Lowest Performing Business',
       value: meta?.lowest_business ?? '—',
-      sub:   meta?.lowest_score ? `${meta.lowest_score} / 5` : '—',
-      icon:  <TrendDownIcon />,
-      color: '#DC2626',
-      bg:    '#FEE2E2',
-      valueFontSize: 15,
+      sub: meta?.lowest_score ? `${meta.lowest_score.toFixed(2)} / 5` : '—',
+      icon: <TrendDownIcon />,
+      bg: '#FEE2E2',
     },
   ];
 
   return (
     <div className="kpi-grid">
-      {cards.map((c) => (
-        <div key={c.label} className="kpi-card">
-          <div className="kpi-icon" style={{ color: c.color, background: c.bg }}>
-            {c.icon}
-          </div>
-          <div className="kpi-body">
-            <div className="kpi-label">{c.label}</div>
-            <div className="kpi-value" style={{ color: c.color, fontSize: c.valueFontSize }}>
-              {c.value}
+      {cards.map((c) => {
+        const isExp = expanded === c.label;
+        const hasTrend = typeof c.sub === 'object' && c.sub?.trend != null;
+        return (
+          <div
+            key={c.label}
+            className={`kpi-card${isExp ? ' expanded' : ''}`}
+            onClick={() => setExpanded(isExp ? null : c.label)}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="kpi-icon" style={{ background: c.bg }}>
+              {c.icon}
             </div>
-            <div className="kpi-sub" style={{ color: c.subColor }}>{c.sub}</div>
+            <div className="kpi-body">
+              <div className={`kpi-label${isExp ? ' wrap' : ''}`}>{c.label}</div>
+              <div className={`kpi-value${isExp ? ' wrap' : ''}`}>{c.value}</div>
+              <div className={`kpi-sub${isExp ? ' wrap' : ''}`}
+                style={{ color: hasTrend ? (c.sub.trend ? '#16A34A' : '#DC2626') : undefined }}>
+                {hasTrend
+                  ? <>{c.sub.trend ? <TrendUpArrow /> : <TrendDownArrow />}{c.sub.text}</>
+                  : c.sub}
+              </div>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -1,4 +1,5 @@
-export default function Skeleton({ width = '100%', height = 12, variant = 'line', count = 1 }) {
+export default function Skeleton({ width = '100%', height = 12, variant = 'line', count = 1, light = false }) {
+  const lightStyle = light ? { background: 'rgba(255,255,255,0.12)' } : {};
   if (variant === 'table') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -27,7 +28,7 @@ export default function Skeleton({ width = '100%', height = 12, variant = 'line'
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="skeleton" style={{ width: i % 3 === 0 ? '85%' : i % 3 === 1 ? '92%' : '70%', height }} />
+          <div key={i} className="skeleton" style={{ width: i % 3 === 0 ? '85%' : i % 3 === 1 ? '92%' : '70%', height, ...lightStyle }} />
         ))}
       </div>
     );
