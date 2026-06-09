@@ -18,31 +18,70 @@ const DIMENSIONS = ['Business Unit','Gender','Generation','Tenure','Job Band'];
 
 export default function InsightsStudio() {
   useContext(AppContext);
-  const [selectedSkill, setSelectedSkill] = useState(null);
-  const [dimension,     setDimension]     = useState('Business Unit');
-  const [result,        setResult]        = useState(null);
-  const [loading,       setLoading]       = useState(false);
-  const [error,         setError]         = useState(null);
+  const [selectedSkills, setSelectedSkills] = useState([]);
+  const [dimension,      setDimension]      = useState('Business Unit');
+  const [result,         setResult]         = useState(null);
+  const [steps,          setSteps]          = useState([]);
+  const [loading,        setLoading]        = useState(false);
+  const [error,          setError]          = useState(null);
+
+  const toggleSkill = (id) => {
+    setSelectedSkills(prev =>
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    );
+    setResult(null); setError(null); setSteps([]);
+  };
 
   const runAnalysis = async () => {
-    if (!selectedSkill) return;
+    if (!selectedSkills.length || loading) return;
     setLoading(true);
     setResult(null);
     setError(null);
+    setSteps([]);
+
     try {
       const res = await fetch('/api/skill-analysis', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ skill: selectedSkill, dimension }),
+        body:    JSON.stringify({ skills: selectedSkills, dimension }),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setResult(data);
+
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const payload = line.slice(6).trim();
+          if (!payload || payload === '[DONE]') continue;
+          try {
+            const evt = JSON.parse(payload);
+            if (evt.error) {
+              setError(evt.error);
+            } else if (evt.result) {
+              setResult(evt.result);
+            } else if (evt.step !== undefined) {
+              setSteps(prev => {
+                const updated = [...prev];
+                const idx = updated.findIndex(s => s.step === evt.step);
+                if (idx >= 0) updated[idx] = evt;
+                else updated.push(evt);
+                return updated;
+              });
+            }
+          } catch {}
+        }
+      }
     } catch (err) {
       setError(err.message || 'Analysis failed. Please try again.');
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   return (
@@ -61,13 +100,13 @@ export default function InsightsStudio() {
 
       {/* Config panel */}
       <div className="chart-card">
-        <div className="chart-title">Select a Skill to Analyse</div>
+        <div className="chart-title">Select Skills to Analyse</div>
         <div className="skill-pills">
           {SKILLS.map(s => (
             <button
               key={s.id}
-              className={`skill-pill ${selectedSkill === s.id ? 'active' : ''}`}
-              onClick={() => setSelectedSkill(s.id)}
+              className={`skill-pill ${selectedSkills.includes(s.id) ? 'active' : ''}`}
+              onClick={() => toggleSkill(s.id)}
             >
               {s.label}
             </button>
@@ -92,21 +131,36 @@ export default function InsightsStudio() {
             className="primary-btn"
             style={{ minWidth: 160 }}
             onClick={runAnalysis}
-            disabled={!selectedSkill || loading}
+            disabled={!selectedSkills.length || loading}
           >
             {loading ? 'Analysing…' : 'Run Analysis'}
           </button>
         </div>
       </div>
 
-      {/* Loading */}
+      {/* Step progress */}
       {loading && (
         <div className="chart-card" style={{ marginTop: 16 }}>
           <div className="ai-summary-header" style={{ marginBottom: 16 }}>
             <span className="ai-badge">AI</span>
             <span style={{ fontSize: 13 }}>Agent is reasoning through the data…</span>
           </div>
-          <Skeleton count={6} height={10} />
+          {steps.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {steps.map(s => (
+                <div key={s.step} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+                  <span style={{ color: s.done ? '#16A34A' : 'var(--blue-primary)', fontWeight: 700 }}>
+                    {s.done ? '✓' : '…'}
+                  </span>
+                  <span style={{ color: s.done ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
+                    Step {s.step}: {s.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Skeleton count={4} height={10} />
+          )}
         </div>
       )}
 
@@ -223,7 +277,7 @@ export default function InsightsStudio() {
       {!result && !loading && !error && (
         <div style={{ marginTop: 24, padding: 48, textAlign: 'center', background: 'var(--bg-card)', border: '1px dashed var(--border)', borderRadius: 12 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>
-            Select a skill above and click Run Analysis
+            Select one or more skills above and click Run Analysis
           </div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
             The AI agent will reason through your data and surface actionable intelligence

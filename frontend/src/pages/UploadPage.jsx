@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import abgLogo from '../assets/abg.avif';
 
 const STAGES = {
   idle:       { label: '',                                  step: 0 },
@@ -89,15 +90,7 @@ export default function UploadPage({ onUploadComplete }) {
     <div className="upload-page">
       {/* Logo */}
       <div className="upload-logo">
-        <svg width="52" height="42" viewBox="0 0 44 36">
-          <polygon points="2,2 20,2 2,16" fill="#5C0B0B"/>
-          <polygon points="20,2 42,2 28,14 2,16" fill="#9B1C1C"/>
-          <polygon points="42,2 42,14 28,14" fill="#C84B11"/>
-          <polygon points="2,16 2,34 16,34 28,14" fill="#7B1313"/>
-          <polygon points="16,34 28,14 28,34" fill="#B91C1C"/>
-          <polygon points="28,14 42,14 42,26 28,34" fill="#D97706"/>
-          <polygon points="28,34 42,26 42,34" fill="#F59E0B"/>
-        </svg>
+        <img src={abgLogo} alt="ABG" width="48" height="48" style={{ objectFit: 'contain', borderRadius: 6 }} />
         <div>
           <div className="upload-logo-title">ABG VIBES 2026</div>
           <div className="upload-logo-sub">Employee Engagement Intelligence</div>

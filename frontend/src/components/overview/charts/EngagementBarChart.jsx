@@ -91,16 +91,19 @@ export default function EngagementBarChart({ onBarClick }) {
 
   return (
     <div className="chart-card">
-      <div className="chart-header">
-        <div className="chart-title">{title}</div>
+      <div className="chart-section-header">
+        <div>
+          <div className="chart-section-title">Engagement Score by BU</div>
+          <div className="chart-section-sub">Sorted by score · click bar to drill down</div>
+        </div>
         {onBarClick && (
-          <button className="see-all-btn" onClick={() => onBarClick && onBarClick(null)}>
-            View all →
-          </button>
+          <button className="see-all-btn" onClick={() => onBarClick && onBarClick(null)}>View all →</button>
         )}
       </div>
-      <div style={{ height: Math.max(260, labels.length * 28) }}>
-        <Bar data={data} options={options} />
+      <div style={{ height: 260, overflowY: 'auto' }}>
+        <div style={{ height: Math.max(260, labels.length * 26), minHeight: 260 }}>
+          <Bar data={data} options={options} />
+        </div>
       </div>
     </div>
   );

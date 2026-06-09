@@ -2,98 +2,136 @@ import { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
 import ChatWithData from '../chat/ChatWithData';
 
-const TABS = ['AI Insights', 'Top Trends', 'Outliers & Alerts', 'Summary'];
+const TABS = ['All Insights', 'Top Trends', 'Outliers & Alerts', 'Summary'];
+
+function UpArrow() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
+      <path d="M5 8.5V1.5M2 4l3-3 3 3" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function DownArrow() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
+      <path d="M5 1.5v7M2 6l3 3 3-3" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function ArrowLink() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ marginLeft: 4 }}>
+      <path d="M2 5.5h7M6 2.5l3 3-3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+const SkeletonLines = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div className="skeleton" style={{ height: 11, width: '85%' }} />
+    <div className="skeleton" style={{ height: 11, width: '92%' }} />
+    <div className="skeleton" style={{ height: 11, width: '70%' }} />
+  </div>
+);
 
 export default function RightPanel() {
   const { insightsData, navigate } = useContext(AppContext);
-  const [activeTab, setActiveTab] = useState('AI Insights');
+  const [activeTab, setActiveTab] = useState('All Insights');
+  const [collapsed, setCollapsed] = useState(false);
+  const [insightsExpanded, setInsightsExpanded] = useState(false);
 
   const trends   = insightsData?.topTrends || [];
   const outliers = insightsData?.outliers  || [];
   const summary  = insightsData?.summary   || '';
 
-  const SkeletonLines = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div className="skeleton" style={{ height: 11, width: '85%' }} />
-      <div className="skeleton" style={{ height: 11, width: '92%' }} />
-      <div className="skeleton" style={{ height: 11, width: '70%' }} />
+  const TrendItem = ({ item }) => (
+    <div className="rp-trend-item">
+      <span className="rp-arrow">{item.direction === 'up' ? <UpArrow /> : <DownArrow />}</span>
+      <span className="rp-trend-text">{item.text}</span>
+    </div>
+  );
+
+  const OutlierItem = ({ item }) => (
+    <div className="rp-trend-item">
+      <span className="rp-arrow"><DownArrow /></span>
+      <span className="rp-trend-text">{item.text}</span>
     </div>
   );
 
   return (
-    <aside className="right-panel">
-      {/* Tabs */}
-      <div className="rp-tabs">
-        {TABS.map(t => (
-          <button
-            key={t}
-            className={`rp-tab ${activeTab === t ? 'active' : ''}`}
-            onClick={() => setActiveTab(t)}
-          >
-            {t}
-          </button>
-        ))}
+    <aside className={`right-panel ${collapsed ? 'collapsed' : ''}`}>
+      {/* Collapse button */}
+      <div className="rp-collapse-btn" onClick={() => setCollapsed(c => !c)}>
+        {collapsed ? '«' : '»'}
       </div>
 
-      {/* Tab content */}
-      <div className="rp-content">
-        {activeTab === 'AI Insights' && (
-          <div className="rp-section">
-            <div className="rp-section-title">Top Trends</div>
-            {trends.length === 0 ? <SkeletonLines /> : trends.map((t, i) => (
-              <div key={i} className="rp-trend-item">
-                <span className={`rp-arrow ${t.direction}`}>{t.direction === 'up' ? '↑' : '↓'}</span>
-                <span className="rp-trend-text">{t.text}</span>
-              </div>
-            ))}
-
-            <div className="rp-section-title" style={{ marginTop: 14 }}>Outliers Detected</div>
-            {outliers.length === 0 ? <SkeletonLines /> : outliers.map((o, i) => (
-              <div key={i} className="rp-trend-item">
-                <span className="rp-arrow down">↓</span>
-                <span className="rp-trend-text">{o.text}</span>
-              </div>
-            ))}
-
-            <button className="rp-view-all" onClick={() => navigate('ai-insights')}>
-              View all insights →
+      {/* Insights card */}
+      <div className="rp-insights-card">
+        <div className="rp-tabs">
+          {TABS.map(t => (
+            <button
+              key={t}
+              className={`rp-tab ${activeTab === t ? 'active' : ''}`}
+              onClick={() => setActiveTab(t)}
+            >
+              {t}
             </button>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {activeTab === 'Top Trends' && (
-          <div className="rp-section">
-            {trends.length === 0 ? <SkeletonLines /> : trends.map((t, i) => (
-              <div key={i} className="rp-trend-item">
-                <span className={`rp-arrow ${t.direction}`}>{t.direction === 'up' ? '↑' : '↓'}</span>
-                <span className="rp-trend-text">{t.text}</span>
+        <div className={`rp-content-wrap ${insightsExpanded ? 'expanded' : ''}`}>
+          <div className="rp-content">
+            {activeTab === 'All Insights' && (
+              <div className="rp-section">
+                <div className="rp-section-title">Top Trends</div>
+                {trends.length === 0 ? <SkeletonLines /> : trends.map((t, i) => <TrendItem key={i} item={t} />)}
+
+                <div className="rp-section-title" style={{ marginTop: 10 }}>Outliers Detected</div>
+                {outliers.length === 0 ? <SkeletonLines /> : outliers.map((o, i) => <OutlierItem key={i} item={o} />)}
+
+                <button className="rp-view-all" onClick={() => navigate('ai-insights')}>
+                  View all Insights <ArrowLink />
+                </button>
               </div>
-            ))}
-          </div>
-        )}
+            )}
 
-        {activeTab === 'Outliers & Alerts' && (
-          <div className="rp-section">
-            {outliers.length === 0 ? <SkeletonLines /> : outliers.map((o, i) => (
-              <div key={i} className="rp-trend-item">
-                <span className="rp-arrow down">↓</span>
-                <span className="rp-trend-text">{o.text}</span>
+            {activeTab === 'Top Trends' && (
+              <div className="rp-section">
+                <div className="rp-section-title">Top Trends</div>
+                {trends.length === 0 ? <SkeletonLines /> : trends.map((t, i) => <TrendItem key={i} item={t} />)}
               </div>
-            ))}
-          </div>
-        )}
+            )}
 
-        {activeTab === 'Summary' && (
-          <div className="rp-section">
-            {summary
-              ? <p className="rp-summary-text">{summary}</p>
-              : <SkeletonLines />
-            }
+            {activeTab === 'Outliers & Alerts' && (
+              <div className="rp-section">
+                <div className="rp-section-title">Outliers Detected</div>
+                {outliers.length === 0 ? <SkeletonLines /> : outliers.map((o, i) => <OutlierItem key={i} item={o} />)}
+              </div>
+            )}
+
+            {activeTab === 'Summary' && (
+              <div className="rp-section">
+                {summary ? <p className="rp-summary-text">{summary}</p> : <SkeletonLines />}
+              </div>
+            )}
           </div>
-        )}
+
+          {!insightsExpanded && <div className="rp-fade-overlay" />}
+        </div>
+
+        {/* Expand / collapse toggle */}
+        <button className="rp-expand-btn" onClick={() => setInsightsExpanded(e => !e)}>
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
+            style={{ transition: 'transform 0.2s', transform: insightsExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+            <path d="M2.5 4.5L6.5 8.5l4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          {insightsExpanded ? 'Show less' : 'Show more'}
+        </button>
       </div>
 
-      {/* Chat — always visible */}
+      {/* Chat card */}
       <ChatWithData />
     </aside>
   );

@@ -1,36 +1,146 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useRef, useEffect } from 'react';
+import { SlidersHorizontal, RotateCcw, Download, Upload, ChevronDown } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 
+const PAGE_TITLES = {
+  overview:              'Employee Engagement Intelligence',
+  'business-detail':     null,
+  'bu-detail':           null,
+  'cluster-detail':      'Cluster Analysis',
+  'business-overview':   'Business Overview',
+  'bu-explorer':         'BU Explorer',
+  'ai-insights':         'AI Insights',
+  outliers:              'Outliers',
+  'insights-studio':     'Insights Studio',
+  trends:                'Trends',
+  'employee-voice':      'Employee Voice',
+  reports:               'Reports',
+  benchmarks:            'Benchmarks',
+};
+
+function TopBarDropdown({ label, value, options, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    if (open) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  const selected = options.find(o => o.value === value) || options[0];
+
+  return (
+    <div className="tb-dropdown" ref={ref}>
+      <button className="tb-dropdown-trigger" onClick={() => setOpen(o => !o)}>
+        <span className="tb-dropdown-label">{label}:</span>
+        <span className="tb-dropdown-value">{selected?.label}</span>
+        <ChevronDown size={11} style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }} />
+      </button>
+
+      {open && (
+        <div className="tb-dropdown-menu">
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              className={`tb-dropdown-item${opt.disabled ? ' disabled' : ''}${opt.value === value ? ' active' : ''}`}
+              disabled={opt.disabled}
+              onClick={() => { if (!opt.disabled) { onChange(opt.value); setOpen(false); } }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TopBar() {
-  const { setIsFiltersOpen, meta, businesses, activeFilters } = useContext(AppContext);
+  const {
+    setIsFiltersOpen, meta, businesses, activeFilters,
+    page, selectedBusiness, selectedBU, selectedCluster,
+  } = useContext(AppContext);
+
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [surveyWave, setSurveyWave]         = useState('current');
+  const [compareTo, setCompareTo]           = useState('none');
+  const exportRef = useRef(null);
 
   const wave = meta?.survey_name || 'ABG Vibes 2026';
+
   const filterCount = Object.values(activeFilters || {}).filter(v =>
     Array.isArray(v) ? v.length < 4 : v !== 'all' && v !== 0
   ).length;
 
-  const handleExportCSV = async () => {
-    setShowExportMenu(false);
-    try {
-      const { default: Papa } = await import('papaparse');
-      const csv = Papa.unparse((businesses || []).map(b => ({
-        Rank: b.rank, Business: b.name, Overall: b.overall, Band: b.band,
-        ...b.categories
-      })));
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href = url; a.download = 'abg_engagement_scores.csv'; a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Export error:', err);
-    }
-  };
+  let pageTitle = PAGE_TITLES[page] || 'Dashboard';
+  if (page === 'business-detail' && selectedBusiness) pageTitle = selectedBusiness;
+  if (page === 'bu-detail'       && selectedBU)       pageTitle = selectedBU;
+  if (page === 'cluster-detail'  && selectedCluster)
+    pageTitle = `${selectedCluster.charAt(0).toUpperCase() + selectedCluster.slice(1)} Cluster`;
 
-  const handlePrint = () => {
+  const subtitleMap = {
+    overview:            `Group Overview · ${wave}`,
+    'business-detail':   `Business Detail · ${wave}`,
+    'bu-detail':         `Business Unit Detail · ${wave}`,
+    'cluster-detail':    `Cluster Detail · ${wave}`,
+    'business-overview': `All Businesses · ${wave}`,
+    'bu-explorer':       `Business Unit Explorer · ${wave}`,
+    'ai-insights':       `AI Analysis · ${wave}`,
+    outliers:            `Statistical Outliers · ${wave}`,
+    'insights-studio':   `Agentic HR Analysis · ${wave}`,
+    trends:              `Trend Analysis · ${wave}`,
+    'employee-voice':    `Employee Feedback · ${wave}`,
+    reports:             `Reports & Exports · ${wave}`,
+    benchmarks:          `Peer Benchmarks · ${wave}`,
+  };
+  const pageSubtitle = subtitleMap[page] || wave;
+
+  const waveOptions = [
+    { value: 'current', label: wave },
+    { value: 'divider', label: '── Historical ──', disabled: true },
+    { value: 'upload',  label: 'Upload previous wave', disabled: true },
+  ];
+
+  const compareOptions = [
+    { value: 'none',   label: 'Select wave…' },
+    { value: 'upload', label: 'Upload previous wave to enable', disabled: true },
+  ];
+
+  const exportOptions = [
+    { value: 'csv',   label: '📄  Business Scores (CSV)' },
+    { value: 'print', label: '🖨  AI Summary (Print / PDF)' },
+  ];
+
+  // Close export menu on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (exportRef.current && !exportRef.current.contains(e.target)) setShowExportMenu(false);
+    }
+    if (showExportMenu) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showExportMenu]);
+
+  const handleExportSelect = async (val) => {
     setShowExportMenu(false);
-    window.print();
+    if (val === 'csv') {
+      try {
+        const { default: Papa } = await import('papaparse');
+        const csv = Papa.unparse((businesses || []).map(b => ({
+          Rank: b.rank, Business: b.name, Overall: b.overall, Band: b.band,
+          ...b.categories,
+        })));
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = 'abg_engagement_scores.csv'; a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) { console.error('Export error:', err); }
+    } else if (val === 'print') {
+      window.print();
+    }
   };
 
   const handleUploadNew = () => {
@@ -42,59 +152,70 @@ export default function TopBar() {
 
   return (
     <div className="topbar">
-      <button
-        className="topbar-btn"
-        onClick={() => setIsFiltersOpen(true)}
-      >
-        <span>⚙</span> Filters {filterCount > 0 && `(${filterCount})`}
-      </button>
-
-      <div className="topbar-group">
-        <span className="topbar-label">Survey Wave</span>
-        <select className="topbar-select" defaultValue={wave}>
-          <option>{wave}</option>
-          <option disabled>── Historical ──</option>
-          <option disabled>Upload previous wave to compare</option>
-        </select>
-      </div>
-
-      <div className="topbar-group">
-        <span className="topbar-label">Compare to</span>
-        <select className="topbar-select" defaultValue="none">
-          <option value="none">Select wave…</option>
-          <option disabled>Upload previous wave to enable</option>
-        </select>
+      {/* Left — page title */}
+      <div className="topbar-title-block">
+        <span className="topbar-page-title">{pageTitle}</span>
+        {page === 'overview'
+          ? <span className="topbar-page-sub">
+              <span style={{ color: 'var(--blue-primary)', fontWeight: 700 }}>Listen.</span>
+              {' Understand. Lead.'}
+            </span>
+          : <span className="topbar-page-sub">{pageSubtitle}</span>
+        }
       </div>
 
       <div className="topbar-spacer" />
 
-      <button className="topbar-btn" onClick={() => window.location.reload()}>
-        ↺ Reset
+      {/* Filters */}
+      <button className="topbar-btn" onClick={() => setIsFiltersOpen(true)}>
+        <SlidersHorizontal size={13} />
+        Filters {filterCount > 0 && <span className="filter-badge">{filterCount}</span>}
       </button>
 
-      <div style={{ position: 'relative' }}>
-        <button className="topbar-btn" onClick={() => setShowExportMenu(m => !m)}>
-          ⬇ Export ▾
+      {/* Survey Wave dropdown */}
+      <TopBarDropdown
+        label="Survey Wave"
+        value={surveyWave}
+        options={waveOptions}
+        onChange={setSurveyWave}
+      />
+
+      {/* Compare to dropdown */}
+      <TopBarDropdown
+        label="Compare to"
+        value={compareTo}
+        options={compareOptions}
+        onChange={setCompareTo}
+      />
+
+      {/* Reset */}
+      <button className="topbar-btn" onClick={() => window.location.reload()}>
+        <RotateCcw size={13} />
+        Reset
+      </button>
+
+      {/* Export */}
+      <div className="tb-dropdown" ref={exportRef}>
+        <button className="topbar-btn" onClick={() => setShowExportMenu(o => !o)}>
+          <Download size={13} />
+          Export
+          <ChevronDown size={11} style={{ transition: 'transform 0.2s', transform: showExportMenu ? 'rotate(180deg)' : 'rotate(0deg)' }} />
         </button>
         {showExportMenu && (
-          <div style={{
-            position: 'absolute', right: 0, top: '100%', marginTop: 4,
-            background: 'var(--bg-card)', border: '1px solid var(--border)',
-            borderRadius: 8, boxShadow: 'var(--shadow-md)', zIndex: 50,
-            minWidth: 200, overflow: 'hidden'
-          }}>
-            <button onClick={handleExportCSV} style={{ display: 'block', width: '100%', padding: '10px 14px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13 }}>
-              Business Scores (CSV)
-            </button>
-            <button onClick={handlePrint} style={{ display: 'block', width: '100%', padding: '10px 14px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13 }}>
-              AI Summary (Print / PDF)
-            </button>
+          <div className="tb-dropdown-menu" style={{ right: 0, left: 'auto' }}>
+            {exportOptions.map(opt => (
+              <button key={opt.value} className="tb-dropdown-item" onClick={() => handleExportSelect(opt.value)}>
+                {opt.label}
+              </button>
+            ))}
           </div>
         )}
       </div>
 
+      {/* Upload */}
       <button className="topbar-btn topbar-btn-primary" onClick={handleUploadNew}>
-        ↑ Upload New Data
+        <Upload size={13} />
+        Upload New Data
       </button>
     </div>
   );

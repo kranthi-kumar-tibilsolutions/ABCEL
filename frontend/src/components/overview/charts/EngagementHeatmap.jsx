@@ -25,30 +25,49 @@ function scoreToText(score) {
   return score >= 3.5 ? '#fff' : '#fff';
 }
 
-export default function EngagementHeatmap({ onCellClick }) {
-  const { businesses } = useContext(AppContext);
+const DIM_LABELS = {
+  overall:    'Business',
+  gender:     'Gender',
+  generation: 'Generation',
+  tenure:     'Tenure',
+  job_band:   'Job Band',
+};
 
-  const { rows, cats } = useMemo(() => {
-    if (!businesses?.length) return { rows: [], cats: CATEGORIES };
+export default function EngagementHeatmap({ onCellClick }) {
+  const { businesses, cohorts, dimension } = useContext(AppContext);
+
+  const { rows, cats, rowLabel } = useMemo(() => {
+    const dimKey = dimension === 'overall' ? null : dimension;
+    if (dimKey && cohorts?.[dimKey]?.length) {
+      const items = [...cohorts[dimKey]].sort((a, b) => (b.overall ?? 0) - (a.overall ?? 0));
+      const usedCats = items[0]?.categories ? Object.keys(items[0].categories) : CATEGORIES;
+      return { rows: items, cats: usedCats, rowLabel: DIM_LABELS[dimKey] ?? dimKey };
+    }
+    if (!businesses?.length) return { rows: [], cats: CATEGORIES, rowLabel: 'Business' };
     const sorted = [...businesses]
       .sort((a, b) => (b.overall ?? b.score ?? 0) - (a.overall ?? a.score ?? 0))
       .slice(0, 15);
     const usedCats = businesses[0]?.categories
       ? Object.keys(businesses[0].categories)
       : CATEGORIES;
-    return { rows: sorted, cats: usedCats };
-  }, [businesses]);
+    return { rows: sorted, cats: usedCats, rowLabel: 'Business' };
+  }, [businesses, cohorts, dimension]);
 
   if (!rows.length) return null;
 
   return (
     <div className="chart-card">
-      <div className="chart-title">Category Heatmap</div>
-      <div style={{ overflowX: 'auto' }}>
+      <div className="chart-section-header">
+        <div>
+          <div className="chart-section-title">Competency Heatmap by {DIM_LABELS[dimension] ?? 'Business'}</div>
+          <div className="chart-section-sub">Score by {rowLabel.toLowerCase()} × category</div>
+        </div>
+      </div>
+      <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 260 }}>
         <table className="heatmap-table">
           <thead>
             <tr>
-              <th className="heatmap-biz-header">Business</th>
+              <th className="heatmap-biz-header">{rowLabel}</th>
               {cats.map(c => (
                 <th key={c} className="heatmap-cat-header" title={c}>
                   {c.length > 10 ? c.slice(0, 9) + '…' : c}

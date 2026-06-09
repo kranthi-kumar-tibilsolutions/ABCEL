@@ -8,10 +8,32 @@ const SUGGESTED = [
   'Show BUs with high polarization',
 ];
 
+function AiChatIcon() {
+  return (
+    <div style={{
+      width: 22, height: 22, borderRadius: '50%',
+      background: 'var(--blue-primary)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
+    }}>
+      <span style={{ color: '#fff', fontWeight: 800, fontSize: 8, letterSpacing: '0.02em' }}>AI</span>
+    </div>
+  );
+}
+
+function PaperPlaneIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M12.5 1.5L6.5 7.5M12.5 1.5L8.5 12.5L6.5 7.5M12.5 1.5L1.5 5.5L6.5 7.5"
+        stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 export default function ChatWithData() {
-  const { dimension } = useContext(AppContext);
+  const { dimension, navigate } = useContext(AppContext);
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hi! I'm your AI analyst. Ask me anything about employee engagement." }
+    { role: 'assistant', content: "Hi! I'm your AI analyst. Ask me anything about employee engagement:" }
   ]);
   const [input,   setInput]   = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,14 +64,18 @@ export default function ChatWithData() {
 
       const reader  = res.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const lines = decoder.decode(value).split('\n').filter(l => l.startsWith('data: '));
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // keep incomplete tail for next chunk
         for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
           const payload = line.slice(6).trim();
-          if (payload === '[DONE]') continue;
+          if (!payload || payload === '[DONE]') continue;
           try {
             const { text: tok } = JSON.parse(payload);
             if (tok) {
@@ -78,10 +104,10 @@ export default function ChatWithData() {
   return (
     <div className="chat-panel">
       <div className="chat-header">
-        <span className="chat-dot" />
+        <AiChatIcon />
         <span className="chat-title">CHAT WITH DATA</span>
         <span className="chat-beta">Beta</span>
-        <span className="chat-sub">Your AI Analyst</span>
+        <span className="chat-sub">Your AI analyst</span>
       </div>
 
       <div className="chat-messages">
@@ -96,13 +122,20 @@ export default function ChatWithData() {
         <div ref={bottomRef} />
       </div>
 
-      <div className="chat-suggested">
-        {SUGGESTED.map((q, i) => (
-          <button key={i} className="chat-suggestion" onClick={() => sendMessage(q)}>
-            {q}
-          </button>
-        ))}
-      </div>
+      {messages.length <= 1 && (
+        <div className="chat-suggested">
+          <div className="chat-try-label">Try asking</div>
+          {SUGGESTED.map((q, i) => (
+            <button key={i} className="chat-suggestion" onClick={() => sendMessage(q)}>
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                <path d="M9.5 1H1.5a.5.5 0 00-.5.5v6a.5.5 0 00.5.5H3l2 2 2-2h2.5a.5.5 0 00.5-.5v-6A.5.5 0 009.5 1z"
+                  stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
+              </svg>
+              {q}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="chat-input-row">
         <input
@@ -113,8 +146,11 @@ export default function ChatWithData() {
           placeholder="Ask a question..."
           disabled={loading}
         />
-        <button className="chat-send" onClick={() => sendMessage()} disabled={loading}>→</button>
+        <button className="chat-send" onClick={() => sendMessage()} disabled={loading}>
+          <PaperPlaneIcon />
+        </button>
       </div>
+
       <div className="chat-disclaimer">AI can make mistakes. Verify important insights.</div>
     </div>
   );

@@ -1,14 +1,94 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useRef } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import Skeleton from '../shared/Skeleton';
 
+function AiBadge() {
+  return (
+    <div style={{
+      width: 36, height: 36, borderRadius: 8, background: '#2563EB',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    }}>
+      <span style={{ color: '#fff', fontWeight: 800, fontSize: 13, letterSpacing: '0.02em' }}>AI</span>
+    </div>
+  );
+}
+
+function SparkleCircle() {
+  return (
+    <div style={{
+      width: 52, height: 52, borderRadius: '50%',
+      background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
+    }}>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2l1.5 5.5H19l-4.5 3 1.5 5.5L12 13l-4 3 1.5-5.5L5 7.5h5.5L12 2z"
+          fill="#A5B4FC" stroke="#6366F1" strokeWidth="1" strokeLinejoin="round"/>
+        <circle cx="19" cy="5" r="1.5" fill="#6366F1" opacity="0.6"/>
+        <circle cx="5" cy="18" r="1" fill="#6366F1" opacity="0.4"/>
+      </svg>
+    </div>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+      <circle cx="8" cy="8" r="7.5" fill="#2563EB"/>
+      <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function DashboardIllustration() {
+  return (
+    <svg width="130" height="90" viewBox="0 0 130 90" fill="none">
+      {/* Card bg */}
+      <rect x="0" y="0" width="130" height="90" rx="10" fill="#EEF2FF"/>
+
+      {/* Bar chart bars */}
+      <rect x="10" y="50" width="10" height="30" rx="2" fill="#A5B4FC"/>
+      <rect x="24" y="35" width="10" height="45" rx="2" fill="#6366F1"/>
+      <rect x="38" y="42" width="10" height="38" rx="2" fill="#A5B4FC"/>
+      <rect x="52" y="28" width="10" height="52" rx="2" fill="#6366F1"/>
+      <rect x="66" y="38" width="10" height="42" rx="2" fill="#A5B4FC"/>
+
+      {/* Pie chart */}
+      <circle cx="105" cy="30" r="18" fill="#C7D2FE" stroke="#6366F1" strokeWidth="1.5"/>
+      <path d="M105 30 L105 12 A18 18 0 0 1 121 42 Z" fill="#6366F1"/>
+      <path d="M105 30 L121 42 A18 18 0 0 1 88 38 Z" fill="#818CF8"/>
+
+      {/* Lines (text placeholders) */}
+      <rect x="82" y="54" width="38" height="4" rx="2" fill="#C7D2FE"/>
+      <rect x="82" y="62" width="30" height="4" rx="2" fill="#C7D2FE"/>
+      <rect x="82" y="70" width="34" height="4" rx="2" fill="#C7D2FE"/>
+
+      {/* Robot */}
+      <rect x="14" y="4" width="16" height="13" rx="3" fill="#6366F1"/>
+      <circle cx="19" cy="10" r="2" fill="white"/>
+      <circle cx="25" cy="10" r="2" fill="white"/>
+      <rect x="18" y="17" width="8" height="7" rx="1.5" fill="#818CF8"/>
+      <line x1="22" y1="24" x2="22" y2="29" stroke="#818CF8" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="14" y1="20" x2="11" y2="24" stroke="#6366F1" strokeWidth="1.5" strokeLinecap="round"/>
+      <line x1="30" y1="20" x2="33" y2="24" stroke="#6366F1" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 export default function AiSummary() {
-  const { summaryData, setSummaryData, dimension } = useContext(AppContext);
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState(null);
+  const { summaryData, setSummaryData, dimension, navigate } = useContext(AppContext);
+  const [loading,   setLoading]   = useState(false);
+  const [error,     setError]     = useState(null);
+  const [genTime,   setGenTime]   = useState(null);
+  const [showWhy,   setShowWhy]   = useState(false);
+  const prevDim = useRef(null);
 
   useEffect(() => {
-    if (summaryData) return;
+    // re-fetch whenever dimension changes, or on first load
+    if (dimension === prevDim.current && summaryData) return;
+    prevDim.current = dimension;
+    setSummaryData(null);
+    setShowWhy(false);
     setLoading(true);
     setError(null);
     fetch('/api/summary', {
@@ -20,100 +100,128 @@ export default function AiSummary() {
       .then(d => {
         if (d.error) throw new Error(d.error);
         setSummaryData(d);
+        setGenTime(new Date());
         setLoading(false);
       })
-      .catch(err => { setError(err.message || 'Could not load summary.'); setLoading(false); });
+      .catch(err => {
+        setError(err.message || 'Could not load summary.');
+        setLoading(false);
+      });
   }, [dimension]);
 
+  const { bullets = [], takeaway = '', whyMatters = '' } = summaryData || {};
+
+  const timeAgo = genTime
+    ? `Generated ${Math.max(1, Math.round((Date.now() - genTime) / 60000))} min ago`
+    : 'Generated just now';
+
   return (
-    <div className="ai-summary-full">
-      {/* Header */}
-      <div className="ai-summary-full-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div className="ai-summary-icon">
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <path d="M11 2C11 2 7 6 7 11C7 14 8.5 15.5 10 16C9.5 14.5 10 13 11 12.5C12 13 12.5 14.5 12 16C13.5 15.5 15 14 15 11C15 6 11 2 11 2Z" fill="white"/>
-            </svg>
-          </div>
-          <div>
-            <div className="ai-summary-full-title">AI Executive Summary</div>
-            <div className="ai-summary-full-sub">
-              {loading ? 'Generating…' : summaryData ? 'Generated just now' : error ? 'Generation failed' : 'Ready to generate'}
+    <div className="ais-card">
+
+      {/* ── Loading state ── */}
+      {loading && (
+        <div className="ais-loading-state">
+          <div className="ais-col-left">
+            <div className="ais-top-row">
+              <AiBadge />
+              <div>
+                <div className="ais-title">AI EXECUTIVE SUMMARY</div>
+                <div className="ais-sub">Generating insights…</div>
+              </div>
             </div>
+          </div>
+          <div style={{ flex: 1 }}><Skeleton count={4} height={10} /></div>
+        </div>
+      )}
+
+      {/* ── Error state ── */}
+      {error && !loading && (
+        <div className="ais-loading-state">
+          <div className="ais-col-left">
+            <div className="ais-top-row">
+              <AiBadge />
+              <div>
+                <div className="ais-title">AI EXECUTIVE SUMMARY</div>
+                <div className="ais-sub" style={{ color: '#DC2626' }}>Failed to generate</div>
+              </div>
+            </div>
+          </div>
+          <div className="ais-error">
+            {error}
+            <button className="ais-retry-btn" onClick={() => { setSummaryData(null); setError(null); }}>Retry</button>
           </div>
         </div>
-        <button
-          className="ai-refresh"
-          title="Regenerate"
-          onClick={() => { setSummaryData(null); setError(null); }}
-          disabled={loading}
-        >↺</button>
-      </div>
+      )}
 
-      {/* Body */}
-      <div className="ai-summary-full-body">
-        {loading && (
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12, fontStyle: 'italic' }}>
-              Here&rsquo;s what I found from this survey wave.
+      {/* ── Loaded state: 4-column layout ── */}
+      {summaryData && !loading && (
+        <div className="ais-grid">
+
+          {/* Col 1: header + sparkle + intro + button */}
+          <div className="ais-col-left">
+            <div className="ais-top-row">
+              <AiBadge />
+              <div>
+                <div className="ais-title">AI EXECUTIVE SUMMARY</div>
+                <div className="ais-sub">{timeAgo}</div>
+              </div>
+              <button
+                className="ais-refresh-btn"
+                title="Regenerate"
+                onClick={() => { setSummaryData(null); setError(null); setGenTime(null); }}
+              >
+                <RefreshCw size={13} />
+              </button>
             </div>
-            <Skeleton count={4} height={10} />
+            <div className="ais-intro-block">
+              <SparkleCircle />
+              <p className="ais-intro-text">Here&rsquo;s what I found from this survey wave.</p>
+            </div>
+            <div style={{ flex: 1 }} />
+            <button className="ais-view-btn" onClick={() => navigate && navigate('ai-insights')}>View full summary &rarr;</button>
           </div>
-        )}
 
-        {error && !loading && (
-          <div style={{ flex: 1, color: 'var(--text-muted)', fontSize: 13 }}>
-            {error} — <button style={{ color: 'var(--blue-primary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13 }} onClick={() => setSummaryData(null)}>Retry</button>
+          {/* Col 2: bullet list */}
+          <div className="ais-col-bullets">
+            <ul className="ais-bullets">
+              {bullets.map((b, i) => (
+                <li key={i} className="ais-bullet">
+                  <CheckIcon />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-        )}
 
-        {summaryData && !loading && (() => {
-          const { bullets = [], takeaway = '', whyMatters = '' } = summaryData;
-          return (
-            <>
-              {/* Left: findings */}
-              <div className="ai-summary-left">
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 10, fontStyle: 'italic' }}>
-                  Here&rsquo;s what I found from this survey wave.
-                </div>
-                <ul className="ai-summary-bullets">
-                  {bullets.map((b, i) => (
-                    <li key={i} className="ai-summary-bullet">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-                        <circle cx="8" cy="8" r="7" stroke="rgba(255,255,255,0.5)" strokeWidth="1"/>
-                        <path d="M5 8l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button className="ai-view-full-btn" onClick={() => {}}>
-                  View full summary →
+          {/* Col 3: key takeaway */}
+          <div className="ais-col-takeaway">
+            {takeaway && (
+              <>
+                <div className="ais-takeaway-title">Key Takeaway</div>
+                <p className="ais-takeaway-text">{takeaway}</p>
+              </>
+            )}
+            {whyMatters && (
+              <>
+                <button className="ais-why-link" onClick={() => setShowWhy(v => !v)}>
+                  {showWhy ? 'Hide ↑' : 'Why this matters →'}
                 </button>
-              </div>
+                {showWhy && (
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, marginTop: 8, padding: '8px 10px', background: '#EFF6FF', borderRadius: 6 }}>
+                    {whyMatters}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
 
-              {/* Right: takeaway */}
-              <div className="ai-summary-right">
-                {takeaway && (
-                  <div className="ai-takeaway-box">
-                    <div className="ai-takeaway-label">Key Takeaway</div>
-                    <p className="ai-takeaway-text">{takeaway}</p>
-                  </div>
-                )}
-                {whyMatters && (
-                  <div className="ai-why-box">
-                    <div className="ai-why-label">Why it matters</div>
-                    <p className="ai-why-text">{whyMatters}</p>
-                    <button style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: 4 }}>
-                      Why this matters →
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          );
-        })()}
-      </div>
+          {/* Col 4: illustration */}
+          <div className="ais-col-illus">
+            <DashboardIllustration />
+          </div>
+
+        </div>
+      )}
     </div>
   );
 }

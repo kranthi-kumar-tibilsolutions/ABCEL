@@ -38,69 +38,91 @@ async function callCerebras(messages, stream = false, maxTokens = 600) {
 }
 
 // ── Mistral: fallback LLM ─────────────────────────────────────────────────────
-async function callMistral(messages, stream = false, maxTokens = 600) {
+// jsonMode: when true, adds response_format=json_object — ONLY safe when the
+// prompt shows a filled-in JSON template (not just a field list description).
+async function callMistral(messages, stream = false, maxTokens = 600, jsonMode = true) {
   const { default: fetch } = await import('node-fetch');
+  const body = {
+    model:       'mistral-small-latest',
+    messages,
+    max_tokens:  maxTokens,
+    stream,
+    temperature: 0.3,
+  };
+  if (!stream && jsonMode) body.response_format = { type: 'json_object' };
   return fetch('https://api.mistral.ai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`,
       'Content-Type':  'application/json',
     },
-    body: JSON.stringify({
-      model:       process.env.MISTRAL_MODEL || 'mistral-small-latest',
-      messages,
-      max_tokens:  maxTokens,
-      stream,
-      temperature: 0.3,
-    }),
+    body: JSON.stringify(body),
   });
 }
 
-// ── Unified call: Cerebras first, silent fallback to Mistral ─────────────────
-async function callLLM(messages, stream = false, maxTokens = 600) {
+// ── Unified call: Mistral primary, Cerebras fast fallback ────────────────────
+// Mistral is primary: generous rate limits, reliable for structured JSON.
+// Cerebras is fallback: ultra-fast inference when Mistral is unavailable.
+async function callLLM(messages, stream = false, maxTokens = 600, jsonMode = true) {
   try {
-    const res = await callCerebras(messages, stream, maxTokens);
-    if (res.ok) { console.log('[LLM] ✓ Cerebras responded'); return res; }
-    throw new Error(`Cerebras HTTP ${res.status}`);
+    const res = await callMistral(messages, stream, maxTokens, jsonMode);
+    if (res.ok) { console.log('[LLM] ✓ Mistral responded'); return res; }
+    throw new Error(`Mistral HTTP ${res.status}`);
   } catch (err) {
-    console.warn(`[LLM] Cerebras failed (${err.message}) — falling back to Mistral`);
-    const res = await callMistral(messages, stream, maxTokens);
-    if (res.ok) console.log('[LLM] ✓ Mistral responded');
-    else console.error(`[LLM] Mistral also failed: HTTP ${res.status}`);
+    console.warn(`[LLM] Mistral failed (${err.message}) — falling back to Cerebras`);
+    const res = await callCerebras(messages, stream, maxTokens);
+    if (res.ok) console.log('[LLM] ✓ Cerebras responded');
+    else console.error(`[LLM] Cerebras also failed: HTTP ${res.status}`);
     return res;
   }
 }
 
-// ── Repair truncated JSON (closes unclosed strings/braces) ───────────────────
+// ── Repair truncated JSON (closes unclosed strings/arrays/objects) ───────────
 function parseJSON(raw) {
-  const text = raw.replace(/```json|```/g, '').trim();
-  // Try direct parse first
+  const text = raw.replace(/```json\n?|```/g, '').trim();
   try { return JSON.parse(text); } catch {}
 
-  // Find start of root object
   const start = text.indexOf('{');
   if (start < 0) throw new Error('No JSON object found in response');
-  let s = text.slice(start);
+  const s = text.slice(start);
 
-  // Walk to find last complete top-level closing brace
-  let depth = 0, inStr = false, esc = false, lastClose = -1;
+  // Walk the string tracking open structures via a stack
+  let inStr = false, esc = false;
+  const stack = [];        // holds '}' or ']' — what still needs closing
+  let lastSafeEnd = -1;   // position after last time stack drained to empty
+
   for (let i = 0; i < s.length; i++) {
     const c = s[i];
-    if (esc)      { esc = false; continue; }
+    if (esc)               { esc = false;  continue; }
     if (c === '\\' && inStr) { esc = true; continue; }
-    if (c === '"') { inStr = !inStr; continue; }
-    if (inStr)    continue;
-    if (c === '{' || c === '[') depth++;
-    if (c === '}' || c === ']') { depth--; if (depth === 0) lastClose = i; }
-  }
-  if (lastClose > 0) {
-    try { return JSON.parse(s.slice(0, lastClose + 1)); } catch {}
+    if (c === '"')           { inStr = !inStr; continue; }
+    if (inStr)               continue;
+    if      (c === '{') stack.push('}');
+    else if (c === '[') stack.push(']');
+    else if (c === '}' || c === ']') {
+      stack.pop();
+      if (stack.length === 0) lastSafeEnd = i + 1;
+    }
   }
 
-  // Last resort: truncate at last complete key-value before an incomplete string
-  const truncated = s.replace(/,?\s*"[^"]*$/, '').replace(/,\s*$/, '');
-  const closed = truncated + '}';
-  try { return JSON.parse(closed); } catch {}
+  // A complete root-level object exists somewhere — use it
+  if (lastSafeEnd > 0) {
+    try { return JSON.parse(s.slice(0, lastSafeEnd)); } catch {}
+  }
+
+  // Repair truncated response:
+  // if we ended mid-string, back up to before the opening quote
+  let repaired = inStr ? s.slice(0, s.lastIndexOf('"')) : s;
+
+  repaired = repaired
+    .replace(/,?\s*"[^"]*$/, '')   // strip incomplete string key or value
+    .replace(/:\s*[\w.]*$/, '')    // strip dangling colon + partial value
+    .replace(/,\s*$/, '')          // strip trailing comma
+    .trimEnd();
+
+  // Close every still-open bracket/brace in the correct order
+  const closers = [...stack].reverse().join('');
+  try { return JSON.parse(repaired + closers); } catch {}
 
   throw new Error('Could not parse or repair AI JSON response');
 }
@@ -163,7 +185,8 @@ Respond ONLY with valid JSON (no markdown, no backticks):
 }`;
 
   try {
-    const r       = await callLLM([{ role: 'user', content: prompt }], false, 800);
+    const r = await callLLM([{ role: 'user', content: prompt }], false, 800);
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e?.error?.message || `LLM HTTP ${r.status}`); }
     const data    = await r.json();
     const content = data.choices?.[0]?.message?.content;
     if (!content) throw new Error('AI returned empty response. Please retry.');
@@ -197,7 +220,8 @@ Respond ONLY with valid JSON:
 }`;
 
   try {
-    const r       = await callLLM([{ role: 'user', content: prompt }], false, 700);
+    const r = await callLLM([{ role: 'user', content: prompt }], false, 700);
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e?.error?.message || `LLM HTTP ${r.status}`); }
     const data    = await r.json();
     const content = data.choices?.[0]?.message?.content;
     if (!content) throw new Error('AI returned empty response. Please retry.');
@@ -209,10 +233,11 @@ Respond ONLY with valid JSON:
 
 // ── CALL 3: Business Drill-Down AI Insight ────────────────────────────────────
 router.post('/business-insight', async (req, res) => {
-  const { businessName } = req.body;
+  const { businessName, business } = req.body;
+  const name       = businessName || business;
   const businesses = read('businesses.json') || [];
   const meta       = read('meta.json')       || {};
-  const biz = businesses.find(b => b.name === businessName);
+  const biz = businesses.find(b => b.name === name);
   if (!biz) return res.status(404).json({ error: 'Business not found' });
 
   const prompt = `You are an HR analytics AI. Analyse this business.
@@ -232,11 +257,21 @@ Respond ONLY with valid JSON:
 }`;
 
   try {
-    const r       = await callLLM([{ role: 'user', content: prompt }], false, 400);
+    const r = await callLLM([{ role: 'user', content: prompt }], false, 400);
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e?.error?.message || `LLM HTTP ${r.status}`); }
     const data    = await r.json();
     const content = data.choices?.[0]?.message?.content;
     if (!content) throw new Error('AI returned empty response. Please retry.');
-    res.json(parseJSON(content));
+    const p = parseJSON(content);
+    res.json({
+      summary:         p.strength || p.risk || '',
+      strengths:       p.strength       ? [p.strength]       : [],
+      concerns:        [p.risk, p.cohortToWatch].filter(Boolean),
+      recommendations: p.recommendation ? [p.recommendation] : [],
+      // keep flat fields for any other consumers
+      strength: p.strength, risk: p.risk,
+      cohortToWatch: p.cohortToWatch, recommendation: p.recommendation,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -287,179 +322,342 @@ ${buildContext(dimension)}`;
 });
 
 // ── CALL 5: Focus Areas ───────────────────────────────────────────────────────
+// Uses a filled-in JSON template (same pattern as /summary) so the model
+// fills in values rather than emitting empty objects.
+// jsonMode is OFF — template approach works better without it.
 router.post('/focus-areas', async (_req, res) => {
   const units = read('units.json') || [];
-  const critical  = units.filter(u => u.cluster === 'critical').slice(0, 3);
-  const polarised = units.filter(u => u.cluster === 'polarised').slice(0, 3);
-  const thriving  = units.filter(u => u.cluster === 'thriving').slice(0, 3);
+  const meta  = read('meta.json')  || {};
+  const avg   = meta.group_avg || 4.46;
 
-  const prompt = `You are an HR analytics AI. Generate focus area card content.
+  const byScore = (a, b) => (a.overall ?? 0) - (b.overall ?? 0); // asc = worst first
+  const critical  = units.filter(u => u.cluster === 'critical').sort(byScore)[0]
+                 || units.filter(u => u.cluster === 'atrisk').sort(byScore)[0];
+  const polarised = units.filter(u => u.cluster === 'polarised')[0]
+                 || units.filter(u => u.cluster === 'atrisk').sort(byScore)[1] // second-worst atrisk
+                 || units.filter(u => u.cluster === 'atrisk').sort(byScore)[0];
+  const thriving  = units.filter(u => u.cluster === 'thriving').sort((a,b) => (b.overall??0)-(a.overall??0))[0]
+                 || units.filter(u => u.cluster === 'atrisk').sort((a,b) => (b.overall??0)-(a.overall??0))[0];
 
-Critical BUs: ${JSON.stringify(critical.map(u => ({ name: u.name, score: u.overall, categories: u.categories })))}
-Polarised BUs: ${JSON.stringify(polarised.map(u => ({ name: u.name, score: u.overall })))}
-Thriving BUs: ${JSON.stringify(thriving.map(u => ({ name: u.name, score: u.overall })))}
+  function cardPrompt(bu, cardType) {
+    const isBright = cardType === 'brightSpots';
+    const dir      = isBright ? 'up' : 'down';
+    const badge    = isBright ? 'High Performer' : cardType === 'criticalWatchlist' ? 'Critical Risk' : 'Emerging Risk';
+    const q1hint   = isBright
+      ? 'a positive quote about team spirit or growth'
+      : 'a pain-point quote about leadership or workload';
 
-Respond ONLY with valid JSON:
+    return `You are an HR analytics AI for Aditya Birla Group.
+Write a focus area card for this business unit.
+
+BU: ${bu.name}
+Score: ${bu.overall}/5.00  |  Group avg: ${avg}/5.00  |  ~${bu.respondent_count || 350} respondents
+Card type: ${cardType}
+
+Respond ONLY with valid JSON (no markdown, no explanation):
 {
-  "criticalWatchlist": {
-    "buName":  "exact BU name from Critical BUs list",
-    "badge":   "Open Conflict",
-    "quote1":  "realistic employee voice quote about a specific problem",
-    "quote2":  "second realistic employee voice quote",
-    "stat":    "Polarization ↑ 0.31 (was 0.18)",
-    "impact":  "~1,250 employees",
-    "sparklineDirection": "down"
-  },
-  "emergingRisks": {
-    "buName":  "exact BU name from Polarised BUs list",
-    "badge":   "Polarised",
-    "quote1":  "realistic employee voice quote",
-    "quote2":  "second realistic employee voice quote",
-    "stat":    "Engagement ↓ 0.18 vs last wave",
-    "impact":  "~900 employees",
-    "sparklineDirection": "down"
-  },
-  "brightSpots": {
-    "buName":  "exact BU name from Thriving BUs list",
-    "badge":   "Thriving",
-    "quote1":  "positive employee voice quote",
-    "quote2":  "second positive employee voice quote",
-    "stat":    "Engagement ↑ 0.12 vs last wave",
-    "impact":  "~1,100 employees",
-    "sparklineDirection": "up"
-  }
+  "buName": "${bu.name}",
+  "badge": "${badge}",
+  "quote1": "${q1hint} — write the actual quote here, max 18 words",
+  "quote2": "a second realistic employee first-person quote, max 18 words",
+  "stat": "Score ${bu.overall}/5.00",
+  "impact": "~${bu.respondent_count || 350} employees",
+  "sparklineDirection": "${dir}"
 }`;
+  }
+
+  const callCard = (bu, type) =>
+    bu ? callLLM([{ role: 'user', content: cardPrompt(bu, type) }], false, 350, false) : null;
 
   try {
-    const r       = await callLLM([{ role: 'user', content: prompt }], false, 700);
-    const data    = await r.json();
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) throw new Error('AI returned empty response. Please retry.');
-    res.json(parseJSON(content));
+    const [cRes, pRes, tRes] = await Promise.all([
+      callCard(critical,  'criticalWatchlist'),
+      callCard(polarised, 'emergingRisks'),
+      callCard(thriving,  'brightSpots'),
+    ]);
+
+    const extract = async (r) => {
+      if (!r) return null;
+      if (!r.ok) return null;
+      const d = await r.json();
+      const c = d.choices?.[0]?.message?.content;
+      if (!c) return null;
+      try {
+        const parsed = parseJSON(c);
+        // Guard against empty-object response from model
+        return parsed && parsed.buName ? parsed : null;
+      } catch { return null; }
+    };
+
+    const fallback = (bu, type) => bu ? {
+      buName:             bu.name,
+      badge:              type === 'brightSpots' ? 'High Performer' : type === 'criticalWatchlist' ? 'Critical Risk' : 'Emerging Risk',
+      quote1:             type === 'brightSpots' ? 'Our team collaboration has improved significantly this year.' : 'Communication from leadership has been inconsistent lately.',
+      quote2:             type === 'brightSpots' ? 'I feel genuinely valued and supported in my role here.' : 'I am not sure my feedback reaches the right people.',
+      stat:               `Score ${bu.overall}/5.00`,
+      impact:             `~${bu.respondent_count || 350} employees`,
+      sparklineDirection: type === 'brightSpots' ? 'up' : 'down',
+    } : null;
+
+    const [critCard, emergCard, brightCard] = await Promise.all([
+      extract(cRes),
+      extract(pRes),
+      extract(tRes),
+    ]);
+
+    res.json({
+      criticalWatchlist: critCard  || fallback(critical,  'criticalWatchlist') || {},
+      emergingRisks:     emergCard || fallback(polarised, 'emergingRisks')     || {},
+      brightSpots:       brightCard|| fallback(thriving,  'brightSpots')       || {},
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ── CALL 6: InsightsStudio Skill Analysis (8-skill agent system) ──────────────
+// ── CALL 6: InsightsStudio — True 3-Step Agentic Pipeline (SSE) ───────────────
+// Each step is a real LLM call whose output feeds the next step.
+// Step 1 discovers patterns  →  Step 2 investigates WHY  →  Step 3 prescribes actions.
 const SKILLS = {
   'leadership-effectiveness': {
     label: 'Leadership Effectiveness',
-    goal: 'Analyse how senior and middle leadership is perceived across BUs. Find where leadership scores are weakest, where they correlate with low engagement, and which specific leadership behaviours need attention.',
+    goal:  'Analyse how senior and middle leadership is perceived across BUs. Find where leadership scores are weakest and correlate with low engagement.',
     chartType: 'bar',
   },
   'communication': {
     label: 'Communication',
-    goal: 'Identify communication gaps between leadership and employees. Find BUs where communication scores are lowest and correlate with engagement drops.',
+    goal:  'Identify communication gaps between leadership and employees. Find BUs where communication scores are lowest and correlate with engagement drops.',
     chartType: 'heatmap',
   },
   'recognition-reward': {
     label: 'Recognition & Reward',
-    goal: 'Analyse recognition and reward perception across BUs and cohorts. Find which groups feel least recognised and what impact this has on engagement and intent to stay.',
+    goal:  'Analyse recognition and reward perception across BUs and cohorts. Find which groups feel least recognised and the impact on intent to stay.',
     chartType: 'bar',
   },
   'growth-development': {
     label: 'Growth & Development',
-    goal: 'Identify where employees feel least supported in career growth and skill development. Find the BUs and cohorts with the biggest development gaps, especially Gen Z.',
+    goal:  'Identify where employees feel least supported in career growth. Find BUs and cohorts with the biggest development gaps, especially Gen Z.',
     chartType: 'bar',
   },
   'work-life-balance': {
     label: 'Work-Life Balance',
-    goal: 'Find where workload and wellbeing scores are most concerning. Identify BUs at risk of burnout based on low wellbeing combined with low engagement scores.',
+    goal:  'Find where workload and wellbeing scores are most concerning. Identify BUs at risk of burnout from low wellbeing combined with low engagement.',
     chartType: 'scatter',
   },
   'team-collaboration': {
     label: 'Team Collaboration',
-    goal: 'Analyse team cohesion and collaboration scores. Find polarised teams (high variance) where some employees are engaged but others are not — a hidden risk.',
+    goal:  'Analyse team cohesion scores. Find polarised teams (high variance) where some employees are engaged but others are not — a hidden risk.',
     chartType: 'heatmap',
   },
   'psychological-safety': {
     label: 'Psychological Safety',
-    goal: 'Find BUs where employees feel least safe to speak up, give feedback, or raise concerns. Correlate with Performance Culture scores as a proxy.',
+    goal:  'Find BUs where employees feel least safe to speak up. Correlate with Performance Culture scores as a proxy for psychological safety.',
     chartType: 'scatter',
   },
   'manager-support': {
     label: 'Manager Support',
-    goal: 'Deep-dive on Manager Effectiveness scores. Find which managers (by BU) are underperforming. Identify the gap between how managers rate themselves vs how their teams rate them.',
+    goal:  'Deep-dive on Manager Effectiveness scores. Find which BUs have underperforming managers and the gap vs group average.',
     chartType: 'bar',
   },
 };
 
-router.post('/skill-analysis', async (req, res) => {
-  const { skill, dimension = 'Business Unit' } = req.body;
-  const skillDef = SKILLS[skill];
-  if (!skillDef) return res.status(400).json({ error: `Unknown skill: ${skill}` });
+// Helper: make one LLM call and parse the JSON result.
+// jsonMode is OFF — the prompt already says "Respond ONLY with valid JSON".
+// Retries once on empty content (Mistral fallback occasionally returns empty).
+async function agentStep(messages, maxTokens, stepLabel) {
+  for (let attempt = 0; attempt <= 1; attempt++) {
+    if (attempt > 0) {
+      console.warn(`[AGENT] ${stepLabel} empty content — retrying after 2s`);
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    const r = await callLLM(messages, false, maxTokens, false);
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(`${stepLabel} failed: ${e?.error?.message || `HTTP ${r.status}`}`);
+    }
+    const data    = await r.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (content) return parseJSON(content);
+  }
+  throw new Error(`${stepLabel} returned empty response`);
+}
 
+router.post('/skill-analysis', async (req, res) => {
+  const { skill, skills, dimension = 'Business Unit' } = req.body;
+  // Accept either a single skill string or an array of skill ids
+  const skillIds = skills?.length ? skills : (skill ? [skill] : []);
+  if (!skillIds.length) return res.status(400).json({ error: 'No skill selected' });
+  const skillDefs = skillIds.map(id => SKILLS[id]).filter(Boolean);
+  if (!skillDefs.length) return res.status(400).json({ error: `Unknown skill: ${skillIds[0]}` });
+  // Merge multiple skills into one combined focus
+  const skillDef = {
+    label:     skillDefs.map(s => s.label).join(' & '),
+    goal:      skillDefs.map(s => s.goal).join('\n'),
+    chartType: skillDefs[0].chartType,
+  };
+
+  // SSE setup — client sees live step progress
+  res.setHeader('Content-Type',  'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection',    'keep-alive');
+  res.flushHeaders();
+
+  const emit = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
+
+  // ── Data preparation ───────────────────────────────────────────────────────
   const meta       = read('meta.json')       || {};
   const businesses = read('businesses.json') || [];
   const units      = read('units.json')      || [];
   const cohorts    = read('cohorts.json')    || {};
 
-  const sorted     = [...units].sort((a, b) => (b.overall ?? b.score ?? 0) - (a.overall ?? a.score ?? 0));
-  const topBUs     = sorted.slice(0, 5);
-  const bottomBUs  = sorted.slice(-5).reverse();
-  const highVar    = [...units].sort((a, b) => (b.variance ?? 0) - (a.variance ?? 0)).slice(0, 5);
+  const sorted    = [...units].sort((a, b) => (b.overall ?? b.score ?? 0) - (a.overall ?? a.score ?? 0));
+  const topBUs    = sorted.slice(0, 6);
+  const bottomBUs = sorted.slice(-6).reverse();
 
-  const context = `
-Organisation: ${meta.survey_name || 'Employee Survey'}
-Group average: ${meta.group_avg} / 5
-Total respondents: ${meta.total_respondents}
-Weakest category: ${meta.weakest_category}
-Strongest category: ${meta.strongest_category}
+  // Compact biz context — category scores only, no verbose descriptions
+  const bizContext = businesses.map(b =>
+    `${b.name} (${b.overall ?? b.score}): ${Object.entries(b.categories || {}).map(([k,v]) => `${k}=${v}`).join(', ')}`
+  ).join('\n');
 
-Top 5 BUs: ${topBUs.map(u => `${u.name} (${u.overall ?? u.score})`).join(', ')}
-Bottom 5 BUs: ${bottomBUs.map(u => `${u.name} (${u.overall ?? u.score})`).join(', ')}
-High variance BUs: ${highVar.map(u => `${u.name} variance=${u.variance ?? 'N/A'}`).join(', ')}
+  const cohortContext = Object.entries(cohorts).map(([dim, items]) =>
+    `${dim}: ${(items || []).map(c => `${c.name || c.label}=${c.overall ?? c.score}`).join(', ')}`
+  ).join('\n');
 
-All businesses with category scores:
-${businesses.map(b => `${b.name}: ${Object.entries(b.categories || {}).map(([k,v]) => `${k}=${v}`).join(', ')}`).join('\n')}
+  const baseContext = `ABG Employee Survey — ${meta.survey_name || '2026'}
+Group avg: ${meta.group_avg}/5 | Respondents: ${meta.total_respondents} | BUs: ${meta.total_units}
+Top BUs: ${topBUs.map(u => `${u.name}(${u.overall ?? u.score})`).join(', ')}
+Bottom BUs: ${bottomBUs.map(u => `${u.name}(${u.overall ?? u.score})`).join(', ')}`;
 
-Cohort data:
-${Object.entries(cohorts).map(([dim, items]) => `${dim}: ${(items||[]).map(c => `${c.name || c.label}=${c.overall ?? c.score}`).join(', ')}`).join('\n')}
-`.trim();
+  try {
+    // ══════════════════════════════════════════════════════════════════════════
+    // AGENT STEP 1 — PATTERN DISCOVERY
+    // Goal: Scan ALL data and surface the 3 strongest signals for this skill.
+    // This step has NO prior context — the AI must discover patterns itself.
+    // ══════════════════════════════════════════════════════════════════════════
+    emit({ step: 1, label: 'Scanning data for patterns…', done: false });
+    console.log(`[AGENT] Step 1 — Pattern Discovery (${skillDef.label})`);
 
-  const prompt = `You are an expert HR analytics AI conducting an agentic skill analysis.
+    const step1 = await agentStep([{ role: 'user', content:
+`You are an HR data analyst agent. Scan this data and find the 3 most significant patterns related to ${skillDef.label}.
 
-SKILL: ${skillDef.label}
-ANALYTICAL GOAL: ${skillDef.goal}
+SKILL FOCUS: ${skillDef.goal}
 DIMENSION: ${dimension}
 
 DATA:
-${context}
+${baseContext}
 
-You are acting as an autonomous analyst agent. Do not just summarise —
-reason through the data, find patterns, make connections, and produce
-actionable intelligence.
+ALL BUSINESSES WITH SCORES:
+${bizContext}
 
-Respond ONLY with valid JSON (no markdown, no backticks):
+Respond ONLY with valid JSON:
 {
-  "skillLabel": "${skillDef.label}",
-  "chartType": "${skillDef.chartType}",
-  "headline": "One bold finding in 10 words or less",
-  "agentReasoning": "3-4 sentences explaining how you reached this conclusion — show your analytical thinking",
-  "keyFindings": [
-    "Finding 1 with specific business name and score",
-    "Finding 2 with specific business name and score",
-    "Finding 3 with specific business name and score"
+  "patterns": [
+    "Pattern 1 — name the specific business/BU and its exact score",
+    "Pattern 2 — name the specific business/BU and its exact score",
+    "Pattern 3 — name the specific business/BU and its exact score"
   ],
-  "riskBUs": ["BU name 1", "BU name 2", "BU name 3"],
-  "brightSpotBUs": ["BU name 1", "BU name 2"],
-  "priorityActions": [
-    { "rank": 1, "action": "Specific action", "owner": "HR/Manager/Leadership", "timeline": "30 days", "expectedImpact": "specific outcome" },
-    { "rank": 2, "action": "Specific action", "owner": "HR/Manager/Leadership", "timeline": "90 days", "expectedImpact": "specific outcome" },
-    { "rank": 3, "action": "Specific action", "owner": "HR/Manager/Leadership", "timeline": "6 months", "expectedImpact": "specific outcome" }
-  ],
-  "cohortInsight": "Which cohort is most affected by this skill dimension and why"
-}`;
+  "riskBUs": ["exact BU name 1", "exact BU name 2", "exact BU name 3"],
+  "brightSpotBUs": ["exact BU name 1", "exact BU name 2"],
+  "keyMetric": "The single most striking number you found, with context"
+}`
+    }], 450, 'Step 1');
 
-  try {
-    const r       = await callLLM([{ role: 'user', content: prompt }], false, 1200);
-    const data    = await r.json();
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) throw new Error('AI returned empty response. Please retry.');
-    res.json(parseJSON(content));
+    emit({ step: 1, label: 'Patterns discovered', done: true, finding: step1.keyMetric });
+    console.log(`[AGENT] Step 1 done — risk BUs: ${(step1.riskBUs || []).join(', ')}`);
+    await new Promise(r => setTimeout(r, 800)); // brief pause between steps
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // AGENT STEP 2 — ROOT CAUSE INVESTIGATION
+    // Goal: Take Step 1's findings as fact and dig into WHY.
+    // Uses cohort data (gender/generation/tenure) that Step 1 didn't see.
+    // ══════════════════════════════════════════════════════════════════════════
+    emit({ step: 2, label: `Investigating why ${(step1.riskBUs || [])[0] || 'risk BUs'} are struggling…`, done: false });
+    console.log(`[AGENT] Step 2 — Root Cause Investigation`);
+
+    const step2 = await agentStep([{ role: 'user', content:
+`You are an HR investigation agent analysing ${skillDef.label} at Aditya Birla Group.
+
+Step 1 found these patterns:
+${(step1.patterns || []).map((p, i) => `${i + 1}. ${p}`).join('\n')}
+At-risk BUs: ${(step1.riskBUs || []).join(', ')}
+
+Cohort scores (use these to explain WHY the at-risk BUs are struggling):
+${cohortContext}
+
+Respond ONLY with valid JSON. All values must be plain strings — no nested objects or arrays.
+{
+  "cohortFindings": "One sentence: which cohort (Gen Z / short-tenure / Non-Management) scores lowest and by how much vs group avg",
+  "rootCause": "One sentence: the specific structural reason these BUs underperform on ${skillDef.label}",
+  "agentReasoning": "Two to three sentences connecting Step 1 patterns to the cohort gap. Name specific scores."
+}`
+    }], 800, 'Step 2');
+
+    emit({ step: 2, label: 'Root causes identified', done: true });
+    console.log(`[AGENT] Step 2 done — cohort: ${(step2.cohortFindings || '').slice(0, 60)}…`);
+    await new Promise(r => setTimeout(r, 800)); // brief pause between steps
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // AGENT STEP 3 — ACTION GENERATION
+    // Goal: Synthesise Steps 1+2 into specific, ownable recommendations.
+    // This agent sees ONLY the findings — forces real synthesis, not re-scan.
+    // ══════════════════════════════════════════════════════════════════════════
+    emit({ step: 3, label: 'Generating priority actions…', done: false });
+    console.log(`[AGENT] Step 3 — Action Synthesis`);
+
+    const step3 = await agentStep([{ role: 'user', content:
+`You are an HR strategy agent finalising a ${skillDef.label} analysis for Aditya Birla Group.
+
+Investigation findings:
+Patterns: ${(step1.patterns || []).join(' | ')}
+At-risk BUs: ${(step1.riskBUs || []).join(', ')}
+Bright spots: ${(step1.brightSpotBUs || []).join(', ')}
+Root cause: ${step2.rootCause || 'Not identified'}
+Cohort impact: ${step2.cohortFindings || 'Not identified'}
+
+Respond ONLY with valid JSON (no markdown):
+{
+  "headline": "Leadership gap in 3 BUs threatens Group-wide engagement",
+  "keyFindings": [
+    "International JV Ops scores 2.76 on Leadership, 1.7 pts below group avg",
+    "Gen Z employees rate leadership 0.34 pts lower than senior cohorts",
+    "Fashion Retail North shows lowest manager visibility at 2.85"
+  ],
+  "priorityActions": [
+    { "rank": 1, "action": "Launch 90-day leadership coaching for bottom-3 BU managers", "owner": "HR Business Partner", "timeline": "30 days", "expectedImpact": "0.3pt leadership score improvement in 1 quarter" },
+    { "rank": 2, "action": "Introduce monthly skip-level listening sessions in at-risk BUs", "owner": "Senior Leadership", "timeline": "90 days", "expectedImpact": "Reduce leadership perception gap by 50%" },
+    { "rank": 3, "action": "Build Gen Z onboarding module covering leadership access and visibility", "owner": "L&D / HR", "timeline": "6 months", "expectedImpact": "Close Gen Z-senior leadership gap from 0.34 to under 0.15" }
+  ]
+}`
+    }], 600, 'Step 3');
+
+    emit({ step: 3, label: 'Recommendations ready', done: true });
+    console.log(`[AGENT] Step 3 done — headline: ${step3.headline}`);
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // MERGE — Combine all 3 agent outputs into the final result object
+    // ══════════════════════════════════════════════════════════════════════════
+    const finalResult = {
+      skillLabel:      skillDef.label,
+      chartType:       skillDef.chartType,
+      headline:        step3.headline        || step1.keyMetric  || '',
+      agentReasoning:  step2.agentReasoning  || '',
+      keyFindings:     step3.keyFindings     || step1.patterns   || [],
+      riskBUs:         step1.riskBUs         || [],
+      brightSpotBUs:   step1.brightSpotBUs   || [],
+      priorityActions: step3.priorityActions || [],
+      cohortInsight:   step2.cohortFindings  || '',
+    };
+
+    emit({ result: finalResult });
+    res.write('data: [DONE]\n\n');
+    res.end();
+    console.log(`[AGENT] ✓ ${skillDef.label} analysis complete`);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[AGENT] Pipeline error:', err.message);
+    emit({ error: err.message });
+    res.write('data: [DONE]\n\n');
+    res.end();
   }
 });
 

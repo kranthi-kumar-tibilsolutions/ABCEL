@@ -27,6 +27,7 @@ export default function BusinessDetail() {
   const { selectedBusiness, navigate, units, businesses, dimension } = useContext(AppContext);
   const [insight,      setInsight]     = useState(null);
   const [loadInsight,  setLoadInsight] = useState(false);
+  const [showAllBUs,   setShowAllBUs]  = useState(false);
 
   const biz = businesses?.find(b => b.name === selectedBusiness);
   const bizUnits = units?.filter(u => u.business === selectedBusiness) ?? [];
@@ -41,7 +42,7 @@ export default function BusinessDetail() {
       body:    JSON.stringify({ business: selectedBusiness, dimension }),
     })
       .then(r => r.json())
-      .then(d => { setInsight(d); setLoadInsight(false); })
+      .then(d => { setInsight(d.error ? null : d); setLoadInsight(false); })
       .catch(() => setLoadInsight(false));
   }, [selectedBusiness]);
 
@@ -116,12 +117,14 @@ export default function BusinessDetail() {
         {catLabels.length > 2 && (
           <div className="chart-card">
             <div className="chart-title">Category Profile</div>
-            <div style={{ height: 280 }}>
-              <Radar data={radarData} options={{
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { r: { min: 0, max: 5, ticks: { stepSize: 1, font: { size: 10 } }, pointLabels: { font: { size: 10 } } } },
-              }} />
+            <div className="chart-inner">
+              <div style={{ height: 280 }}>
+                <Radar data={radarData} options={{
+                  responsive: true, maintainAspectRatio: false,
+                  plugins: { legend: { display: false } },
+                  scales: { r: { min: 0, max: 5, ticks: { stepSize: 1, font: { size: 10 } }, pointLabels: { font: { size: 10 } } } },
+                }} />
+              </div>
             </div>
           </div>
         )}
@@ -130,21 +133,23 @@ export default function BusinessDetail() {
         {bizUnits.length > 0 && (
           <div className="chart-card">
             <div className="chart-title">Business Units</div>
-            <div style={{ height: Math.max(200, bizUnits.length * 28) }}>
-              <Bar data={barData} options={{
-                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                  x: { min: 2, max: 5, ticks: { font: { size: 10 } } },
-                  y: { ticks: { font: { size: 10 } } },
-                },
-                onClick: (_, el) => {
-                  if (el[0]) {
-                    const unit = bizUnits.slice().sort((a,b) => a.name.localeCompare(b.name))[el[0].index];
-                    if (unit) navigate('bu-detail', { business: selectedBusiness, unit: unit.name });
-                  }
-                },
-              }} />
+            <div className="chart-inner">
+              <div style={{ height: Math.max(200, bizUnits.length * 26) }}>
+                <Bar data={barData} options={{
+                  indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                  plugins: { legend: { display: false } },
+                  scales: {
+                    x: { min: 2, max: 5, ticks: { font: { size: 10 } } },
+                    y: { ticks: { font: { size: 10 } } },
+                  },
+                  onClick: (_, el) => {
+                    if (el[0]) {
+                      const unit = bizUnits.slice().sort((a,b) => a.name.localeCompare(b.name))[el[0].index];
+                      if (unit) navigate('bu-detail', { business: selectedBusiness, unit: unit.name });
+                    }
+                  },
+                }} />
+              </div>
             </div>
           </div>
         )}
@@ -195,7 +200,9 @@ export default function BusinessDetail() {
             </thead>
             <tbody>
               {bizUnits
+                .slice()
                 .sort((a,b) => (b.score??b.overall??0)-(a.score??a.overall??0))
+                .slice(0, showAllBUs ? undefined : 10)
                 .map((u, i) => (
                   <tr
                     key={u.name}
@@ -213,6 +220,20 @@ export default function BusinessDetail() {
                 ))}
             </tbody>
           </table>
+          {bizUnits.length > 10 && (
+            <button
+              onClick={() => setShowAllBUs(v => !v)}
+              style={{
+                marginTop: 10, width: '100%', padding: '9px 0',
+                background: 'none', border: '1px solid var(--border)',
+                borderRadius: 8, fontSize: 12, fontWeight: 600,
+                color: 'var(--blue-primary)', cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              {showAllBUs ? `Show less ↑` : `View more (${bizUnits.length - 10} more) ↓`}
+            </button>
+          )}
         </div>
       )}
     </div>
