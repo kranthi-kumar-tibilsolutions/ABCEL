@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useRef } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import Skeleton from '../shared/Skeleton';
@@ -81,12 +81,12 @@ export default function AiSummary() {
   const [error,     setError]     = useState(null);
   const [genTime,   setGenTime]   = useState(null);
   const [showWhy,   setShowWhy]   = useState(false);
-  const prevDim = useRef(null);
 
   useEffect(() => {
-    // re-fetch whenever dimension changes, or on first load
-    if (dimension === prevDim.current && summaryData) return;
-    prevDim.current = dimension;
+    // summaryData is stored in context — it persists across navigations.
+    // Tag it with the dimension it was generated for so remounting the
+    // component never triggers a refetch for the same dimension.
+    if (summaryData?._dim === dimension) return;
     setSummaryData(null);
     setShowWhy(false);
     setLoading(true);
@@ -99,7 +99,7 @@ export default function AiSummary() {
       .then(r => r.json())
       .then(d => {
         if (d.error) throw new Error(d.error);
-        setSummaryData(d);
+        setSummaryData({ ...d, _dim: dimension });
         setGenTime(new Date());
         setLoading(false);
       })
