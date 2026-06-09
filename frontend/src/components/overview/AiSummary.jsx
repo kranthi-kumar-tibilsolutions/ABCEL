@@ -161,10 +161,6 @@ export default function AiSummary() {
           <div className="ais-col-left">
             <div className="ais-top-row">
               <AiBadge />
-              <div>
-                <div className="ais-title">AI EXECUTIVE SUMMARY</div>
-                <div className="ais-sub">{timeAgo}</div>
-              </div>
               <button
                 className="ais-refresh-btn"
                 title="Regenerate"
@@ -172,6 +168,10 @@ export default function AiSummary() {
               >
                 <RefreshCw size={13} />
               </button>
+            </div>
+            <div>
+              <div className="ais-title">AI EXECUTIVE SUMMARY</div>
+              <div className="ais-sub">{timeAgo}</div>
             </div>
             <div className="ais-intro-block">
               <SparkleCircle />
