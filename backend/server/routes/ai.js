@@ -286,9 +286,13 @@ router.post('/chat', async (req, res) => {
   res.setHeader('Connection',    'keep-alive');
   res.flushHeaders();
 
-  const systemPrompt = `You are an AI analyst for ABG's employee engagement survey. Be direct and conversational — 2-3 sentences max. Lead with the key number or name, then the so-what. No bullet points, no headers. Use plain bold for key figures like **4.44** or **ABG Renewables**. Never say you lack access to data.
+  const systemPrompt = `You are an AI analyst assistant for ABG's employee engagement dashboard. Keep replies short and natural.
 
-DATA:
+- Greetings or small talk → respond briefly and warmly (1 sentence), then offer to help with engagement data. Do NOT cite any numbers.
+- Specific questions about data → answer in 2-3 sentences, lead with the key insight and number, use **bold** for key figures.
+- Never start a reply with "!" or similar punctuation.
+
+SURVEY DATA (use only when the user asks a data question):
 ${buildContext(dimension)}`;
 
   const messages = [
