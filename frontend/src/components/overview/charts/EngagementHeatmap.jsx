@@ -34,7 +34,8 @@ const DIM_LABELS = {
 };
 
 export default function EngagementHeatmap({ onCellClick }) {
-  const { businesses, cohorts, dimension } = useContext(AppContext);
+  const { businesses, filteredBusinesses, cohorts, dimension } = useContext(AppContext);
+  const bizList = filteredBusinesses ?? businesses;
 
   const { rows, cats, rowLabel } = useMemo(() => {
     const dimKey = dimension === 'overall' ? null : dimension;
@@ -43,15 +44,15 @@ export default function EngagementHeatmap({ onCellClick }) {
       const usedCats = items[0]?.categories ? Object.keys(items[0].categories) : CATEGORIES;
       return { rows: items, cats: usedCats, rowLabel: DIM_LABELS[dimKey] ?? dimKey };
     }
-    if (!businesses?.length) return { rows: [], cats: CATEGORIES, rowLabel: 'Business' };
-    const sorted = [...businesses]
+    if (!bizList?.length) return { rows: [], cats: CATEGORIES, rowLabel: 'Business' };
+    const sorted = [...bizList]
       .sort((a, b) => (b.overall ?? b.score ?? 0) - (a.overall ?? a.score ?? 0))
       .slice(0, 15);
-    const usedCats = businesses[0]?.categories
-      ? Object.keys(businesses[0].categories)
+    const usedCats = bizList[0]?.categories
+      ? Object.keys(bizList[0].categories)
       : CATEGORIES;
     return { rows: sorted, cats: usedCats, rowLabel: 'Business' };
-  }, [businesses, cohorts, dimension]);
+  }, [bizList, cohorts, dimension]);
 
   if (!rows.length) return null;
 

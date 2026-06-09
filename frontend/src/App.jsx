@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AppContext }      from './context/AppContext';
 import Sidebar             from './components/layout/Sidebar';
 import TopBar              from './components/layout/TopBar';
 import RightPanel          from './components/layout/RightPanel';
+import FilterDrawer        from './components/layout/FilterDrawer';
 import UploadPage          from './pages/UploadPage';
 import Overview            from './pages/Overview';
 import BusinessDetail      from './pages/BusinessDetail';
@@ -110,6 +111,17 @@ export default function App() {
       .catch(() => {});
   }, []);
 
+  // Derived filtered businesses — respects cluster + minScore filters
+  const filteredBusinesses = useMemo(() => {
+    if (!businesses) return null;
+    const { clusters: fc, minScore: ms } = activeFilters;
+    return businesses.filter(b => {
+      if (fc?.length && !fc.includes(b.cluster)) return false;
+      if (ms > 0 && (b.overall ?? b.score ?? 0) < ms) return false;
+      return true;
+    });
+  }, [businesses, activeFilters]);
+
   const handleUploadComplete = useCallback(() => {
     setSummaryData(null);
     setInsightsData(null);
@@ -124,6 +136,7 @@ export default function App() {
     selectedBU,       setSelectedBU,
     selectedCluster,  setSelectedCluster,
     businesses, units, clusters, cohorts, meta,
+    filteredBusinesses,
     isFiltersOpen, setIsFiltersOpen,
     activeFilters, setActiveFilters,
     summaryData,    setSummaryData,
@@ -154,6 +167,7 @@ export default function App() {
             <RightPanel />
           </div>
         </div>
+        <FilterDrawer />
       </div>
     </AppContext.Provider>
   );
