@@ -286,11 +286,9 @@ router.post('/chat', async (req, res) => {
   res.setHeader('Connection',    'keep-alive');
   res.flushHeaders();
 
-  const systemPrompt = `You are an expert HR analytics AI analyst for Aditya Birla Group.
-Be concise (3-4 sentences). Lead with the insight, support with specific numbers.
-Think like a McKinsey consultant. Use the data provided — never say you lack access.
+  const systemPrompt = `You are an AI analyst for ABG's employee engagement survey. Be direct and conversational — 2-3 sentences max. Lead with the key number or name, then the so-what. No bullet points, no headers. Use plain bold for key figures like **4.44** or **ABG Renewables**. Never say you lack access to data.
 
-DATA CONTEXT:
+DATA:
 ${buildContext(dimension)}`;
 
   const messages = [

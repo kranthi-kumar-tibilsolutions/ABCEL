@@ -21,6 +21,21 @@ function AiChatIcon() {
   );
 }
 
+function renderMd(text) {
+  return text.split('\n').map((line, li, arr) => {
+    const parts = [];
+    const rx = /\*\*(.*?)\*\*/g;
+    let last = 0, m;
+    while ((m = rx.exec(line)) !== null) {
+      if (m.index > last) parts.push(line.slice(last, m.index));
+      parts.push(<strong key={m.index}>{m[1]}</strong>);
+      last = m.index + m[0].length;
+    }
+    if (last < line.length) parts.push(line.slice(last));
+    return <span key={li}>{parts}{li < arr.length - 1 && <br />}</span>;
+  });
+}
+
 function PaperPlaneIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -31,7 +46,7 @@ function PaperPlaneIcon() {
 }
 
 export default function ChatWithData() {
-  const { dimension, navigate } = useContext(AppContext);
+  const { dimension } = useContext(AppContext);
   const [messages, setMessages] = useState([
     { role: 'assistant', content: "Hi! I'm your AI analyst. Ask me anything about employee engagement:" }
   ]);
@@ -113,10 +128,10 @@ export default function ChatWithData() {
       <div className="chat-messages">
         {messages.map((m, i) => (
           <div key={i} className={`chat-msg ${m.role}`}>
-            {m.content || (m.role === 'assistant' && loading && i === messages.length - 1
+            {m.role === 'assistant' && loading && i === messages.length - 1 && !m.content
               ? <span className="chat-typing">●●●</span>
-              : null
-            )}
+              : renderMd(m.content || '')
+            }
           </div>
         ))}
         <div ref={bottomRef} />
