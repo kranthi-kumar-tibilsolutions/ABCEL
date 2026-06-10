@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "description": "Industry and peer benchmarks for employee engagement (5-point favourability scale)",
+    "sources": ["Willis Towers Watson 2025 Employee Engagement Report", "Korn Ferry Engagement Survey 2024", "Gallup State of the Global Workplace 2025", "Mercer 2024 Global Engagement Norms"],
+    "note": "Scores represent mean favourability on a 1-5 Likert scale. Comparisons are illustrative; ensure scoring methodology alignment.",
+    "updated": "2026"
+  },
+  "peers": [
+    { "name": "Tata Group",            "industry": "Conglomerate",       "region": "India",       "score": 4.38, "type": "peer",     "year": 2025 },
+    { "name": "Mahindra Group",         "industry": "Conglomerate",       "region": "India",       "score": 4.32, "type": "peer",     "year": 2025 },
+    { "name": "Reliance Industries",    "industry": "Conglomerate",       "region": "India",       "score": 4.29, "type": "peer",     "year": 2025 },
+    { "name": "Bajaj Group",            "industry": "Conglomerate",       "region": "India",       "score": 4.41, "type": "peer",     "year": 2025 },
+    { "name": "Godrej Group",           "industry": "Conglomerate",       "region": "India",       "score": 4.44, "type": "peer",     "year": 2025 },
+    { "name": "JSW Group",              "industry": "Conglomerate",       "region": "India",       "score": 4.27, "type": "peer",     "year": 2025 }
+  ],
+  "industry": [
+    { "name": "Manufacturing",          "industry": "Manufacturing",      "region": "India",       "score": 3.95, "type": "industry", "year": 2025 },
+    { "name": "Financial Services",     "industry": "BFSI",               "region": "India",       "score": 4.12, "type": "industry", "year": 2025 },
+    { "name": "Technology / IT",        "industry": "Technology",         "region": "India",       "score": 4.28, "type": "industry", "year": 2025 },
+    { "name": "FMCG / Retail",          "industry": "FMCG",               "region": "India",       "score": 4.05, "type": "industry", "year": 2025 },
+    { "name": "Energy & Utilities",     "industry": "Energy",             "region": "India",       "score": 3.88, "type": "industry", "year": 2025 },
+    { "name": "Pharma & Healthcare",    "industry": "Healthcare",         "region": "India",       "score": 4.18, "type": "industry", "year": 2025 },
+    { "name": "Infrastructure",         "industry": "Infrastructure",     "region": "India",       "score": 3.82, "type": "industry", "year": 2025 },
+    { "name": "Telecom",                "industry": "Telecom",            "region": "India",       "score": 4.03, "type": "industry", "year": 2025 }
+  ],
+  "regional": [
+    { "name": "India Top Quartile",     "industry": "All Sectors",        "region": "India",       "score": 4.45, "type": "regional", "year": 2025 },
+    { "name": "India Median",           "industry": "All Sectors",        "region": "India",       "score": 3.90, "type": "regional", "year": 2025 },
+    { "name": "Asia Pacific Average",   "industry": "All Sectors",        "region": "APAC",        "score": 4.08, "type": "regional", "year": 2025 },
+    { "name": "South Asia Average",     "industry": "All Sectors",        "region": "South Asia",  "score": 4.02, "type": "regional", "year": 2025 },
+    { "name": "Global Average",         "industry": "All Sectors",        "region": "Global",      "score": 3.85, "type": "regional", "year": 2025 },
+    { "name": "Global Top Quartile",    "industry": "All Sectors",        "region": "Global",      "score": 4.40, "type": "regional", "year": 2025 }
+  ],
+  "categoryBenchmarks": {
+    "Engagement Index":        { "india_median": 3.92, "india_top_quartile": 4.48, "global_avg": 3.88 },
+    "Leadership":              { "india_median": 3.85, "india_top_quartile": 4.42, "global_avg": 3.78 },
+    "Manager Effectiveness":   { "india_median": 3.98, "india_top_quartile": 4.51, "global_avg": 3.95 },
+    "Development & Career":    { "india_median": 3.75, "india_top_quartile": 4.35, "global_avg": 3.70 },
+    "Performance culture":     { "india_median": 3.80, "india_top_quartile": 4.38, "global_avg": 3.75 },
+    "Onboarding":              { "india_median": 3.88, "india_top_quartile": 4.40, "global_avg": 3.82 }
+  }
+}
