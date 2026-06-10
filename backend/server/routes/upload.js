@@ -47,6 +47,11 @@ router.post('/', upload.single('file'), (req, res) => {
   const dataDir  = path.resolve('./backend/data');
   fs.mkdirSync(dataDir, { recursive: true });
 
+  // Clear previous results so old data never bleeds into the new upload
+  ['businesses.json','units.json','clusters.json','cohorts.json','meta.json'].forEach(f => {
+    try { fs.unlinkSync(path.join(dataDir, f)); } catch {}
+  });
+
   send('uploading', `File received (${(req.file.size / 1024 / 1024).toFixed(1)} MB). Starting analysis...`);
 
   // Try python3 first, fall back to python on Windows

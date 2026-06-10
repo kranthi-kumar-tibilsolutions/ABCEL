@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import abgLogo from '../assets/abg.avif';
 
 const STAGES = {
@@ -16,7 +16,15 @@ export default function UploadPage({ onUploadComplete }) {
   const [logLine,    setLogLine]    = useState('');
   const [errorMsg,   setErrorMsg]   = useState('');
   const [isDragging, setIsDragging] = useState(false);
+  const [hasData,    setHasData]    = useState(false);
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    fetch('/api/status')
+      .then(r => r.json())
+      .then(d => { if (d.ready) setHasData(true); })
+      .catch(() => {});
+  }, []);
 
   const processFile = useCallback(async (file) => {
     if (!file) return;
@@ -163,6 +171,17 @@ export default function UploadPage({ onUploadComplete }) {
           <div className="feature-item">✓ AI insights generated automatically</div>
           <div className="feature-item">✓ Schema-agnostic — works with any column naming</div>
         </div>
+      )}
+
+      {/* Continue with existing data */}
+      {hasData && stage === 'idle' && (
+        <button
+          className="sample-btn"
+          style={{ background: 'var(--blue-primary)', color: '#fff', fontWeight: 700, borderColor: 'transparent' }}
+          onClick={onUploadComplete}
+        >
+          Continue to Dashboard with existing data →
+        </button>
       )}
 
       {/* Sample data option */}

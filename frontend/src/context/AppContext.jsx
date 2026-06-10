@@ -20,7 +20,8 @@ export const AppContext = createContext({
   setSelectedCluster: () => {},
 
   // Global data (fetched in App.jsx)
-  businesses:  [],
+  businesses:          [],
+  filteredBusinesses:  [],
   units:       [],
   clusters:    {},
   cohorts:     {},

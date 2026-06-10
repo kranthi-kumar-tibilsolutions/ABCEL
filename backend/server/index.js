@@ -2,13 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
 const path    = require('path');
-const fs      = require('fs');
-
-// Clear stale data so every server start requires a fresh upload
-const dataDir = path.join(__dirname, '../data');
-['businesses.json','units.json','clusters.json','cohorts.json','meta.json'].forEach(f => {
-  try { fs.unlinkSync(path.join(dataDir, f)); } catch {}
-});
 
 const app = express();
 app.use(cors({ origin: '*' }));

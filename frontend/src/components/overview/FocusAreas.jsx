@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useRef } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { AppContext } from '../../context/AppContext';
 import Skeleton from '../shared/Skeleton';
 
@@ -135,11 +135,9 @@ export default function FocusAreas() {
   const { focusAreasData, setFocusAreasData, dimension, navigate } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(null);
-  const prevDim = useRef(null);
 
   useEffect(() => {
-    if (dimension === prevDim.current && focusAreasData) return;
-    prevDim.current = dimension;
+    if (focusAreasData?._dim === dimension) return;
     setFocusAreasData(null);
     setLoading(true);
     setError(null);
@@ -151,7 +149,7 @@ export default function FocusAreas() {
       .then(r => r.json())
       .then(d => {
         if (d.error) throw new Error(d.error);
-        setFocusAreasData(d);
+        setFocusAreasData({ ...d, _dim: dimension });
         setLoading(false);
       })
       .catch(err => {
