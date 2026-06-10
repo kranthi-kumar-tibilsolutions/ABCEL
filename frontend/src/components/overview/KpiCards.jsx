@@ -27,10 +27,10 @@ function ResponseIcon() {
 function TrophyIcon() {
   return (
     <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-      <path d="M9 23h8M13 19v4" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M6 5H4v5c0 2.5 2 4.5 4.5 4.5" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M20 5h2v5c0 2.5-2 4.5-4.5 4.5" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M8 5h10v6.5a5 5 0 01-10 0V5z" fill="#FEF3C7" stroke="#D97706" strokeWidth="1.5"/>
+      <path d="M9 23h8M13 19v4" stroke="#FBBF24" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M6 5H4v5c0 2.5 2 4.5 4.5 4.5" stroke="#FBBF24" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M20 5h2v5c0 2.5-2 4.5-4.5 4.5" stroke="#FBBF24" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M8 5h10v6.5a5 5 0 01-10 0V5z" fill="#FFEDD5" stroke="#FBBF24" strokeWidth="1.5"/>
     </svg>
   );
 }
@@ -93,7 +93,7 @@ export default function KpiCards() {
       value: meta?.top_business ?? '—',
       sub: meta?.top_score ? `${meta.top_score.toFixed(2)} / 5` : '—',
       icon: <TrophyIcon />,
-      bg: '#FEF3C7',
+      bg: '#FFEDD5',
     },
     {
       label: 'Lowest Performing Business',
@@ -120,9 +120,9 @@ export default function KpiCards() {
               {c.icon}
             </div>
             <div className="kpi-body">
-              <div className={`kpi-label${isExp ? ' wrap' : ''}`}>{c.label}</div>
-              <div className={`kpi-value${isExp ? ' wrap' : ''}`}>{c.value}</div>
-              <div className={`kpi-sub${isExp ? ' wrap' : ''}`}
+              <div className="kpi-label">{c.label}</div>
+              <div className="kpi-value" style={{ fontSize: String(c.value).length > 12 ? 13 : 18 }}>{c.value}</div>
+              <div className="kpi-sub"
                 style={{ color: hasTrend ? (c.sub.trend ? '#16A34A' : '#DC2626') : undefined }}>
                 {hasTrend
                   ? <>{c.sub.trend ? <TrendUpArrow /> : <TrendDownArrow />}{c.sub.text}</>
