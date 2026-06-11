@@ -39,7 +39,7 @@ export default function BenchmarksPage() {
   const catAvgs     = meta?.category_averages ?? {};
   const catBenchmarks = BENCHMARKS.categoryBenchmarks ?? {};
 
-  const allExternal = [...BENCHMARKS.peers, ...BENCHMARKS.industry, ...BENCHMARKS.regional];
+  const allExternal = [...BENCHMARKS.peers];
 
   // Main bar chart — filtered by active tab
   const barData = useMemo(() => {
@@ -71,9 +71,7 @@ export default function BenchmarksPage() {
   }, [catAvgs, catBenchmarks]);
 
   const tabs = [
-    { key: 'peers',    label: 'Peer Conglomerates' },
-    { key: 'industry', label: 'By Industry' },
-    { key: 'regional', label: 'Regional Norms' },
+    { key: 'peers', label: 'Peer Conglomerates' },
   ];
 
   return (

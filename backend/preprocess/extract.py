@@ -256,9 +256,11 @@ BAND_SIGNALS   = ['band', 'level', 'management', 'executive', 'non-mgmt', 'mgmt'
 TENURE_SIGNALS = ['year', 'tenure', '0-2', '3-5', '6+', '< 1', 'months']
 
 GEN_HEADER    = ['generation', 'age group', 'age_group', 'generation cohort']
+AGE_HEADER    = ['cq23', ' age', 'age band', 'age_band', 'age range', 'age bracket']
 GENDER_HEADER = ['gender', 'sex']
 BAND_HEADER   = ['band', 'job band', 'job_band', 'job level', 'job_level', 'grade']
 TENURE_HEADER = ['tenure', 'years of service', 'years_of_service', 'experience']
+AGE_VALUE_SIGNALS = ['<21', '21-', '25-', '30-', '35-', '40-', '45-', '50-', '>55']
 
 
 def detect_dimensions(decoded_df, decode_map):
@@ -318,6 +320,11 @@ def detect_dimensions(decoded_df, decode_map):
             dimensions.setdefault('generation', col)
         elif any(s in sample for s in GEN_SIGNALS) and n <= 6:
             dimensions.setdefault('generation', col)
+
+        if any(s in col_lower for s in AGE_HEADER) and n <= 12:
+            dimensions.setdefault('age_group', col)
+        elif any(s in sample for s in AGE_VALUE_SIGNALS) and n <= 12:
+            dimensions.setdefault('age_group', col)
 
         if any(s in col_lower for s in GENDER_HEADER) and n <= 5:
             dimensions.setdefault('gender', col)
@@ -693,7 +700,7 @@ def parse_excel(excel_path, output_dir):
                 cat_avgs[cat] = round(float(np.mean(vals)), 2)
 
     meta = {
-        "survey_name":         os.path.basename(excel_path).replace('.xlsx', '').replace('.xls', ''),
+        "survey_name":         sys.argv[3] if len(sys.argv) > 3 and sys.argv[3].strip() else os.path.basename(excel_path).replace('.xlsx', '').replace('.xls', ''),
         "total_businesses":    len(businesses),
         "total_units":         len(units),
         "total_respondents":   total_respondents,

@@ -148,7 +148,11 @@ function buildContext(dimension = 'Business Unit') {
     `${k}: ${(units||[]).length} BUs`
   ).join(', ');
 
-  const genderLine = (cohorts.gender||[]).map(c=>`${c.name}=${c.overall}`).join(', ');
+  const genderLine     = (cohorts.gender||[]).map(c=>`${c.name}=${c.overall}`).join(', ');
+  const generationLine = (cohorts.generation||[]).map(c=>`${c.name}=${c.overall}`).join(', ');
+  const ageGroupLine   = (cohorts.age_group||[]).map(c=>`${c.name}=${c.overall}`).join(', ');
+  const jobBandLine    = (cohorts.job_band||[]).map(c=>`${c.name}=${c.overall}`).join(', ');
+  const tenureLine     = (cohorts.tenure||[]).map(c=>`${c.name} yrs=${c.overall}`).join(', ');
 
   return `ABG Vibes Employee Survey — ${meta.survey_name || '2026'}
 Respondents: ${meta.total_respondents || 55457} | Businesses: ${meta.total_businesses || businesses.length} | BUs: ${meta.total_units || 415}
@@ -159,7 +163,11 @@ Dimension: ${dimension}
 TOP/BOTTOM BUSINESSES: ${bizLines}
 
 CLUSTERS: ${clusterLines}
-GENDER: ${genderLine}`.trim();
+GENDER: ${genderLine}
+GENERATION: ${generationLine}
+AGE GROUP (numeric bands): ${ageGroupLine || '(not yet computed — re-upload data to populate)'}
+JOB BAND: ${jobBandLine}
+TENURE (years): ${tenureLine}`.trim();
 }
 
 // ── CALL 1: AI Executive Summary ──────────────────────────────────────────────
@@ -291,6 +299,8 @@ router.post('/chat', async (req, res) => {
 - Greetings or small talk → respond briefly and warmly (1 sentence), then offer to help with engagement data. Do NOT cite any numbers.
 - Specific questions about data → answer in 2-3 sentences, lead with the key insight and number, use **bold** for key figures.
 - Never start a reply with "!" or similar punctuation.
+- "age group" or "age" questions → use GENERATION data (Gen Z, Gen Y, Gen X, Baby Boomer, Traditionalist). There is no separate age column.
+- Never answer an age/generation question using gender data.
 
 SURVEY DATA (use only when the user asks a data question):
 ${buildContext(dimension)}`;
