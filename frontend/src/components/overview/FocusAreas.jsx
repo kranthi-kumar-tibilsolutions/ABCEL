@@ -9,7 +9,7 @@ const CARD_CONFIG = {
     color:      '#DC2626',
     badgeBg:    '#FEE2E2',
     badgeColor: '#DC2626',
-    sparkDir:   'volatile-down',
+
     icon: (
       <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
         <circle cx="16" cy="16" r="15" fill="#DC2626"/>
@@ -24,7 +24,7 @@ const CARD_CONFIG = {
     color:      '#D97706',
     badgeBg:    '#FEF3C7',
     badgeColor: '#D97706',
-    sparkDir:   'volatile-down',
+
     icon: (
       <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
         <circle cx="16" cy="16" r="15" fill="#D97706"/>
@@ -38,7 +38,7 @@ const CARD_CONFIG = {
     color:      '#16A34A',
     badgeBg:    '#DCFCE7',
     badgeColor: '#16A34A',
-    sparkDir:   'volatile-up',
+
     icon: (
       <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
         <circle cx="16" cy="16" r="15" fill="#16A34A"/>
@@ -48,33 +48,25 @@ const CARD_CONFIG = {
   },
 };
 
-/* Generate sparkline points seeded by BU name, trending toward actual score */
-function makeSparkPoints(buName = '', score = 4.4) {
-  const W = 140;
-  const scoreToY = s => Math.max(6, Math.min(64, (5 - s) * 28));
-  let seed = [...buName].reduce((a, c) => a + c.charCodeAt(0), 42);
-  const rand = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
-  const groupAvg = 4.44;
-  const startY = scoreToY(groupAvg);
-  const endY   = scoreToY(score);
-  const n = 10;
-  return Array.from({ length: n }, (_, i) => {
-    const t = i / (n - 1);
-    const base = startY + (endY - startY) * t;
-    const jitter = (rand() - 0.5) * 18;
-    return [Math.round((i / (n - 1)) * W), Math.max(6, Math.min(64, Math.round(base + jitter)))];
-  });
-}
-
-function Sparkline({ buName, score, color }) {
-  const pts = makeSparkPoints(buName, score);
-  const linePath = pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x},${y}`).join(' ');
+function ScoreRing({ score, color }) {
+  const r = 26;
+  const circ = 2 * Math.PI * r;
+  const filled = Math.min(score / 5, 1) * circ;
   return (
-    <svg width="100%" height="100%" viewBox="0 0 140 70"
-      fill="none" preserveAspectRatio="none" style={{ display: 'block' }}>
-      <path d={linePath} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      {pts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.5" fill={color}/>)}
-    </svg>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 4 }}>
+      <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
+        <circle cx="34" cy="34" r={r} stroke="#E5E7EB" strokeWidth="5"/>
+        <circle cx="34" cy="34" r={r} stroke={color} strokeWidth="5"
+          strokeDasharray={`${filled} ${circ}`}
+          strokeLinecap="round"
+          transform="rotate(-90 34 34)"
+        />
+        <text x="34" y="37" textAnchor="middle" fontSize="13" fontWeight="800" fill="#0F172A" fontFamily="inherit">
+          {Number(score).toFixed(2)}
+        </text>
+      </svg>
+      <span style={{ fontSize: 9, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>out of 5</span>
+    </div>
   );
 }
 
@@ -118,11 +110,10 @@ function FocusCard({ cardKey, data, navigate }) {
           </button>
         </div>
 
-        {/* Sparkline panel */}
+        {/* Score ring */}
         <div className="fac-body-right">
-          <Sparkline
-            buName={data.buName}
-            score={parseFloat(data.stat?.match(/[\d.]+/)?.[0] ?? '4.4')}
+          <ScoreRing
+            score={parseFloat(data.stat?.match(/[\d.]+/)?.[0] ?? '0')}
             color={cfg.color}
           />
         </div>

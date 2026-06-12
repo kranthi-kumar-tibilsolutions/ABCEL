@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import { AppContext } from '../../context/AppContext';
 
 function SparkleIcon() {
@@ -62,7 +62,6 @@ function TrendDownArrow() {
 
 export default function KpiCards() {
   const { meta } = useContext(AppContext);
-  const [expanded, setExpanded] = useState(null);
 
   const delta = meta?.group_avg_delta;
   const deltaPositive = delta != null ? delta >= 0 : null;
@@ -107,15 +106,9 @@ export default function KpiCards() {
   return (
     <div className="kpi-grid">
       {cards.map((c) => {
-        const isExp = expanded === c.label;
         const hasTrend = typeof c.sub === 'object' && c.sub?.trend != null;
         return (
-          <div
-            key={c.label}
-            className={`kpi-card${isExp ? ' expanded' : ''}`}
-            onClick={() => setExpanded(isExp ? null : c.label)}
-            style={{ cursor: 'pointer' }}
-          >
+          <div key={c.label} className="kpi-card">
             <div className="kpi-icon" style={{ background: c.bg }}>
               {c.icon}
             </div>

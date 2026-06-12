@@ -77,10 +77,11 @@ function DashboardIllustration() {
 
 export default function AiSummary({ maxBullets = 3 }) {
   const { summaryData, setSummaryData, dimension, navigate } = useContext(AppContext);
-  const [loading,   setLoading]   = useState(false);
-  const [error,     setError]     = useState(null);
-  const [genTime,   setGenTime]   = useState(null);
-  const [showWhy,   setShowWhy]   = useState(false);
+  const [loading,      setLoading]      = useState(false);
+  const [error,        setError]        = useState(null);
+  const [genTime,      setGenTime]      = useState(null);
+  const [showWhy,      setShowWhy]      = useState(false);
+  const [bulletsOpen,  setBulletsOpen]  = useState(false);
 
   useEffect(() => {
     // summaryData is stored in context — it persists across navigations.
@@ -154,74 +155,84 @@ export default function AiSummary({ maxBullets = 3 }) {
         </div>
       )}
 
-      {/* ── Loaded state: 4-column layout ── */}
+      {/* ── Loaded state ── */}
       {summaryData && !loading && (
-        <div className="ais-grid">
+        <>
+          {/* 3-column row: header | takeaway | illustration */}
+          <div className="ais-grid">
 
-          {/* Col 1: header + sparkle + intro + button */}
-          <div className="ais-col-left">
-            <div className="ais-top-row">
-              <AiBadge />
-              <button
-                className="ais-refresh-btn"
-                title="Regenerate"
-                onClick={() => { setSummaryData(null); setError(null); setGenTime(null); }}
-              >
-                <RefreshCw size={13} />
-              </button>
-            </div>
-            <div>
-              <div className="ais-title">AI EXECUTIVE SUMMARY</div>
-              <div className="ais-sub">{timeAgo}</div>
-            </div>
-            <div className="ais-intro-block">
-              <SparkleCircle />
-              <p className="ais-intro-text">Here&rsquo;s what I found from this survey wave.</p>
-            </div>
-            <div style={{ flex: 1 }} />
-            <button className="ais-view-btn" onClick={() => navigate && navigate('ai-insights')}>View full summary &rarr;</button>
-          </div>
-
-          {/* Col 2: bullet list */}
-          <div className="ais-col-bullets">
-            <ul className="ais-bullets">
-              {bullets.map((b, i) => (
-                <li key={i} className="ais-bullet">
-                  <CheckIcon />
-                  <span>{b}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Col 3: key takeaway */}
-          <div className="ais-col-takeaway">
-            {takeaway && (
-              <>
-                <div className="ais-takeaway-title">Key Takeaway</div>
-                <p className="ais-takeaway-text">{takeaway}</p>
-              </>
-            )}
-            {whyMatters && (
-              <>
-                <button className="ais-why-link" onClick={() => setShowWhy(v => !v)}>
-                  {showWhy ? 'Hide ↑' : 'Why this matters →'}
+            {/* Col 1: header + sparkle + intro + buttons */}
+            <div className="ais-col-left">
+              <div className="ais-top-row">
+                <AiBadge />
+                <button
+                  className="ais-refresh-btn"
+                  title="Regenerate"
+                  onClick={() => { setSummaryData(null); setError(null); setGenTime(null); }}
+                >
+                  <RefreshCw size={13} />
                 </button>
-                {showWhy && (
-                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, marginTop: 8, padding: '8px 10px', background: '#EFF6FF', borderRadius: 6 }}>
-                    {whyMatters}
-                  </p>
-                )}
-              </>
-            )}
+              </div>
+              <div>
+                <div className="ais-title">AI EXECUTIVE SUMMARY</div>
+                <div className="ais-sub">{timeAgo}</div>
+              </div>
+              <div className="ais-intro-block">
+                <SparkleCircle />
+                <p className="ais-intro-text">Here&rsquo;s what I found from this survey wave.</p>
+              </div>
+              <div style={{ flex: 1 }} />
+              <div className="ais-btn-row">
+                <button className="ais-view-btn" onClick={() => navigate && navigate('ai-insights')}>View full summary &rarr;</button>
+                <button className="ais-more-btn" onClick={() => setBulletsOpen(v => !v)}>
+                  {bulletsOpen ? 'Less ↑' : 'More ↓'}
+                </button>
+              </div>
+            </div>
+
+            {/* Col 2: key takeaway */}
+            <div className="ais-col-takeaway">
+              {takeaway && (
+                <>
+                  <div className="ais-takeaway-title">Key Takeaway</div>
+                  <p className="ais-takeaway-text">{takeaway}</p>
+                </>
+              )}
+              {whyMatters && (
+                <>
+                  <button className="ais-why-link" onClick={() => setShowWhy(v => !v)}>
+                    {showWhy ? 'Hide ↑' : 'Why this matters →'}
+                  </button>
+                  {showWhy && (
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, marginTop: 8, padding: '8px 10px', background: '#EFF6FF', borderRadius: 6 }}>
+                      {whyMatters}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Col 3: illustration */}
+            <div className="ais-col-illus">
+              <DashboardIllustration />
+            </div>
+
           </div>
 
-          {/* Col 4: illustration */}
-          <div className="ais-col-illus">
-            <DashboardIllustration />
-          </div>
-
-        </div>
+          {/* Expandable bullets panel */}
+          {bulletsOpen && (
+            <div className="ais-bullets-panel">
+              <ul className="ais-bullets">
+                {bullets.map((b, i) => (
+                  <li key={i} className="ais-bullet">
+                    <CheckIcon />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
