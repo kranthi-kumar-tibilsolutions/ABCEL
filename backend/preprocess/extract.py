@@ -22,10 +22,12 @@ def compute_variance(category_scores):
     mean = sum(vals) / len(vals)
     return round((sum((v - mean) ** 2 for v in vals) / len(vals)) ** 0.5, 3)
 
-def classify_cluster(overall, variance):
-    if overall >= 4.0 and variance < 0.15: return "thriving"
-    if overall >= 3.5 and variance < 0.15: return "atrisk"
-    if variance >= 0.15 and overall >= 3.0: return "polarised"
+def classify_cluster(overall, variance, median_score=4.0, median_variance=0.15):
+    hi_score = overall >= median_score
+    hi_var   = variance >= median_variance
+    if hi_score and not hi_var: return "thriving"
+    if not hi_score and not hi_var: return "atrisk"
+    if hi_score and hi_var:     return "polarised"
     return "critical"
 
 def fav_score(series):
@@ -254,9 +256,11 @@ BAND_SIGNALS   = ['band', 'level', 'management', 'executive', 'non-mgmt', 'mgmt'
 TENURE_SIGNALS = ['year', 'tenure', '0-2', '3-5', '6+', '< 1', 'months']
 
 GEN_HEADER    = ['generation', 'age group', 'age_group', 'generation cohort']
+AGE_HEADER    = ['cq23', ' age', 'age band', 'age_band', 'age range', 'age bracket']
 GENDER_HEADER = ['gender', 'sex']
 BAND_HEADER   = ['band', 'job band', 'job_band', 'job level', 'job_level', 'grade']
 TENURE_HEADER = ['tenure', 'years of service', 'years_of_service', 'experience']
+AGE_VALUE_SIGNALS = ['<21', '21-', '25-', '30-', '35-', '40-', '45-', '50-', '>55']
 
 
 def detect_dimensions(decoded_df, decode_map):
@@ -316,6 +320,11 @@ def detect_dimensions(decoded_df, decode_map):
             dimensions.setdefault('generation', col)
         elif any(s in sample for s in GEN_SIGNALS) and n <= 6:
             dimensions.setdefault('generation', col)
+
+        if any(s in col_lower for s in AGE_HEADER) and n <= 12:
+            dimensions.setdefault('age_group', col)
+        elif any(s in sample for s in AGE_VALUE_SIGNALS) and n <= 12:
+            dimensions.setdefault('age_group', col)
 
         if any(s in col_lower for s in GENDER_HEADER) and n <= 5:
             dimensions.setdefault('gender', col)
@@ -486,21 +495,33 @@ def compute_scores(decoded_df, dimensions, category_groups, col_profiles):
 
     units = []
     if su_col:
+        raw_units = []
         for (bu_name, su_name), group in decoded_df.groupby([bu_col, su_col]):
             cat_scores = {cat: s for cat, cols in category_groups.items()
                           if (s := cat_score(group, cols)) is not None}
             overall  = round(float(np.mean(list(cat_scores.values()))), 2) if cat_scores else 0
             variance = compute_variance(cat_scores)
-            units.append({
+            raw_units.append({
                 "name":             str(su_name).strip(),
                 "business":         str(bu_name).strip(),
                 "overall":          overall,
                 "band":             score_to_band(overall),
-                "cluster":          classify_cluster(overall, variance),
                 "categories":       cat_scores,
                 "variance":         variance,
                 "respondent_count": len(group),
             })
+        # Compute medians for relative cluster classification
+        if raw_units:
+            all_scores    = sorted(u["overall"]  for u in raw_units)
+            all_variances = sorted(u["variance"] for u in raw_units)
+            mid           = len(raw_units) // 2
+            med_score     = all_scores[mid]
+            med_variance  = all_variances[mid]
+        else:
+            med_score, med_variance = 4.0, 0.15
+        for u in raw_units:
+            u["cluster"] = classify_cluster(u["overall"], u["variance"], med_score, med_variance)
+        units = raw_units
 
     cohorts = {}
     for dim_name, dim_col in dimensions.items():
@@ -679,7 +700,7 @@ def parse_excel(excel_path, output_dir):
                 cat_avgs[cat] = round(float(np.mean(vals)), 2)
 
     meta = {
-        "survey_name":         os.path.basename(excel_path).replace('.xlsx', '').replace('.xls', ''),
+        "survey_name":         sys.argv[3] if len(sys.argv) > 3 and sys.argv[3].strip() else os.path.basename(excel_path).replace('.xlsx', '').replace('.xls', ''),
         "total_businesses":    len(businesses),
         "total_units":         len(units),
         "total_respondents":   total_respondents,

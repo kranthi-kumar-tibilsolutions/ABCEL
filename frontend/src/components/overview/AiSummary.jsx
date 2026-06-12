@@ -75,7 +75,7 @@ function DashboardIllustration() {
   );
 }
 
-export default function AiSummary() {
+export default function AiSummary({ maxBullets = 3 }) {
   const { summaryData, setSummaryData, dimension, navigate } = useContext(AppContext);
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState(null);
@@ -109,7 +109,8 @@ export default function AiSummary() {
       });
   }, [dimension]);
 
-  const { bullets = [], takeaway = '', whyMatters = '' } = summaryData || {};
+  const { bullets: allBullets = [], takeaway = '', whyMatters = '' } = summaryData || {};
+  const bullets = allBullets.slice(0, maxBullets);
 
   const timeAgo = genTime
     ? `Generated ${Math.max(1, Math.round((Date.now() - genTime) / 60000))} min ago`

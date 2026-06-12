@@ -56,7 +56,8 @@ router.post('/', upload.single('file'), (req, res) => {
 
   // Try python3 first, fall back to python on Windows
   const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
-  const python = spawn(pythonCmd, ['backend/preprocess/extract.py', filePath, dataDir]);
+  const originalName = path.basename(req.file.originalname, path.extname(req.file.originalname));
+  const python = spawn(pythonCmd, ['backend/preprocess/extract.py', filePath, dataDir, originalName]);
 
   python.stdout.on('data', (chunk) => {
     const lines = chunk.toString().split('\n').filter(Boolean);

@@ -24,7 +24,7 @@ export default function AiInsightsPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         {/* AI Executive Summary */}
-        <AiSummary />
+        <AiSummary maxBullets={4} />
 
         {/* Focus Areas */}
         <FocusAreas />

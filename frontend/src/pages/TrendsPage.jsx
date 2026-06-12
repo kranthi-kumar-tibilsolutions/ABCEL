@@ -3,7 +3,7 @@ import { AppContext } from '../context/AppContext';
 import { Line } from 'react-chartjs-2';
 import Breadcrumb from '../components/shared/Breadcrumb';
 
-const MOCK_WAVES = ['Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024', 'Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025', 'Q1 2026'];
+const MOCK_WAVES = ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026'];
 
 function jitter(base, amplitude = 0.08) {
   return MOCK_WAVES.map((_, i) => +(base + (Math.sin(i * 1.5) * amplitude)).toFixed(2));
@@ -21,25 +21,35 @@ export default function TrendsPage() {
   const lineData = {
     labels:   MOCK_WAVES,
     datasets: top5.map((b, i) => ({
-      label:       b.name,
-      data:        jitter(+(b.overall??b.score??4.0)),
-      borderColor: COLORS[i % COLORS.length],
+      label:           b.name,
+      data:            jitter(+(b.overall??b.score??4.0)),
+      borderColor:     COLORS[i % COLORS.length],
       backgroundColor: 'transparent',
-      tension:     0.3,
-      pointRadius: 3,
+      tension:         0.3,
+      pointRadius:     3,
     })),
   };
 
   const groupData = {
     labels:   MOCK_WAVES,
     datasets: [{
-      label:       'Group Average',
-      data:        jitter(meta?.group_avg ?? 4.46, 0.05),
-      borderColor: '#F97316',
+      label:           'Group Average',
+      data:            jitter(meta?.group_avg ?? 4.46, 0.05),
+      borderColor:     '#F97316',
       backgroundColor: 'rgba(249,115,22,0.08)',
-      fill:        true,
-      tension:     0.3,
+      fill:            true,
+      tension:         0.3,
     }],
+  };
+
+  const lineOptions = {
+    responsive:          true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { min: 3.5, max: 5, ticks: { stepSize: 0.5 } },
+      x: { grid: { display: false } },
+    },
   };
 
   return (
@@ -57,28 +67,20 @@ export default function TrendsPage() {
       <div className="chart-card" style={{ marginBottom: 24 }}>
         <div className="chart-title">Group Engagement Trend</div>
         <div style={{ height: 260 }}>
-          <Line data={groupData} options={{
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              y: { min: 3.5, max: 5, ticks: { stepSize: 0.5 } },
-              x: { grid: { display: false } },
-            },
-          }} />
+          <Line data={groupData} options={lineOptions} />
         </div>
       </div>
 
       <div className="chart-card">
         <div className="chart-title">Top 5 Businesses — Engagement Over Time</div>
         <div style={{ height: 320 }}>
-          <Line data={lineData} options={{
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
-            scales: {
-              y: { min: 3.5, max: 5, ticks: { stepSize: 0.5 } },
-              x: { grid: { display: false } },
-            },
-          }} />
+          <Line
+            data={lineData}
+            options={{
+              ...lineOptions,
+              plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+            }}
+          />
         </div>
       </div>
 

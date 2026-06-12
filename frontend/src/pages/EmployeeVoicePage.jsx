@@ -1,7 +1,6 @@
 import { useContext } from 'react';
 import { AppContext } from '../context/AppContext';
 import Breadcrumb   from '../components/shared/Breadcrumb';
-import ChatWithData from '../components/chat/ChatWithData';
 
 const MOCK_THEMES = [
   { theme: 'Work-Life Balance',       sentiment: 'mixed',    count: 1432, pct: 38, color: '#D97706' },
@@ -33,8 +32,7 @@ export default function EmployeeVoicePage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
-        <div>
+      <div>
           {/* Theme overview */}
           <div className="chart-card">
             <div className="chart-title">Top Themes from Free-Text Responses</div>
@@ -80,12 +78,6 @@ export default function EmployeeVoicePage() {
               The system will automatically detect and process open-ended question columns.
             </p>
           </div>
-        </div>
-
-        {/* Chat */}
-        <div>
-          <ChatWithData />
-        </div>
       </div>
     </div>
   );
