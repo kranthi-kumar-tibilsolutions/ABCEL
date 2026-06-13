@@ -1,9 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import Lottie from 'lottie-react';
+import loaderAnim from './assets/loader.json';
 import { AppContext }      from './context/AppContext';
+import { getAuth, setAuth, apiFetch } from './utils/api';
+import AppHeader           from './components/layout/AppHeader';
 import Sidebar             from './components/layout/Sidebar';
 import TopBar              from './components/layout/TopBar';
 import RightPanel          from './components/layout/RightPanel';
 import FilterDrawer        from './components/layout/FilterDrawer';
+import LoginPage           from './pages/LoginPage';
 import UploadPage          from './pages/UploadPage';
 import Overview            from './pages/Overview';
 import BusinessDetail      from './pages/BusinessDetail';
@@ -37,6 +42,9 @@ const PAGE_MAP = {
 };
 
 export default function App() {
+  const [auth,           setAuthState]      = useState(null);
+  const [authChecked,    setAuthChecked]    = useState(false);
+  const [loggingOut,     setLoggingOut]     = useState(false);
   const [page,           setPage]           = useState('upload');
   const [navHistory,     setNavHistory]     = useState([]);
   const [dimension,      setDimension]      = useState('overall');
@@ -44,6 +52,7 @@ export default function App() {
   const [selectedBU,     setSelectedBU]     = useState(null);
   const [selectedCluster,setSelectedCluster]= useState(null);
   const [isFiltersOpen,  setIsFiltersOpen]  = useState(false);
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [activeFilters,  setActiveFilters]  = useState({});
   const [businesses,     setBusinesses]     = useState(null);
   const [units,          setUnits]          = useState(null);
@@ -76,11 +85,11 @@ export default function App() {
   const fetchData = useCallback(async () => {
     try {
       const [bRes, uRes, cRes, coRes, mRes] = await Promise.all([
-        fetch('/api/businesses'),
-        fetch('/api/units'),
-        fetch('/api/clusters'),
-        fetch('/api/cohorts'),
-        fetch('/api/meta'),
+        apiFetch('/api/businesses'),
+        apiFetch('/api/units'),
+        apiFetch('/api/clusters'),
+        apiFetch('/api/cohorts'),
+        apiFetch('/api/meta'),
       ]);
       if (bRes.ok)  setBusinesses(await bRes.json());
       if (uRes.ok)  setUnits(await uRes.json());
@@ -99,13 +108,53 @@ export default function App() {
     }
   }, []);
 
+  // Restore session on load and validate the stored token
   useEffect(() => {
+    const stored = getAuth();
+    if (!stored) { setAuthChecked(true); return; }
+    apiFetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.user) setAuthState(stored);
+        else setAuth(null);
+      })
+      .catch(() => setAuth(null))
+      .finally(() => setAuthChecked(true));
+  }, []);
+
+  useEffect(() => {
+    if (!auth) return;
     // Pre-load data silently — but never skip the upload page automatically.
     // UploadPage will show a "Continue" button when data is already present.
-    fetch('/api/status')
+    apiFetch('/api/status')
       .then(r => r.json())
       .then(d => { if (d.ready) fetchData(); })
       .catch(() => {});
+  }, [auth, fetchData]);
+
+  const handleLogin = useCallback((user, token) => {
+    const next = { user, token };
+    setAuth(next);
+    setAuthState(next);
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    setLoggingOut(true);
+    setTimeout(() => {
+      setAuth(null);
+      setAuthState(null);
+      setBusinesses(null);
+      setUnits(null);
+      setClusters(null);
+      setCohorts(null);
+      setMeta(null);
+      setDataLoaded(false);
+      setSummaryData(null);
+      setInsightsData(null);
+      setFocusAreasData(null);
+      setPage('upload');
+      setLoggingOut(false);
+    }, 3000);
   }, []);
 
   // Derived filtered businesses — respects cluster + minScore filters
@@ -139,33 +188,54 @@ export default function App() {
     summaryData,    setSummaryData,
     insightsData,   setInsightsData,
     focusAreasData, setFocusAreasData,
+    user: auth?.user ?? null,
+    logout: handleLogout,
+    rightPanelCollapsed, setRightPanelCollapsed,
   };
 
   const PageComponent = PAGE_MAP[page] ?? Overview;
+
+  if (!authChecked) return null;
+
+  const loggingOutOverlay = loggingOut && (
+    <div className="login-loading-overlay">
+      <Lottie animationData={loaderAnim} loop autoplay style={{ width: 180, height: 60 }} />
+      <div className="login-loading-text">Signing out…</div>
+    </div>
+  );
+
+  if (!auth) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
 
   if (page === 'upload') {
     return (
       <AppContext.Provider value={ctx}>
         <UploadPage onUploadComplete={handleUploadComplete} />
+        {loggingOutOverlay}
       </AppContext.Provider>
     );
   }
 
   return (
     <AppContext.Provider value={ctx}>
-      <div className="shell">
-        <Sidebar />
-        <div className="main-area">
-          <TopBar />
-          <div className="content-with-panel">
-            <div className="content">
-              <PageComponent />
+      <div className="app-shell">
+        <AppHeader />
+        <div className="shell">
+          <Sidebar />
+          <div className="main-area">
+            <TopBar />
+            <div className="content-with-panel">
+              <div className="content">
+                <PageComponent />
+              </div>
+              <RightPanel />
             </div>
-            <RightPanel />
           </div>
+          <FilterDrawer />
         </div>
-        <FilterDrawer />
       </div>
+      {loggingOutOverlay}
     </AppContext.Provider>
   );
 }

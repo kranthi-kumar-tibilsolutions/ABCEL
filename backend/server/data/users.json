@@ -1,0 +1,5 @@
+[
+  { "email": "niranjan@adityabirla.com", "password": "abg2026", "name": "Niranjan", "role": "group_hr", "company": null },
+  { "email": "hr@cementho.com", "password": "cement2026", "name": "Cement HO User", "role": "company", "company": "Cement HO" },
+  { "email": "hr@novelis.com", "password": "novelis2026", "name": "Novelis User", "role": "company", "company": "Novelis" }
+]

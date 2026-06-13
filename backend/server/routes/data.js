@@ -2,6 +2,7 @@ const express = require('express');
 const router  = express.Router();
 const fs      = require('fs');
 const path    = require('path');
+const { requireAuth } = require('../middleware/auth');
 
 const dataDir = path.resolve('./backend/data');
 
@@ -19,40 +20,50 @@ router.get('/status', (req, res) => {
 });
 
 // Survey metadata
-router.get('/meta', (req, res) => {
+router.get('/meta', requireAuth, (req, res) => {
   const data = read('meta.json');
   if (!data) return res.status(404).json({ error: 'No data loaded' });
   res.json(data);
 });
 
-// All businesses (sorted by overall desc)
-router.get('/businesses', (req, res) => {
+// All businesses (sorted by overall desc) — scoped to the user's company for company-level users
+router.get('/businesses', requireAuth, (req, res) => {
   const data = read('businesses.json');
   if (!data) return res.status(404).json({ error: 'No data loaded' });
-  res.json(data);
+  let result = data;
+  if (req.user.role === 'company') result = result.filter(b => b.name === req.user.company);
+  res.json(result);
 });
 
-// Business units — filterable by business name and/or cluster
-router.get('/units', (req, res) => {
+// Business units — filterable by business name and/or cluster, scoped to the user's company
+router.get('/units', requireAuth, (req, res) => {
   const data = read('units.json');
   if (!data) return res.status(404).json({ error: 'No data loaded' });
   const { business, cluster, limit } = req.query;
   let result = data;
+  if (req.user.role === 'company') result = result.filter(u => u.business === req.user.company);
   if (business) result = result.filter(u => u.business === business);
   if (cluster)  result = result.filter(u => u.cluster  === cluster);
   if (limit)    result = result.slice(0, parseInt(limit));
   res.json(result);
 });
 
-// Clusters grouped object { thriving: [], atrisk: [], polarised: [], critical: [] }
-router.get('/clusters', (req, res) => {
+// Clusters grouped object { thriving: [], atrisk: [], polarised: [], critical: [] }, scoped to the user's company
+router.get('/clusters', requireAuth, (req, res) => {
   const data = read('clusters.json');
   if (!data) return res.status(404).json({ error: 'No data loaded' });
-  res.json(data);
+  let result = data;
+  if (req.user.role === 'company') {
+    result = {};
+    for (const [key, units] of Object.entries(data)) {
+      result[key] = units.filter(u => u.business === req.user.company);
+    }
+  }
+  res.json(result);
 });
 
 // Cohort data { gender: [], generation: [], tenure: [], job_band: [] }
-router.get('/cohorts', (req, res) => {
+router.get('/cohorts', requireAuth, (req, res) => {
   const data = read('cohorts.json');
   if (!data) return res.json({ gender: [], generation: [], tenure: [], job_band: [] });
   res.json(data);
