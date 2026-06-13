@@ -2,6 +2,8 @@ import os
 import sys
 import json
 import asyncio
+import subprocess
+import threading
 import time
 from pathlib import Path
 
@@ -10,34 +12,41 @@ from fastapi.responses import StreamingResponse
 
 router = APIRouter()
 
-_UPLOADS = Path("./backend/uploads")
-_DATA    = Path("./backend/data")
+# Absolute paths derived from this file's location — CWD-independent.
+# upload.py lives at: <root>/backend/server/routes/upload.py
+_BACKEND = Path(__file__).resolve().parent.parent.parent   # <root>/backend
+_UPLOADS = _BACKEND / "uploads"
+_DATA    = _BACKEND / "data"
+_EXTRACT = _BACKEND / "preprocess" / "extract.py"
 
 
-@router.post("/")
+@router.post("")
 async def upload_file(file: UploadFile = File(None)):
+    # Read file content NOW, while the request is still open.
+    # StreamingResponse iterates the generator lazily AFTER the request body closes,
+    # so any await file.read() inside generate() would raise "read of closed file".
+    _filename = file.filename if file else None
+    _content  = await file.read() if file else None
+
     async def generate():
         def sse(stage: str, message: str) -> str:
             return f"data: {json.dumps({'stage': stage, 'message': message})}\n\n"
 
-        # == JS: if (!req.file) ==
-        if file is None:
+        if _filename is None or _content is None:
             yield sse("error", "No file received. Please try again.")
             yield "data: [DONE]\n\n"
             return
 
-        # == JS: fileFilter — only .xlsx / .xls ==
-        ext = os.path.splitext(file.filename or "")[1].lower()
+        ext = os.path.splitext(_filename)[1].lower()
         if ext not in {".xlsx", ".xls"}:
             yield sse("error", "Only .xlsx and .xls files are supported")
             yield "data: [DONE]\n\n"
             return
 
-        # == JS: multer diskStorage — save to backend/uploads ==
         _UPLOADS.mkdir(parents=True, exist_ok=True)
         file_path = _UPLOADS / f"upload_{int(time.time() * 1000)}{ext}"
 
-        content = await file.read()
+        content = _content
 
         # == JS: limits: { fileSize: 100MB } ==
         if len(content) > 100 * 1024 * 1024:
@@ -60,19 +69,43 @@ async def upload_file(file: UploadFile = File(None)):
 
         # == JS: process.platform === 'win32' ? 'python' : 'python3' ==
         python_cmd    = "python" if sys.platform == "win32" else "python3"
-        original_name = os.path.splitext(file.filename or "upload")[0]
+        original_name = os.path.splitext(_filename or "upload")[0]
 
-        # == JS: spawn(pythonCmd, ['backend/preprocess/extract.py', filePath, dataDir, originalName]) ==
-        proc = await asyncio.create_subprocess_exec(
-            python_cmd, "backend/preprocess/extract.py",
-            str(file_path.resolve()), str(_DATA.resolve()), original_name,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
+        # asyncio.create_subprocess_exec requires ProactorEventLoop on Windows,
+        # but uvicorn uses SelectorEventLoop. Run extract.py in a thread instead
+        # and stream lines back through an asyncio.Queue.
+        loop = asyncio.get_running_loop()
+        q: asyncio.Queue = asyncio.Queue()
 
-        # == JS: python.stdout.on('data', ...) — stream progress lines as SSE ==
-        async for raw in proc.stdout:
-            line = raw.decode().strip()
+        def _run_extract():
+            env = os.environ.copy()
+            env["PYTHONIOENCODING"] = "utf-8"
+            p = subprocess.Popen(
+                [python_cmd, str(_EXTRACT),
+                 str(file_path.resolve()), str(_DATA.resolve()), original_name],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=env,
+            )
+            for raw_line in p.stdout:
+                loop.call_soon_threadsafe(q.put_nowait, ("line", raw_line))
+            p.stdout.close()
+            p.wait()
+            errbytes = p.stderr.read()
+            p.stderr.close()
+            loop.call_soon_threadsafe(q.put_nowait, ("done", p.returncode, errbytes))
+
+        threading.Thread(target=_run_extract, daemon=True).start()
+
+        return_code  = 0
+        stderr_bytes = b""
+        while True:
+            item = await q.get()
+            if item[0] == "done":
+                _, return_code, stderr_bytes = item
+                break
+            _, raw = item
+            line = raw.decode("utf-8", errors="replace").strip()
             if not line:
                 continue
             if "Sheets found"    in line: yield sse("processing", line)
@@ -83,17 +116,13 @@ async def upload_file(file: UploadFile = File(None)):
             if "business units"  in line: yield sse("computing",  line)
             if "DONE"            in line: yield sse("generating", "Scores computed. AI generating insights...")
 
-        # == JS: python.stderr.on('data', ...) + python.on('close', code) ==
-        stderr_bytes = await proc.stderr.read()
-        await proc.wait()
-
         # == JS: fs.unlink(filePath, () => {}) — cleanup temp upload ==
         try:
             file_path.unlink()
         except OSError:
             pass
 
-        if proc.returncode != 0:
+        if return_code != 0:
             stderr_buf = stderr_bytes.decode()
             print(f"[Python stderr] {stderr_buf}")
             # Extract last meaningful error line (skip File/Traceback/^ lines)

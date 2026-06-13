@@ -7,9 +7,10 @@ from fastapi import APIRouter, HTTPException, Query
 from lib.stats import pearson_r, pearson_p_value, correlation_strength, correlation_category
 from lib.llm   import call_llm_json
 
-router  = APIRouter()
-_DATA   = Path("./backend/data")
-_SAMPLE = Path("./backend/data/sample")
+router   = APIRouter()
+_BACKEND = Path(__file__).resolve().parent.parent.parent
+_DATA    = _BACKEND / "data"
+_SAMPLE  = _DATA / "sample"
 
 
 def _read(f: str) -> list:

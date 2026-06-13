@@ -12,8 +12,9 @@ from pydantic import BaseModel
 
 from lib.llm import call_llm
 
-router = APIRouter()
-_DATA  = Path("./backend/data")
+router   = APIRouter()
+_BACKEND = Path(__file__).resolve().parent.parent.parent
+_DATA    = _BACKEND / "data"
 
 
 # ── Data helper ───────────────────────────────────────────────────────────────

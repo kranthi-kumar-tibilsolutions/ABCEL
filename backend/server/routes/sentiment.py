@@ -11,8 +11,9 @@ from lib.llm   import call_llm_json
 from lib.nlp   import classify_batch
 
 router   = APIRouter()
-_DATA    = Path("./backend/data")
-_SAMPLE  = Path("./backend/data/sample")
+_BACKEND = Path(__file__).resolve().parent.parent.parent
+_DATA    = _BACKEND / "data"
+_SAMPLE  = _DATA / "sample"
 
 
 def _read(f: str):

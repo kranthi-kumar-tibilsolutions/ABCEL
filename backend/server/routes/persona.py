@@ -10,9 +10,10 @@ from pydantic import BaseModel
 from lib.stats import std_dev, two_sample_z_test, significance_badge
 from lib.llm   import call_llm_json
 
-router  = APIRouter()
-_DATA   = Path("./backend/data")
-_SAMPLE = Path("./backend/data/sample")
+router   = APIRouter()
+_BACKEND = Path(__file__).resolve().parent.parent.parent
+_DATA    = _BACKEND / "data"
+_SAMPLE  = _DATA / "sample"
 
 
 def _read(f: str) -> list:

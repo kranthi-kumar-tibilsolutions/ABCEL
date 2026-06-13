@@ -99,7 +99,7 @@ export default function ReportsPage() {
             Cluster:  cluster,
             Unit:     item.name ?? item,
             Business: item.business ?? '',
-            Score:    item.score ?? '',
+            Score:    item.overall ?? '',
           }))
         );
         downloadCsv(rows, 'abg_clusters.csv');

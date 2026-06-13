@@ -135,8 +135,7 @@ export default function App() {
     if (!businesses) return null;
     const { clusters: fc, minScore: ms } = activeFilters;
     return businesses.filter(b => {
-      if (fc?.length && !fc.includes(b.cluster)) return false;
-      if (ms > 0 && (b.overall ?? b.score ?? 0) < ms) return false;
+      if (ms > 0 && (b.overall ?? 0) < ms) return false;
       return true;
     });
   }, [businesses, activeFilters]);

@@ -5,9 +5,10 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-router  = APIRouter()
-_DATA   = Path("./backend/data")
-_SAMPLE = Path("./backend/data/sample")
+router   = APIRouter()
+_BACKEND = Path(__file__).resolve().parent.parent.parent
+_DATA    = _BACKEND / "data"
+_SAMPLE  = _DATA / "sample"
 
 _FILES  = ["businesses.json", "units.json", "clusters.json", "cohorts.json", "meta.json"]
 
