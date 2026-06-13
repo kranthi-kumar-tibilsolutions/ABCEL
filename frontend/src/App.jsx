@@ -82,18 +82,40 @@ export default function App() {
         fetch('/api/cohorts'),
         fetch('/api/meta'),
       ]);
-      if (bRes.ok)  setBusinesses(await bRes.json());
+      let bizList = null, metaObj = null;
+      if (bRes.ok)  { bizList  = await bRes.json(); setBusinesses(bizList); }
       if (uRes.ok)  setUnits(await uRes.json());
       if (cRes.ok)  setClusters(await cRes.json());
       if (coRes.ok) setCohorts(await coRes.json());
-      if (mRes.ok)  setMeta(await mRes.json());
+      if (mRes.ok)  { metaObj  = await mRes.json(); setMeta(metaObj); }
       setDataLoaded(true);
 
-      // Auto-fetch right-panel insights (non-blocking)
+      const buildFallbackInsights = () => {
+        const sorted = [...(bizList || [])].sort((a, b) => (b.overall ?? 0) - (a.overall ?? 0));
+        const top    = sorted[0];
+        const bottom = sorted[sorted.length - 1];
+        const avg    = metaObj?.group_avg ?? 4.44;
+        const n      = sorted.length;
+        return {
+          topTrends: [
+            { direction: 'up',   text: `${top?.name ?? 'Top business'} leads engagement at ${top?.overall?.toFixed(2) ?? avg}/5` },
+            { direction: 'up',   text: `Group average stands at ${avg}/5 across ${n} businesses` },
+            { direction: 'down', text: `${bottom?.name ?? 'Lowest business'} is the lowest-scoring at ${bottom?.overall?.toFixed(2) ?? avg}/5` },
+          ],
+          outliers: [
+            { direction: 'down', text: `${bottom?.name ?? 'Lowest business'} is ${(avg - (bottom?.overall ?? avg)).toFixed(2)} below group average` },
+            { direction: 'up',   text: `${top?.name ?? 'Top business'} is ${((top?.overall ?? avg) - avg).toFixed(2)} above group average` },
+            { direction: 'down', text: `${metaObj?.weakest_category ?? 'Performance Culture'} is the weakest category group-wide` },
+          ],
+          summary: `${metaObj?.survey_name ?? 'ABG Vibes 2026'}: group average ${avg}/5 across ${n} businesses. ${top?.name ?? ''} leads; ${bottom?.name ?? ''} needs attention.`,
+        };
+      };
+
+      // Auto-fetch right-panel insights (non-blocking); fall back to data-derived content on AI failure
       fetch('/api/insights', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
         .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d && !d.error) setInsightsData(d); })
-        .catch(() => {});
+        .then(d => { setInsightsData((d && !d.error) ? d : buildFallbackInsights()); })
+        .catch(() => { setInsightsData(buildFallbackInsights()); });
     } catch (e) {
       console.error('Failed to fetch data', e);
     }
