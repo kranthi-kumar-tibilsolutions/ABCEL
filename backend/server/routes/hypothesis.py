@@ -55,6 +55,13 @@ async def run_test(req: TestRequest):
         units     = _read("responses.json")
         questions = _read("questions.json")
 
+        # Read group average for use as default hypothesized_mean
+        try:
+            meta_data = json.loads((_DATA / "meta.json").read_text(encoding="utf-8"))
+            group_avg = meta_data.get("group_avg", 4.44)
+        except Exception:
+            group_avg = 4.44
+
         # ── Step 1: LLM parses hypothesis → structured test parameters ──
         q_list = ", ".join(
             f"{q.get('id')}: {q.get('short_label', q.get('id'))}"
@@ -64,18 +71,22 @@ async def run_test(req: TestRequest):
 Parse this hypothesis into structured test parameters.
 
 Available survey fields: {q_list}
-Available demographic fields: business, generation, gender, job_level, tenure, country, is_manager, abglp
+Available demographic fields: business, generation, gender, age_group, job_level, tenure, country, is_manager, abglp
+Group average score for this survey: {group_avg}/5
 
 Hypothesis: "{req.hypothesis_text}"
+
+IMPORTANT: If the hypothesis compares against "average" or "group average", set hypothesized_mean to {group_avg}.
+Do NOT use the alpha value (0.05) as hypothesized_mean.
 
 Return ONLY a JSON object — no explanation, no markdown:
 {{
   "h0": "<null hypothesis text>",
   "h1": "<alternative hypothesis text>",
   "test_type": "one_sample_z",
-  "variable": "<field name to measure>",
-  "group_filter": {{ "dimension": "<field>", "operator": "eq|gte|lte", "value": "<val>" }},
-  "hypothesized_mean": <number or null>,
+  "variable": "<field name to measure — use a theme key like engagement, leadership, overall>",
+  "group_filter": {{ "dimension": "<demographic field>", "operator": "eq|gte|lte", "value": "<val>" }},
+  "hypothesized_mean": <number — use {group_avg} if comparing vs group average>,
   "threshold": <number or null>,
   "direction": "greater" | "less" | "two_tailed",
   "parseable": true,
@@ -145,7 +156,7 @@ Return ONLY a JSON object — no explanation, no markdown:
         sample_mean = mean(scores)
         sample_std  = std_dev(scores)
         n           = len(scores)
-        pop_mean    = params.get("hypothesized_mean") or params.get("threshold") or 3.5
+        pop_mean    = params.get("hypothesized_mean") or params.get("threshold") or group_avg
 
         if n < 30:
             return {

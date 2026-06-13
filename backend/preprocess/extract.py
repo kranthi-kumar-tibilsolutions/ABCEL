@@ -654,6 +654,7 @@ def extract_phase2_data(raw_df, decoded_df, xl, output_dir):
 
     # Demographic column references
     col_biz    = find_col('CQ9')   or find_col('CQ9 Org')
+    col_age    = find_col('CQ23')
     col_gen    = find_col('CQ24')
     col_gender = find_col('CQ25')
     col_job    = find_col('CQ27')
@@ -702,6 +703,7 @@ def extract_phase2_data(raw_df, decoded_df, xl, output_dir):
         responses.append({
             'employee_id':            f'E{idx+1:05d}',
             'business':               str_val(col_biz),
+            'age_group':              str_val(col_age),
             'generation':             str_val(col_gen),
             'gender':                 str_val(col_gender),
             'job_level':              str_val(col_job),

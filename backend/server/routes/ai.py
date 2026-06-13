@@ -120,7 +120,7 @@ TOP/BOTTOM BUSINESSES: {biz_lines}
 CLUSTERS: {cluster_lines}
 GENDER: {gender_line}
 GENERATION: {generation_line}
-AGE GROUP (numeric bands): {age_group_line or "(not yet computed — re-upload data to populate)"}
+AGE GROUP (bands): {age_group_line or "(not in dataset)"}
 JOB BAND: {job_band_line}
 TENURE (years): {tenure_line}""".strip()
 
@@ -146,10 +146,12 @@ async def _llm_json(messages: list, max_tokens: int = 600, json_mode: bool = Tru
 # ── agentStep — retry once on empty content ───────────────────────────────────
 
 async def _agent_step(messages: list, max_tokens: int, step_label: str) -> dict:
-    for attempt in range(2):
+    last_err = None
+    for attempt in range(3):
         if attempt > 0:
-            print(f"[AGENT] {step_label} empty content — retrying after 2s")
-            await asyncio.sleep(2)
+            delay = 2 if attempt == 1 else 4
+            print(f"[AGENT] {step_label} attempt {attempt+1} after {delay}s — {last_err}")
+            await asyncio.sleep(delay)
         r = await call_llm(messages, max_tokens=max_tokens, json_mode=False)
         if not r.is_success:
             try:
@@ -160,9 +162,15 @@ async def _agent_step(messages: list, max_tokens: int, step_label: str) -> dict:
             raise RuntimeError(f"{step_label} failed: {msg}")
         data    = r.json()
         content = ((data.get("choices") or [{}])[0].get("message") or {}).get("content")
-        if content:
+        if not content:
+            last_err = "empty content"
+            continue
+        try:
             return _parse_json(content)
-    raise RuntimeError(f"{step_label} returned empty response")
+        except (ValueError, json.JSONDecodeError) as e:
+            last_err = str(e)
+            continue
+    raise RuntimeError(f"{step_label} returned unparseable JSON after 3 attempts")
 
 
 # ── Request models ────────────────────────────────────────────────────────────
@@ -296,8 +304,9 @@ async def chat(req: ChatRequest):
 - Greetings or small talk → respond briefly and warmly (1 sentence), then offer to help with engagement data. Do NOT cite any numbers.
 - Specific questions about data → answer in 2-3 sentences, lead with the key insight and number, use **bold** for key figures.
 - Never start a reply with "!" or similar punctuation.
-- "age group" or "age" questions → use GENERATION data (Gen Z, Gen Y, Gen X, Baby Boomer, Traditionalist). There is no separate age column.
-- Never answer an age/generation question using gender data.
+- "age group" or "age band" questions → use the AGE GROUP (bands) scores in the context (e.g. 25-30, 30-35, etc.).
+- "generation" questions → use the GENERATION scores in the context (Gen Z, Millennials, etc.).
+- Never say age group data is missing or not computed — it is in the context above.
 
 SURVEY DATA (use only when the user asks a data question):
 {_build_context(req.dimension)}"""
@@ -592,6 +601,17 @@ async def skill_analysis(req: SkillAnalysisRequest):
     units      = _read("units.json")      or []
     cohorts    = _read("cohorts.json")    or {}
 
+    # Map UI dimension label → cohorts.json key
+    _DIM_KEY = {
+        "Business Unit": None,
+        "Gender":        "gender",
+        "Generation":    "generation",
+        "Tenure":        "tenure",
+        "Job Band":      "job_band",
+        "Age Group":     "age_group",
+    }
+    dim_key = _DIM_KEY.get(req.dimension)
+
     sorted_units = sorted(units, key=lambda u: u.get("overall") or u.get("score") or 0, reverse=True)
     top_bus      = sorted_units[:6]
     bottom_bus   = sorted_units[-6:][::-1]
@@ -601,13 +621,29 @@ async def skill_analysis(req: SkillAnalysisRequest):
         + ", ".join(f"{k}={v}" for k, v in (b.get("categories") or {}).items())
         for b in businesses
     )
-    cohort_context = "\n".join(
-        f"{dim}: " + ", ".join(
-            f"{c.get('name') or c.get('label')}={c.get('overall') or c.get('score')}"
-            for c in (items or [])
+
+    # Build cohort context: only the selected dimension (not all dimensions)
+    if dim_key and cohorts.get(dim_key):
+        dim_cohorts = cohorts[dim_key]
+        cohort_context = (
+            f"{req.dimension} breakdown (group avg: {meta.get('group_avg')}/5):\n"
+            + "\n".join(
+                f"  {c.get('name')}: {c.get('overall')} (n={c.get('respondent_count', '?')})"
+                for c in dim_cohorts
+            )
         )
-        for dim, items in cohorts.items()
-    )
+        dim_label = req.dimension
+    else:
+        # Business Unit selected — use all cohorts as supporting context
+        cohort_context = "\n".join(
+            f"{dim}: " + ", ".join(
+                f"{c.get('name')}={c.get('overall')}"
+                for c in (items or [])
+            )
+            for dim, items in cohorts.items()
+        )
+        dim_label = "Business Unit"
+
     def _bu_label(u):
         return f"{u.get('name')}({u.get('overall') or u.get('score')})"
 
@@ -627,57 +663,62 @@ async def skill_analysis(req: SkillAnalysisRequest):
         try:
             # ── Step 1: Pattern Discovery ─────────────────────────────────────
             yield sse({"step": 1, "label": "Scanning data for patterns…", "done": False})
-            print(f"[AGENT] Step 1 — Pattern Discovery ({skill_def['label']})")
+            print(f"[AGENT] Step 1 — Pattern Discovery ({skill_def['label']}, dim={dim_label})")
 
+            # For non-BU dimensions pass the actual cohort scores so Step 1 names the right groups
+            step1_data = (
+                f"{cohort_context}\n\nALL BUSINESSES WITH CATEGORY SCORES (for context):\n{biz_context}"
+                if dim_key else
+                f"{base_context}\n\nALL BUSINESSES WITH CATEGORY SCORES:\n{biz_context}"
+            )
             step1 = await _agent_step([{"role": "user", "content":
                 f"""You are an HR data analyst agent. Scan this data and find the 3 most significant patterns related to {skill_def["label"]}.
 
 SKILL FOCUS: {skill_def["goal"]}
-DIMENSION: {req.dimension}
+ANALYSE BY DIMENSION: {dim_label}
+{"— The riskBUs and brightSpotBUs fields MUST contain exact " + dim_label + " group names from the data below, NOT business unit names." if dim_key else "— The riskBUs and brightSpotBUs fields should be exact Business Unit names."}
 
 DATA:
-{base_context}
-
-ALL BUSINESSES WITH SCORES:
-{biz_context}
+{step1_data}
 
 Respond ONLY with valid JSON:
 {{
   "patterns": [
-    "Pattern 1 — name the specific business/BU and its exact score",
-    "Pattern 2 — name the specific business/BU and its exact score",
-    "Pattern 3 — name the specific business/BU and its exact score"
+    "Pattern 1 — name a specific {dim_label} group and its exact score",
+    "Pattern 2 — name a specific {dim_label} group and its exact score",
+    "Pattern 3 — name a specific {dim_label} group and its exact score"
   ],
-  "riskBUs": ["exact BU name 1", "exact BU name 2", "exact BU name 3"],
-  "brightSpotBUs": ["exact BU name 1", "exact BU name 2"],
-  "keyMetric": "The single most striking number you found, with context"
-}}"""}], 450, "Step 1")
+  "riskBUs": ["lowest-scoring {dim_label} group", "second-lowest {dim_label} group"],
+  "brightSpotBUs": ["highest-scoring {dim_label} group", "second-highest {dim_label} group"],
+  "keyMetric": "The single most striking number from the {dim_label} data, with context"
+}}"""}], 500, "Step 1")
 
             yield sse({"step": 1, "label": "Patterns discovered", "done": True, "finding": step1.get("keyMetric")})
-            print(f"[AGENT] Step 1 done — risk BUs: {', '.join(step1.get('riskBUs') or [])}")
+            print(f"[AGENT] Step 1 done — risk groups: {', '.join(step1.get('riskBUs') or [])}")
             await asyncio.sleep(0.8)
 
             # ── Step 2: Root Cause Investigation ─────────────────────────────
-            risk_label = (step1.get("riskBUs") or ["risk BUs"])[0]
-            yield sse({"step": 2, "label": f"Investigating why {risk_label} are struggling…", "done": False})
+            risk_label = (step1.get("riskBUs") or [dim_label])[0]
+            yield sse({"step": 2, "label": f"Investigating {risk_label} patterns…", "done": False})
             print("[AGENT] Step 2 — Root Cause Investigation")
 
             patterns_str = "\n".join(f"{i+1}. {p}" for i, p in enumerate(step1.get("patterns") or []))
             step2 = await _agent_step([{"role": "user", "content":
                 f"""You are an HR investigation agent analysing {skill_def["label"]} at Aditya Birla Group.
+The analysis dimension is: {dim_label}
 
 Step 1 found these patterns:
 {patterns_str}
-At-risk BUs: {", ".join(step1.get("riskBUs") or [])}
+At-risk {dim_label} groups: {", ".join(step1.get("riskBUs") or [])}
 
-Cohort scores (use these to explain WHY the at-risk BUs are struggling):
+{dim_label} cohort scores:
 {cohort_context}
 
 Respond ONLY with valid JSON. All values must be plain strings — no nested objects or arrays.
 {{
-  "cohortFindings": "One sentence: which cohort (Gen Z / short-tenure / Non-Management) scores lowest and by how much vs group avg",
-  "rootCause": "One sentence: the specific structural reason these BUs underperform on {skill_def["label"]}",
-  "agentReasoning": "Two to three sentences connecting Step 1 patterns to the cohort gap. Name specific scores."
+  "cohortFindings": "One sentence: which {dim_label} group scores lowest, its exact score, and the gap vs group average ({meta.get('group_avg')}/5)",
+  "rootCause": "One sentence: the specific structural reason the lowest {dim_label} groups underperform on {skill_def["label"]}",
+  "agentReasoning": "Two to three sentences connecting the {dim_label} score differences to {skill_def["label"]}. Name specific {dim_label} groups and exact scores."
 }}"""}], 800, "Step 2")
 
             yield sse({"step": 2, "label": "Root causes identified", "done": True})
@@ -690,28 +731,34 @@ Respond ONLY with valid JSON. All values must be plain strings — no nested obj
 
             step3 = await _agent_step([{"role": "user", "content":
                 f"""You are an HR strategy agent finalising a {skill_def["label"]} analysis for Aditya Birla Group.
+The analysis is broken down by: {dim_label}
 
 Investigation findings:
 Patterns: {" | ".join(step1.get("patterns") or [])}
-At-risk BUs: {", ".join(step1.get("riskBUs") or [])}
-Bright spots: {", ".join(step1.get("brightSpotBUs") or [])}
+At-risk {dim_label} groups: {", ".join(step1.get("riskBUs") or [])}
+Bright spot {dim_label} groups: {", ".join(step1.get("brightSpotBUs") or [])}
 Root cause: {step2.get("rootCause") or "Not identified"}
-Cohort impact: {step2.get("cohortFindings") or "Not identified"}
+{dim_label} cohort impact: {step2.get("cohortFindings") or "Not identified"}
+
+Write a headline and 4 prioritised actions SPECIFIC to {skill_def["label"]} and the {dim_label} dimension.
+Do NOT use generic leadership examples. Base everything on the findings above.
 
 Respond ONLY with valid JSON (no markdown):
 {{
-  "headline": "Leadership gap in 3 BUs threatens Group-wide engagement",
+  "headline": "<concise headline naming the {dim_label} gap and skill>",
   "keyFindings": [
-    "International JV Ops scores 2.76 on Leadership, 1.7 pts below group avg",
-    "Gen Z employees rate leadership 0.34 pts lower than senior cohorts",
-    "Fashion Retail North shows lowest manager visibility at 2.85"
+    "<finding 1 — name a specific {dim_label} group and its score>",
+    "<finding 2 — name a specific {dim_label} group and its score>",
+    "<finding 3 — name a specific {dim_label} group and its score>",
+    "<finding 4 — state the widest gap between {dim_label} groups>"
   ],
   "priorityActions": [
-    {{ "rank": 1, "action": "Launch 90-day leadership coaching for bottom-3 BU managers", "owner": "HR Business Partner", "timeline": "30 days", "expectedImpact": "0.3pt leadership score improvement in 1 quarter" }},
-    {{ "rank": 2, "action": "Introduce monthly skip-level listening sessions in at-risk BUs", "owner": "Senior Leadership", "timeline": "90 days", "expectedImpact": "Reduce leadership perception gap by 50%" }},
-    {{ "rank": 3, "action": "Build Gen Z onboarding module covering leadership access and visibility", "owner": "L&D / HR", "timeline": "6 months", "expectedImpact": "Close Gen Z-senior leadership gap from 0.34 to under 0.15" }}
+    {{ "rank": 1, "action": "<action targeting the lowest {dim_label} group for {skill_def["label"]}>", "owner": "HR Business Partner", "timeline": "30 days", "expectedImpact": "<measurable outcome>" }},
+    {{ "rank": 2, "action": "<action targeting mid-tier {dim_label} groups>", "owner": "L&D / HR", "timeline": "60 days", "expectedImpact": "<measurable outcome>" }},
+    {{ "rank": 3, "action": "<structural change to close the {dim_label} gap>", "owner": "Senior Leadership", "timeline": "90 days", "expectedImpact": "<measurable outcome>" }},
+    {{ "rank": 4, "action": "<leverage bright spot {dim_label} groups to share best practice>", "owner": "HR COE", "timeline": "120 days", "expectedImpact": "<measurable outcome>" }}
   ]
-}}"""}], 600, "Step 3")
+}}"""}], 700, "Step 3")
 
             yield sse({"step": 3, "label": "Recommendations ready", "done": True})
             print(f"[AGENT] Step 3 done — headline: {step3.get('headline')}")

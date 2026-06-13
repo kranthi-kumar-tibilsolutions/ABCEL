@@ -1,7 +1,8 @@
 node_modules/
 backend/uploads/
-backend/data/
+backend/data/*
 !backend/data/sample/
+!backend/data/sample/**
 dist/
 .env
 *.xlsx

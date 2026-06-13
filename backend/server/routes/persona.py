@@ -26,10 +26,11 @@ def _read(f: str) -> list:
 
 
 # Real dimension names from responses.json (DATA_REALITY_UPDATE §6)
-DIMS = ["business", "generation", "gender", "job_level", "tenure", "country", "is_manager", "abglp"]
+DIMS = ["business", "age_group", "generation", "gender", "job_level", "tenure", "country", "is_manager", "abglp"]
 
 DIM_LABELS = {
     "business":   "Business",
+    "age_group":  "Age Group",
     "generation": "Generation",
     "gender":     "Gender",
     "job_level":  "Job Band Level",
@@ -51,14 +52,17 @@ THEMES = [
 
 # Real built-in cohorts (DATA_REALITY_UPDATE §10)
 BUILTIN_COHORTS = {
-    "gen_z":       {"label": "Gen Z",                "filter": [{"dimension": "generation", "operator": "eq", "value": "Gen Z"}]},
-    "gen_y":       {"label": "Gen Y (Millennials)",  "filter": [{"dimension": "generation", "operator": "eq", "value": "Gen Y"}]},
-    "female":      {"label": "Female Employees",     "filter": [{"dimension": "gender",     "operator": "eq", "value": "Female"}]},
-    "new_joiners": {"label": "New Joiners (0-2 yrs)","filter": [{"dimension": "tenure",     "operator": "eq", "value": "0-2 years"}]},
-    "junior_mgmt": {"label": "Junior Management",    "filter": [{"dimension": "job_level",  "operator": "eq", "value": "Junior Management"}]},
-    "senior_mgmt": {"label": "Senior Management",    "filter": [{"dimension": "job_level",  "operator": "eq", "value": "Senior Management"}]},
-    "abglp":       {"label": "ABGLP Talent Pool",    "filter": [{"dimension": "abglp",      "operator": "eq", "value": "Yes"}]},
-    "managers":    {"label": "People Managers",      "filter": [{"dimension": "is_manager", "operator": "eq", "value": "Yes"}]},
+    "gen_z":        {"label": "Gen Z",                "filter": [{"dimension": "generation", "operator": "eq", "value": "Gen Z"}]},
+    "gen_y":        {"label": "Gen Y (Millennials)",  "filter": [{"dimension": "generation", "operator": "eq", "value": "Gen Y"}]},
+    "female":       {"label": "Female Employees",     "filter": [{"dimension": "gender",     "operator": "eq", "value": "Female"}]},
+    "new_joiners":  {"label": "New Joiners (0-2 yrs)","filter": [{"dimension": "tenure",     "operator": "eq", "value": "0-2 years"}]},
+    "junior_mgmt":  {"label": "Junior Management",    "filter": [{"dimension": "job_level",  "operator": "eq", "value": "Junior Management"}]},
+    "senior_mgmt":  {"label": "Senior Management",    "filter": [{"dimension": "job_level",  "operator": "eq", "value": "Senior Management"}]},
+    "abglp":        {"label": "ABGLP Talent Pool",    "filter": [{"dimension": "abglp",      "operator": "eq", "value": "Yes"}]},
+    "managers":     {"label": "People Managers",      "filter": [{"dimension": "is_manager", "operator": "eq", "value": "Yes"}]},
+    "age_under_25": {"label": "Age Under 25",         "filter": [{"dimension": "age_group",  "operator": "eq", "value": "21-25"}]},
+    "age_30_35":    {"label": "Age 30-35",            "filter": [{"dimension": "age_group",  "operator": "eq", "value": "30-35"}]},
+    "age_40_plus":  {"label": "Age 40+",              "filter": [{"dimension": "age_group",  "operator": "eq", "value": "40-45"}]},
 }
 
 
