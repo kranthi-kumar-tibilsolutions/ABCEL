@@ -17,7 +17,7 @@ async def call_mistral(messages: list, max_tokens: int = 600, json_mode: bool = 
     if json_mode:
         body["response_format"] = {"type": "json_object"}
 
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=60) as client:
         return await client.post(
             "https://api.mistral.ai/v1/chat/completions",
             headers={
@@ -64,9 +64,15 @@ async def call_llm(messages: list, max_tokens: int = 600, json_mode: bool = True
         if res.is_success:
             print("[LLM] Mistral responded OK")
             return res
-        raise RuntimeError(f"Mistral HTTP {res.status_code}")
+        # Log the actual HTTP error body so we can diagnose 4xx/5xx issues
+        try:
+            err_body = res.json()
+        except Exception:
+            err_body = res.text[:200]
+        raise RuntimeError(f"Mistral HTTP {res.status_code}: {err_body}")
     except Exception as err:
-        print(f"[LLM] Mistral failed ({err}) - falling back to Cerebras")
+        err_type = type(err).__name__
+        print(f"[LLM] Mistral failed ({err_type}: {err}) - falling back to Cerebras")
         res = await call_cerebras(messages, max_tokens)
         if res.is_success:
             print("[LLM] Cerebras responded OK")
