@@ -107,6 +107,8 @@ body {
 .tb-dropdown-item:hover:not(.disabled) { background: var(--bg-page); }
 .tb-dropdown-item.active { color: var(--blue-primary); font-weight: 600; }
 .tb-dropdown-item.disabled { color: var(--text-muted); cursor: default; font-size: 11px; }
+.tb-dropdown-item-danger { color: #EF4444 !important; }
+.tb-dropdown-item-danger:hover { background: #FEF2F2 !important; }
 
 /* TopBar user menu */
 .tb-user-trigger { display: flex; align-items: center; gap: 8px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card); cursor: pointer; font-family: inherit; transition: border-color 0.15s, background 0.15s; }
@@ -146,7 +148,7 @@ body {
 .rp-insights-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
 
 /* Floating AI toggle button */
-.rp-fab { position: fixed; bottom: 20px; right: 20px; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--abg-orange) 0%, var(--abg-red) 100%); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.18); z-index: 20; transition: transform 0.15s, box-shadow 0.15s; }
+.rp-fab { position: fixed; bottom: 8px; right: 20px; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--abg-orange) 0%, var(--abg-red) 100%); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.18); z-index: 20; transition: transform 0.15s, box-shadow 0.15s; }
 .rp-fab:hover { transform: scale(1.06); box-shadow: 0 6px 16px rgba(0,0,0,0.22); }
 
 .rp-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 4px 4px 0; gap: 1px; align-items: flex-end; }
