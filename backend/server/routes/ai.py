@@ -102,12 +102,18 @@ def _build_context(dimension: str = "Business Unit") -> str:
     biz_sample = sorted_biz[:5] + sorted_biz[-3:]
     biz_lines  = "\n".join(f"{b['name']}: {b['overall']} ({b['band']})" for b in biz_sample)
 
+    def _fmt(items, suffix=""):
+        # exclude noise: n<30 and "DOB not Available"; sort highest first
+        valid = [c for c in (items or []) if (c.get("respondent_count") or 0) >= 30 and c.get("name") != "DOB not Available"]
+        valid.sort(key=lambda c: c.get("overall") or 0, reverse=True)
+        return ", ".join(f"{c['name']}={c.get('overall')}{suffix} (n={c.get('respondent_count')})" for c in valid)
+
     cluster_lines   = ", ".join(f"{k}: {len(v or [])} BUs" for k, v in clusters.items())
-    gender_line     = ", ".join(f"{c.get('name')}={c.get('overall')}" for c in (cohorts.get("gender")     or []))
-    generation_line = ", ".join(f"{c.get('name')}={c.get('overall')}" for c in (cohorts.get("generation") or []))
-    age_group_line  = ", ".join(f"{c.get('name')}={c.get('overall')}" for c in (cohorts.get("age_group")  or []))
-    job_band_line   = ", ".join(f"{c.get('name')}={c.get('overall')}" for c in (cohorts.get("job_band")   or []))
-    tenure_line     = ", ".join(f"{c.get('name')} yrs={c.get('overall')}" for c in (cohorts.get("tenure") or []))
+    gender_line     = _fmt(cohorts.get("gender"))
+    generation_line = _fmt(cohorts.get("generation"))
+    age_group_line  = _fmt(cohorts.get("age_group"))
+    job_band_line   = _fmt(cohorts.get("job_band"))
+    tenure_line     = _fmt(cohorts.get("tenure"), " yrs")
 
     return f"""ABG Vibes Employee Survey — {meta.get("survey_name", "2026")}
 Respondents: {meta.get("total_respondents", 55457)} | Businesses: {meta.get("total_businesses", len(businesses))} | BUs: {meta.get("total_units", 415)}
@@ -118,9 +124,9 @@ Dimension: {dimension}
 TOP/BOTTOM BUSINESSES: {biz_lines}
 
 CLUSTERS: {cluster_lines}
-GENDER: {gender_line}
-GENERATION: {generation_line}
-AGE GROUP (bands): {age_group_line or "(not in dataset)"}
+GENDER BREAKDOWN: {gender_line}
+GENERATION BREAKDOWN (Gen Z / Gen Y / Gen X / Baby Boomer — NOT age bands): {generation_line}
+AGE BAND BREAKDOWN (numeric bands like 25-30, 30-35 etc — use these for any "age group" question): {age_group_line or "(not in dataset)"}
 JOB BAND: {job_band_line}
 TENURE (years): {tenure_line}""".strip()
 
@@ -306,9 +312,10 @@ STRICT SCOPE RULE: If the user asks anything outside employee engagement or this
 - Greetings or small talk → respond briefly and warmly (1 sentence), then offer to help with engagement data. Do NOT cite any numbers.
 - Specific questions about data → answer in 2-3 sentences, lead with the key insight and number, use **bold** for key figures.
 - Never start a reply with "!" or similar punctuation.
-- "age group" or "age band" questions → use the AGE GROUP (bands) scores in the context (e.g. 25-30, 30-35, etc.).
-- "generation" questions → use the GENERATION scores in the context (Gen Z, Millennials, etc.).
-- Never say age group data is missing or not computed — it is in the context above.
+- "age group" or "age band" questions → use ONLY the AGE BAND BREAKDOWN scores (25-30, 30-35, etc.). NEVER use generation names (Gen Z, Traditionalist, etc.) as an answer to age group questions.
+- "generation" questions → use ONLY the GENERATION BREAKDOWN scores (Gen Z, Gen Y, Gen X, Baby Boomer).
+- Traditionalist is NOT an age group — it is a generation label with only 1 respondent and must never be cited.
+- Never say age group data is missing — it is always in the AGE BAND BREAKDOWN section above.
 
 SURVEY DATA (use only when the user asks a data question):
 {_build_context(req.dimension)}"""
