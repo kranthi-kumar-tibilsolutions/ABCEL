@@ -12,7 +12,7 @@ function loadUsers() {
 }
 
 function toPublicUser(user) {
-  return { email: user.email, name: user.name, role: user.role, company: user.company };
+  return { email: user.email, name: user.name, role: user.role, company: user.company, theme: user.theme };
 }
 
 router.post('/login', (req, res) => {

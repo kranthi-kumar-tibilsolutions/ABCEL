@@ -48,6 +48,26 @@ export const AppContext = createContext({
   // Right panel
   rightPanelCollapsed:    false,
   setRightPanelCollapsed: () => {},
+
+  // Page breadcrumb (set by individual pages, rendered in TopBar)
+  breadcrumb:    [],
+  setBreadcrumb: () => {},
+
+  // Statistical Analysis filters (TopBar-hosted)
+  saFilters:      {},
+  setSaFilters:   () => {},
+
+  // Outliers & Alerts "Show top/bottom N" (TopBar-hosted)
+  outliersTopN:    5,
+  setOutliersTopN: () => {},
+
+  // Employee Voice cohort/company/BU filters (TopBar-hosted)
+  evFilters:    {},
+  setEvFilters: () => {},
+
+  // Sentiment Analysis filters (TopBar-hosted)
+  senFilters:    {},
+  setSenFilters: () => {},
 });
 
 export const useApp = () => useContext(AppContext);

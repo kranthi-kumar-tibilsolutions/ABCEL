@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import Breadcrumb from '../components/shared/Breadcrumb';
+import { useState, useContext, useEffect } from 'react';
+import { AppContext } from '../context/AppContext';
 
 /* ── Static data ─────────────────────────────────────────── */
 
@@ -129,6 +129,12 @@ function ResultBadge({ result }) {
 
 /* ── Page ────────────────────────────────────────────────── */
 export default function HypothesisTestingPage() {
+  const { setBreadcrumb } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([{ label: 'Explore' }, { label: 'Hypothesis Testing' }]);
+  }, []);
+
   const [input,       setInput]       = useState('');
   const [result,      setResult]      = useState(DUMMY_RESULT);
   const [showDetails, setShowDetails] = useState(true);
@@ -145,21 +151,6 @@ export default function HypothesisTestingPage() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[{ label: 'Explore' }, { label: 'Hypothesis Testing' }]} />
-
-      {/* Page header */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
-          <h1 className="page-title" style={{ margin: 0 }}>Hypothesis Testing</h1>
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-            <circle cx="7.5" cy="7.5" r="7" stroke="#94A3B8" strokeWidth="1.3"/>
-            <circle cx="7.5" cy="4.8" r="0.8" fill="#94A3B8"/>
-            <rect x="6.8" y="6.5" width="1.4" height="4.2" rx="0.7" fill="#94A3B8"/>
-          </svg>
-        </div>
-        <p className="page-sub" style={{ margin: 0 }}>Validate assumptions using HR survey data and statistical tests.</p>
-      </div>
-
       {/* ── Top two-column row ── */}
       <div className="ht-top-grid">
 

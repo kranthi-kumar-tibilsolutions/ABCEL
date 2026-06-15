@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { RotateCcw } from 'lucide-react';
+import { useState, useMemo, useContext, useEffect } from 'react';
+import { AppContext } from '../context/AppContext';
 import Dropdown from '../components/shared/Dropdown';
 
 /* ── static data ──────────────────────────────────────────────── */
@@ -67,15 +67,6 @@ const QUESTIONS_LIST = [
   'Q01. I often feel stressed.',
   'Q57. I feel overloaded with work.',
   'Q66. Work-life balance is poor.',
-];
-
-const FILTER_CFG = [
-  { label:'Survey',                     key:'survey',   opts:['Q4 2024 Employee Survey','Q3 2024 Employee Survey','Q2 2024 Employee Survey'] },
-  { label:'Business',                   key:'business', opts:['All','Finance','Operations','HR','Technology'] },
-  { label:'Year',                       key:'year',     opts:['2024','2023','2022'] },
-  { label:'Country',                    key:'country',  opts:['All','United Kingdom','United States','India','Australia'] },
-  { label:'Department',                 key:'dept',     opts:['All','Engineering','Sales','Marketing','Finance'] },
-  { label:'Include Inactive Employees', key:'inactive', opts:['No','Yes'] },
 ];
 
 const SUMMARY_TILES = [
@@ -247,16 +238,16 @@ function NetworkGraph() {
 
 /* ── page ─────────────────────────────────────────────────────── */
 export default function StatisticalAnalysisPage() {
+  const { setBreadcrumb } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([{ label: 'Explore' }, { label: 'Statistical Analysis' }]);
+  }, []);
+
   const [activeTab, setActiveTab] = useState('all');
   const [expanded,  setExpanded]  = useState(false);
   const [topCorr,   setTopCorr]   = useState('Top 20');
   const [topNet,    setTopNet]    = useState('Top 25');
-  const [filters,   setFilters]   = useState({
-    survey:'Q4 2024 Employee Survey', business:'All',
-    year:'2024', country:'All', dept:'All', inactive:'No',
-  });
-  const setF      = (k, v) => setFilters(f => ({ ...f, [k]: v }));
-  const resetF    = () => setFilters({ survey:'Q4 2024 Employee Survey', business:'All', year:'2024', country:'All', dept:'All', inactive:'No' });
 
   const tabRows = useMemo(() => {
     switch (activeTab) {
@@ -269,34 +260,6 @@ export default function StatisticalAnalysisPage() {
 
   return (
     <div className="page-container">
-
-      {/* header */}
-      <div style={{ marginBottom:10 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:3 }}>
-          <h1 style={{ fontSize:17, fontWeight:800, color:'var(--text-primary)', margin:0 }}>
-            Statistical Analysis
-          </h1>
-          <InfoIcon />
-        </div>
-        <p style={{ fontSize:11.5, color:'var(--text-muted)', margin:0 }}>
-          Explore statistical relationships between survey questions using Pearson correlation.
-        </p>
-      </div>
-
-      {/* filter bar */}
-      <div className="sa-filter-bar" style={{ marginBottom:12 }}>
-        {FILTER_CFG.map(f => (
-          <div key={f.key} className="sa-filter-item">
-            <span className="sa-filter-label">{f.label}</span>
-            <Dropdown variant="filter" value={filters[f.key]}
-              options={f.opts} onChange={v => setF(f.key, v)}/>
-          </div>
-        ))}
-        <button className="sa-reset-btn" onClick={resetF}>
-          <RotateCcw size={12} />
-          Reset Filters
-        </button>
-      </div>
 
       {/* top grid */}
       <div className="sta-top-grid">

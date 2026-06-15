@@ -1,25 +1,20 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
-import Breadcrumb  from '../components/shared/Breadcrumb';
 import AiSummary   from '../components/overview/AiSummary';
 import FocusAreas  from '../components/overview/FocusAreas';
 
 export default function AiInsightsPage() {
-  const { insightsData } = useContext(AppContext);
+  const { insightsData, setBreadcrumb } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Overview', page: 'overview' },
+      { label: 'AI Insights' },
+    ]);
+  }, []);
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[
-        { label: 'Overview', page: 'overview' },
-        { label: 'AI Insights' },
-      ]} />
-
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">AI Insights</h1>
-          <p className="page-sub">AI-powered analysis of your engagement data</p>
-        </div>
-      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 

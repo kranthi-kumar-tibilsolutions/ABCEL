@@ -1,7 +1,6 @@
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useMemo, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Badge      from '../components/shared/Badge';
-import Breadcrumb from '../components/shared/Breadcrumb';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -12,8 +11,15 @@ function scoreColor(s) {
 }
 
 export default function OutliersPage() {
-  const { units, businesses, navigate } = useContext(AppContext);
-  const [topN, setTopN] = useState(5);
+  const { units, businesses, navigate, setBreadcrumb, outliersTopN } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Overview', page: 'overview' },
+      { label: 'Outliers & Alerts' },
+    ]);
+  }, []);
+  const topN = outliersTopN;
 
   const { top5, bottom5, highVariance } = useMemo(() => {
     if (!units?.length) return { top5: [], bottom5: [], highVariance: [] };
@@ -35,30 +41,6 @@ export default function OutliersPage() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[
-        { label: 'Overview', page: 'overview' },
-        { label: 'Outliers & Alerts' },
-      ]} />
-
-      <div className="page-header" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:12 }}>
-        <div>
-          <h1 className="page-title">Outliers & Alerts</h1>
-          <p className="page-sub">Units requiring immediate attention or recognition</p>
-        </div>
-        {/* Task 17 — threshold selector */}
-        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 14px', background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:8 }}>
-          <span style={{ fontSize:12, color:'var(--text-secondary)', fontWeight:600 }}>Show top / bottom</span>
-          <select
-            value={topN}
-            onChange={e => setTopN(+e.target.value)}
-            style={{ padding:'4px 8px', border:'1px solid var(--border)', borderRadius:6, background:'var(--bg-card)', fontSize:12, fontFamily:'inherit', cursor:'pointer', outline:'none', color:'var(--text-primary)' }}
-          >
-            {[3, 5, 10, 15, 20].map(n => <option key={n} value={n}>{n}</option>)}
-          </select>
-          <span style={{ fontSize:12, color:'var(--text-secondary)' }}>units</span>
-        </div>
-      </div>
-
       <div className="outliers-grid">
         {/* Top performers */}
         <div className="chart-card">

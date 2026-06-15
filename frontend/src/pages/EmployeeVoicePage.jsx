@@ -1,6 +1,5 @@
-import { useContext, useState } from 'react';
+import { useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
-import Breadcrumb from '../components/shared/Breadcrumb';
 
 const MOCK_THEMES = [
   { theme: 'Work-Life Balance',     sentiment: 'mixed',    count: 1432, pct: 38, color: '#D97706' },
@@ -15,65 +14,20 @@ const MOCK_THEMES = [
 
 const SENTIMENT_COLOR = { positive: '#16A34A', negative: '#DC2626', mixed: '#D97706' };
 
-const COHORT_OPTIONS = ['All Cohorts', 'Tenure < 2yr', 'Tenure 2–5yr', 'Tenure > 5yr', 'Manager', 'Non-Manager', 'Grade 1–3', 'Grade 4–6', 'Female', 'Male'];
-
-const selectStyle = {
-  padding: '5px 8px', border: '1px solid var(--border)', borderRadius: 6,
-  background: 'var(--bg-card)', fontSize: 11, color: 'var(--text-primary)',
-  fontFamily: 'inherit', cursor: 'pointer', outline: 'none', minWidth: 120,
-};
-
 export default function EmployeeVoicePage() {
-  const { meta, businesses, units } = useContext(AppContext);
+  const { meta, setBreadcrumb, evFilters } = useContext(AppContext);
 
-  // Task 20 — filter state
-  const [cohort,  setCohort]  = useState('All Cohorts');
-  const [company, setCompany] = useState('All');
-  const [bu,      setBu]      = useState('All');
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Overview', page: 'overview' },
+      { label: 'Employee Voice' },
+    ]);
+  }, []);
 
-  const companyList = businesses ? ['All', ...businesses.map(b => b.name)] : ['All'];
-  const buList      = company !== 'All' && units
-    ? ['All', ...units.filter(u => u.business === company).map(u => u.name)]
-    : ['All'];
+  const { cohort, company, bu } = evFilters;
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[
-        { label: 'Overview', page: 'overview' },
-        { label: 'Employee Voice' },
-      ]} />
-
-      <div className="page-header">
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:12, width:'100%' }}>
-          <div>
-            <h1 className="page-title">Employee Voice</h1>
-            <p className="page-sub">Free-text response themes and sentiment analysis</p>
-          </div>
-
-          {/* Task 20 — filters */}
-          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-            <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-              <span style={{ fontSize:9.5, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-muted)' }}>Cohort</span>
-              <select style={selectStyle} value={cohort} onChange={e => setCohort(e.target.value)}>
-                {COHORT_OPTIONS.map(o => <option key={o}>{o}</option>)}
-              </select>
-            </div>
-            <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-              <span style={{ fontSize:9.5, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-muted)' }}>Company</span>
-              <select style={selectStyle} value={company} onChange={e => { setCompany(e.target.value); setBu('All'); }}>
-                {companyList.map(o => <option key={o}>{o}</option>)}
-              </select>
-            </div>
-            <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-              <span style={{ fontSize:9.5, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--text-muted)' }}>Business Unit</span>
-              <select style={selectStyle} value={bu} onChange={e => setBu(e.target.value)} disabled={company === 'All'}>
-                {buList.map(o => <option key={o}>{o}</option>)}
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Task 18 — sentiment cards moved above the bar chart */}
       <div className="kpi-grid" style={{ marginBottom: 16 }}>
         {[

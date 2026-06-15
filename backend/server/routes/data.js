@@ -19,11 +19,30 @@ router.get('/status', (req, res) => {
   res.json({ ready });
 });
 
-// Survey metadata
+// Survey metadata — scoped to the user's company for company-level users
 router.get('/meta', requireAuth, (req, res) => {
   const data = read('meta.json');
   if (!data) return res.status(404).json({ error: 'No data loaded' });
-  res.json(data);
+  if (req.user.role !== 'company') return res.json(data);
+
+  const units      = (read('units.json')      || []).filter(u => u.business === req.user.company);
+  const businesses = (read('businesses.json') || []).filter(b => b.name === req.user.company);
+  const biz        = businesses[0];
+
+  const total_respondents = units.reduce((sum, u) => sum + (u.respondent_count || 0), 0);
+  const company_avg = units.length
+    ? Math.round((units.reduce((sum, u) => sum + (u.overall || 0), 0) / units.length) * 100) / 100
+    : null;
+
+  res.json({
+    survey_name:        data.survey_name,
+    total_businesses:   1,
+    total_units:        units.length,
+    total_respondents,
+    group_avg:          company_avg,
+    category_averages:  biz?.categories || {},
+    dimensions_detected: data.dimensions_detected,
+  });
 });
 
 // All businesses (sorted by overall desc) — scoped to the user's company for company-level users
@@ -62,8 +81,12 @@ router.get('/clusters', requireAuth, (req, res) => {
   res.json(result);
 });
 
-// Cohort data { gender: [], generation: [], tenure: [], job_band: [] }
+// Cohort data { gender: [], generation: [], tenure: [], job_band: [] } — group-wide only,
+// not derivable per company, so company-level users get empty arrays
 router.get('/cohorts', requireAuth, (req, res) => {
+  if (req.user.role === 'company') {
+    return res.json({ gender: [], generation: [], tenure: [], job_band: [] });
+  }
   const data = read('cohorts.json');
   if (!data) return res.json({ gender: [], generation: [], tenure: [], job_band: [] });
   res.json(data);
