@@ -1,5 +1,6 @@
 import { useState, useContext } from 'react';
 import { AppContext } from '../context/AppContext';
+import { apiFetch } from '../utils/api';
 import Breadcrumb from '../components/shared/Breadcrumb';
 import Skeleton   from '../components/shared/Skeleton';
 
@@ -40,7 +41,7 @@ export default function InsightsStudio() {
     setSteps([]);
 
     try {
-      const res = await fetch('/api/skill-analysis', {
+      const res = await apiFetch('/api/skill-analysis', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ skills: selectedSkills, dimension }),

@@ -2,11 +2,37 @@ const express = require('express');
 const router  = express.Router();
 const fs      = require('fs');
 const path    = require('path');
+const { requireAuth } = require('../middleware/auth');
+
+router.use(requireAuth);
 
 const dataDir = path.resolve('./backend/data');
 function read(file) {
   try { return JSON.parse(fs.readFileSync(path.join(dataDir, file), 'utf8')); }
   catch { return null; }
+}
+
+// Scope businesses/units/clusters/cohorts to the user's company for company-level users.
+// `companyFilter` (business name) further narrows the data for group-level users who
+// pick a specific company via the chat's company filter.
+function scopedData(user, companyFilter = null) {
+  let businesses = read('businesses.json') || [];
+  let units      = read('units.json')      || [];
+  let clusters   = read('clusters.json')   || {};
+  let cohorts    = read('cohorts.json')    || {};
+
+  const company = user?.role === 'company' ? user.company : companyFilter;
+
+  if (company) {
+    businesses = businesses.filter(b => b.name === company);
+    units      = units.filter(u => u.business === company);
+    clusters   = Object.fromEntries(
+      Object.entries(clusters).map(([k, list]) => [k, (list || []).filter(u => u.business === company)])
+    );
+    cohorts = { gender: [], generation: [], tenure: [], job_band: [] };
+  }
+
+  return { businesses, units, clusters, cohorts };
 }
 
 // ── Cerebras: primary LLM, retries up to 4× on 429 ──────────────────────────
@@ -128,11 +154,13 @@ function parseJSON(raw) {
 }
 
 // ── Build data context string shared by all LLM calls ────────────────────────
-function buildContext(dimension = 'Business Unit') {
-  const meta      = read('meta.json')      || {};
-  const businesses= read('businesses.json')|| [];
-  const clusters  = read('clusters.json')  || {};
-  const cohorts   = read('cohorts.json')   || {};
+// `companyFilter`: business name picked via the chat's company filter (group-level users only).
+// `focusArea`: category/cohort lens picked via the chat's dimension filter (e.g. "Gender", "Leadership").
+function buildContext(dimension = 'Business Unit', user = null, companyFilter = null, focusArea = null) {
+  const meta = read('meta.json') || {};
+  const { businesses, clusters, cohorts } = scopedData(user, companyFilter);
+  const isCompanyUser  = user?.role === 'company';
+  const scopedCompany  = isCompanyUser ? user.company : companyFilter;
 
   // Top 5 + bottom 3 only to keep context short
   const sorted = [...businesses].sort((a,b) => (b.overall||0)-(a.overall||0));
@@ -154,20 +182,32 @@ function buildContext(dimension = 'Business Unit') {
   const jobBandLine    = (cohorts.job_band||[]).map(c=>`${c.name}=${c.overall}`).join(', ');
   const tenureLine     = (cohorts.tenure||[]).map(c=>`${c.name} yrs=${c.overall}`).join(', ');
 
-  return `ABG Vibes Employee Survey — ${meta.survey_name || '2026'}
+  const headerLines = scopedCompany
+    ? `ABG Vibes Employee Survey — ${meta.survey_name || '2026'}
+Company: ${scopedCompany}
+Dimension: ${dimension}`
+    : `ABG Vibes Employee Survey — ${meta.survey_name || '2026'}
 Respondents: ${meta.total_respondents || 55457} | Businesses: ${meta.total_businesses || businesses.length} | BUs: ${meta.total_units || 415}
 Group avg: ${meta.group_avg || 4.46}/5 | Top: ${meta.top_business} (${meta.top_score}) | Lowest: ${meta.lowest_business} (${meta.lowest_score})
 Strongest category: ${meta.strongest_category} | Weakest: ${meta.weakest_category}
-Dimension: ${dimension}
+Dimension: ${dimension}`;
 
-TOP/BOTTOM BUSINESSES: ${bizLines}
-
-CLUSTERS: ${clusterLines}
+  const cohortSection = (isCompanyUser || scopedCompany)
+    ? ''
+    : `
 GENDER: ${genderLine}
 GENERATION: ${generationLine}
 AGE GROUP (numeric bands): ${ageGroupLine || '(not yet computed — re-upload data to populate)'}
 JOB BAND: ${jobBandLine}
-TENURE (years): ${tenureLine}`.trim();
+TENURE (years): ${tenureLine}`;
+
+  const focusLine = focusArea ? `\nFOCUS AREA: ${focusArea} (prioritise this in your analysis)` : '';
+
+  return `${headerLines}${focusLine}
+
+TOP/BOTTOM BUSINESSES: ${bizLines}
+
+CLUSTERS: ${clusterLines}${cohortSection}`.trim();
 }
 
 // ── CALL 1: AI Executive Summary ──────────────────────────────────────────────
@@ -178,7 +218,7 @@ router.post('/summary', async (req, res) => {
 Generate an executive summary of engagement data analysed by ${dimension} dimension.
 
 DATA:
-${buildContext(dimension)}
+${buildContext(dimension, req.user)}
 
 Respond ONLY with valid JSON (no markdown, no backticks):
 {
@@ -206,11 +246,11 @@ Respond ONLY with valid JSON (no markdown, no backticks):
 });
 
 // ── CALL 2: Right Panel AI Insights ──────────────────────────────────────────
-router.post('/insights', async (_req, res) => {
+router.post('/insights', async (req, res) => {
   const prompt = `You are an HR analytics AI for ABG. Analyse this data.
 
 DATA:
-${buildContext()}
+${buildContext('Business Unit', req.user)}
 
 Respond ONLY with valid JSON:
 {
@@ -243,7 +283,7 @@ Respond ONLY with valid JSON:
 router.post('/business-insight', async (req, res) => {
   const { businessName, business } = req.body;
   const name       = businessName || business;
-  const businesses = read('businesses.json') || [];
+  const { businesses } = scopedData(req.user);
   const meta       = read('meta.json')       || {};
   const biz = businesses.find(b => b.name === name);
   if (!biz) return res.status(404).json({ error: 'Business not found' });
@@ -287,12 +327,19 @@ Respond ONLY with valid JSON:
 
 // ── CALL 4: Chat with Data — SSE Streaming ────────────────────────────────────
 router.post('/chat', async (req, res) => {
-  const { message, history = [], dimension = 'Business Unit' } = req.body;
+  const { message, history = [], dimension = 'Business Unit', companyFilter = null, focusArea = null } = req.body;
 
   res.setHeader('Content-Type',  'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection',    'keep-alive');
   res.flushHeaders();
+
+  const focusInstruction = focusArea
+    ? `\n- The user has set a focus area filter to "${focusArea}" — frame your analysis around this dimension/category when relevant.`
+    : '';
+  const companyInstruction = companyFilter
+    ? `\n- The user has filtered to company "${companyFilter}" — base your answer only on this company's data.`
+    : '';
 
   const systemPrompt = `You are an AI analyst assistant for ABG's employee engagement dashboard. Keep replies short and natural.
 
@@ -300,10 +347,10 @@ router.post('/chat', async (req, res) => {
 - Specific questions about data → answer in 2-3 sentences, lead with the key insight and number, use **bold** for key figures.
 - Never start a reply with "!" or similar punctuation.
 - "age group" or "age" questions → use GENERATION data (Gen Z, Gen Y, Gen X, Baby Boomer, Traditionalist). There is no separate age column.
-- Never answer an age/generation question using gender data.
+- Never answer an age/generation question using gender data.${focusInstruction}${companyInstruction}
 
 SURVEY DATA (use only when the user asks a data question):
-${buildContext(dimension)}`;
+${buildContext(dimension, req.user, companyFilter, focusArea)}`;
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -337,8 +384,8 @@ ${buildContext(dimension)}`;
 // Uses a filled-in JSON template (same pattern as /summary) so the model
 // fills in values rather than emitting empty objects.
 // jsonMode is OFF — template approach works better without it.
-router.post('/focus-areas', async (_req, res) => {
-  const units = read('units.json') || [];
+router.post('/focus-areas', async (req, res) => {
+  const { units } = scopedData(req.user);
   const meta  = read('meta.json')  || {};
   const avg   = meta.group_avg || 4.46;
 
@@ -517,10 +564,8 @@ router.post('/skill-analysis', async (req, res) => {
   const emit = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
 
   // ── Data preparation ───────────────────────────────────────────────────────
-  const meta       = read('meta.json')       || {};
-  const businesses = read('businesses.json') || [];
-  const units      = read('units.json')      || [];
-  const cohorts    = read('cohorts.json')    || {};
+  const meta = read('meta.json') || {};
+  const { businesses, units, cohorts } = scopedData(req.user);
 
   const sorted    = [...units].sort((a, b) => (b.overall ?? b.score ?? 0) - (a.overall ?? a.score ?? 0));
   const topBUs    = sorted.slice(0, 6);

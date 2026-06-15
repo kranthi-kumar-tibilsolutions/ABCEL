@@ -77,7 +77,7 @@ export default function App() {
   const [selectedBU,     setSelectedBU]     = useState(null);
   const [selectedCluster,setSelectedCluster]= useState(null);
   const [isFiltersOpen,  setIsFiltersOpen]  = useState(false);
-  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(true);
   const [activeFilters,  setActiveFilters]  = useState({});
   const [businesses,     setBusinesses]     = useState(null);
   const [units,          setUnits]          = useState(null);
@@ -124,7 +124,7 @@ export default function App() {
       setDataLoaded(true);
 
       // Auto-fetch right-panel insights (non-blocking)
-      fetch('/api/insights', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      apiFetch('/api/insights', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
         .then(r => r.ok ? r.json() : null)
         .then(d => { if (d && !d.error) setInsightsData(d); })
         .catch(() => {});
@@ -233,10 +233,14 @@ export default function App() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
+  const themeClass = auth?.user?.theme && auth.user.theme !== 'abg' ? `theme-${auth.user.theme}` : '';
+
   if (page === 'upload') {
     return (
       <AppContext.Provider value={ctx}>
-        <UploadPage onUploadComplete={handleUploadComplete} />
+        <div className={themeClass}>
+          <UploadPage onUploadComplete={handleUploadComplete} />
+        </div>
         {loggingOutOverlay}
       </AppContext.Provider>
     );
@@ -244,7 +248,7 @@ export default function App() {
 
   return (
     <AppContext.Provider value={ctx}>
-      <div className="app-shell">
+      <div className={`app-shell ${themeClass}`}>
         <AppHeader />
         <div className="shell">
           <Sidebar />

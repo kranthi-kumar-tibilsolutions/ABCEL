@@ -1,5 +1,6 @@
 import { useState, useContext, useEffect } from 'react';
 import { AppContext } from '../../context/AppContext';
+import { apiFetch } from '../../utils/api';
 import Skeleton from '../shared/Skeleton';
 
 const CARD_CONFIG = {
@@ -132,7 +133,7 @@ export default function FocusAreas() {
     setFocusAreasData(null);
     setLoading(true);
     setError(null);
-    fetch('/api/focus-areas', {
+    apiFetch('/api/focus-areas', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ dimension }),
