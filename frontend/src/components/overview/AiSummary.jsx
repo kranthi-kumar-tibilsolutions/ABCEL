@@ -161,7 +161,7 @@ export default function AiSummary({ maxBullets = 3 }) {
           {/* grid: header | [bullets] | takeaway */}
           <div className="ais-grid" style={{ gridTemplateColumns: bulletsOpen ? '200px minmax(0,1fr) minmax(0,1fr)' : '200px minmax(0,1fr)' }}>
 
-            {/* Col 1: badge + title + sparkle + view button */}
+            {/* Col 1: badge + title + sparkle + view button + expand arrow */}
             <div className="ais-col-left">
               <div className="ais-top-row">
                 <AiBadge />
@@ -175,6 +175,17 @@ export default function AiSummary({ maxBullets = 3 }) {
                   onClick={() => { setSummaryData(null); setError(null); setGenTime(null); }}
                 >
                   <RefreshCw size={13} />
+                </button>
+                <button
+                  className="ais-expand-btn"
+                  title={bulletsOpen ? 'Collapse findings' : 'Expand findings'}
+                  onClick={() => setBulletsOpen(v => !v)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                    style={{ transition: 'transform 0.2s', transform: bulletsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                    <path d="M5 2.5L9.5 7L5 11.5"
+                      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </button>
               </div>
               <div className="ais-intro-block">
@@ -223,12 +234,6 @@ export default function AiSummary({ maxBullets = 3 }) {
 
           </div>
 
-          {/* Footer: View More toggle — centered below the entire card content */}
-          <div className="ais-card-footer">
-            <button className="ais-more-btn" onClick={() => setBulletsOpen(v => !v)}>
-              {bulletsOpen ? 'View Less ↑' : 'View More ↓'}
-            </button>
-          </div>
         </>
       )}
     </div>

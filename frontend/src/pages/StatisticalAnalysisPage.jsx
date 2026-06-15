@@ -383,9 +383,10 @@ export default function StatisticalAnalysisPage() {
 
         {/* 2. Correlations table */}
         <div className="sa-card">
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-            <div className="sa-card-title" style={{ marginBottom:0 }}>
-              2. Correlations with All Questions <InfoIcon />
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:8, marginBottom:8 }}>
+            <div className="sa-card-title" style={{ marginBottom:0, minWidth:0, overflow:'hidden' }}>
+              <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>2. Correlations with All Questions</span>
+              <InfoIcon />
             </div>
             <button onClick={() => setExpanded(e => !e)} style={{
               fontSize:10, fontWeight:600, padding:'3px 8px',
@@ -412,17 +413,17 @@ export default function StatisticalAnalysisPage() {
           {/* table */}
           <table className="sta-corr-tbl">
             <colgroup>
-              <col style={{ width:'46%' }}/>
-              <col style={{ width:'14%' }}/>
-              <col style={{ width:'22%' }}/>
-              <col style={{ width:'18%' }}/>
+              <col style={{ width:'42%' }}/>
+              <col style={{ width:'13%' }}/>
+              <col style={{ width:'24%' }}/>
+              <col style={{ width:'21%' }}/>
             </colgroup>
             <thead>
               <tr>
                 <th>Question</th>
-                <th style={{ textAlign:'right' }}>Pearson r</th>
-                <th>Strength</th>
-                <th style={{ textAlign:'right' }}>Significance<br/>(p-value)</th>
+                <th style={{ textAlign:'right', whiteSpace:'nowrap' }}>Pearson r</th>
+                <th style={{ whiteSpace:'nowrap' }}>Strength</th>
+                <th style={{ textAlign:'right', whiteSpace:'nowrap' }}>p-value</th>
               </tr>
             </thead>
             <tbody>
@@ -465,18 +466,6 @@ export default function StatisticalAnalysisPage() {
           </div>
         </div>
 
-        {/* 3. Correlogram */}
-        <div className="sa-card">
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, flexWrap:'wrap', gap:6 }}>
-            <div className="sa-card-title" style={{ marginBottom:0 }}>
-              3. Correlogram (Top 20 Related Questions) <InfoIcon />
-            </div>
-            <Dropdown variant="filter" value={topCorr}
-              options={['Top 10','Top 20','Top 30']} onChange={setTopCorr}/>
-          </div>
-          <Correlogram />
-        </div>
-
         {/* 4. Relationship Network */}
         <div className="sa-card">
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, flexWrap:'wrap', gap:6 }}>
@@ -502,6 +491,18 @@ export default function StatisticalAnalysisPage() {
           <p style={{ fontSize:9, color:'var(--text-muted)', margin:'4px 0 0' }}>
             Edge thickness represents strength of correlation (|r|)
           </p>
+        </div>
+
+        {/* 3. Correlogram — full width on second row */}
+        <div className="sa-card" style={{ gridColumn:'1 / -1' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, flexWrap:'wrap', gap:6 }}>
+            <div className="sa-card-title" style={{ marginBottom:0 }}>
+              3. Correlogram (Top 20 Related Questions) <InfoIcon />
+            </div>
+            <Dropdown variant="filter" value={topCorr}
+              options={['Top 10','Top 20','Top 30']} onChange={setTopCorr}/>
+          </div>
+          <Correlogram />
         </div>
 
       </div>
