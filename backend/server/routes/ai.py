@@ -324,7 +324,7 @@ SURVEY DATA (use only when the user asks a data question):
 
     messages = [
         {"role": "system", "content": system_prompt},
-        *req.history[-6:],
+        *req.history[-10:],
         {"role": "user", "content": req.message},
     ]
 

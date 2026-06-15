@@ -72,7 +72,10 @@ export default function ChatWithData() {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
           message:   msg,
-          history:   messages.slice(-6).map(m => ({ role: m.role, content: m.content })),
+          history:   messages
+            .filter(m => m.content && m.content.trim())   // drop empty placeholder messages
+            .slice(-10)                                     // last 5 turns of context
+            .map(m => ({ role: m.role, content: m.content })),
           dimension,
         }),
       });
