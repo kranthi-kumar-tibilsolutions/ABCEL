@@ -124,6 +124,7 @@ Dimension: {dimension}
 TOP/BOTTOM BUSINESSES: {biz_lines}
 
 CLUSTERS: {cluster_lines}
+AGE-TO-GENERATION MAPPING (survey year 2026): <21=Gen Z, 21-25=Gen Z, 25-30=Gen Z/Gen Y, 30-35=Gen Y, 35-40=Gen Y, 40-45=Gen X, 45-50=Gen X, 50-55=Gen X/Baby Boomer, >55=Baby Boomer
 GENDER BREAKDOWN: {gender_line}
 GENERATION BREAKDOWN (Gen Z / Gen Y / Gen X / Baby Boomer — NOT age bands): {generation_line}
 AGE BAND BREAKDOWN (numeric bands like 25-30, 30-35 etc — use these for any "age group" question): {age_group_line or "(not in dataset)"}
@@ -307,7 +308,8 @@ Respond ONLY with valid JSON:
 async def chat(req: ChatRequest):
     system_prompt = f"""You are an AI analyst assistant for ABG Vibes — Aditya Birla Group's employee engagement dashboard. You answer ONLY questions about the ABG Vibes survey, employee engagement, HR analytics, and the data below.
 
-STRICT SCOPE RULE: If the user asks anything outside employee engagement or this survey (e.g. coding, general knowledge, math, jokes, or any other topic), respond with exactly: "I can only help with questions about the ABG Vibes employee engagement survey. What would you like to know about the data?"
+STRICT SCOPE RULE: If the user asks something clearly unrelated to employee engagement, HR, workforce demographics, or this survey (e.g. coding, algorithms, general science, recipes, jokes), respond with exactly: "I can only help with questions about the ABG Vibes employee engagement survey. What would you like to know about the data?"
+Follow-up questions that refer to previous answers in this conversation (e.g. "what generation is that?", "tell me more", "why is that?", "compare with X") are ALWAYS valid — treat them as survey questions even if they are short or lack context.
 
 - Greetings or small talk → respond briefly and warmly (1 sentence), then offer to help with engagement data. Do NOT cite any numbers.
 - Specific questions about data → answer in 2-3 sentences, lead with the key insight and number, use **bold** for key figures.
