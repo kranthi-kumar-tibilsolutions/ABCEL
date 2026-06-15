@@ -77,6 +77,22 @@ export default function App() {
   const [selectedBU,     setSelectedBU]     = useState(null);
   const [selectedCluster,setSelectedCluster]= useState(null);
   const [isFiltersOpen,  setIsFiltersOpen]  = useState(false);
+  const [dpbFilters,     setDpbFilters]     = useState({
+    survey: 'Q4 2024 Employee Survey', business: 'All',
+    year: '2024', country: 'All', inactive: 'No',
+  });
+  const [dpbResetSignal, setDpbResetSignal] = useState(0);
+  const [saFilters,     setSaFilters]     = useState({
+    survey: 'Q4 2024 Employee Survey', business: 'All',
+    year: '2024', country: 'All', dept: 'All', inactive: 'No',
+  });
+  const [breadcrumb,     setBreadcrumb]     = useState([]);
+  const [outliersTopN, setOutliersTopN] = useState(5);
+  const [evFilters, setEvFilters] = useState({ cohort: 'All Cohorts', company: 'All', bu: 'All' });
+  const [senFilters, setSenFilters] = useState({
+    survey: 'Q4 2024 Employee Survey', bu: 'All', dept: 'All',
+    location: 'All', tenure: 'All', level: 'All', inactive: 'No',
+  });
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(true);
   const [activeFilters,  setActiveFilters]  = useState({});
   const [businesses,     setBusinesses]     = useState(null);
@@ -94,6 +110,7 @@ export default function App() {
     if (params.business !== undefined) setSelectedBusiness(params.business);
     if (params.unit     !== undefined) setSelectedBU(params.unit);
     if (params.cluster  !== undefined) setSelectedCluster(params.cluster);
+    if (nextPage !== page) setBreadcrumb([]);
     setPage(nextPage);
   }, [page]);
 
@@ -102,6 +119,7 @@ export default function App() {
       if (!prev.length) return prev;
       const next = [...prev];
       const target = next.pop();
+      setBreadcrumb([]);
       setPage(target);
       return next;
     });
@@ -209,6 +227,13 @@ export default function App() {
     businesses, units, clusters, cohorts, meta,
     filteredBusinesses,
     isFiltersOpen, setIsFiltersOpen,
+    dpbFilters, setDpbFilters,
+    dpbResetSignal, setDpbResetSignal,
+    saFilters, setSaFilters,
+    breadcrumb, setBreadcrumb,
+    outliersTopN, setOutliersTopN,
+    evFilters, setEvFilters,
+    senFilters, setSenFilters,
     activeFilters, setActiveFilters,
     summaryData,    setSummaryData,
     insightsData,   setInsightsData,

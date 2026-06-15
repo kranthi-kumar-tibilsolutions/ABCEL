@@ -1,7 +1,6 @@
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useMemo, useState, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import { Bar } from 'react-chartjs-2';
-import Breadcrumb from '../components/shared/Breadcrumb';
 import BENCHMARKS from '../data/benchmarks.json';
 
 const TYPE_LABELS = { peer: 'Peer Conglomerate', industry: 'Industry', regional: 'Regional / Norm' };
@@ -32,8 +31,15 @@ function GapBar({ score, groupAvg }) {
 }
 
 export default function BenchmarksPage() {
-  const { businesses, meta } = useContext(AppContext);
+  const { businesses, meta, setBreadcrumb } = useContext(AppContext);
   const [activeTab, setActiveTab] = useState('peers');
+
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Overview', page: 'overview' },
+      { label: 'Benchmarks' },
+    ]);
+  }, []);
 
   const groupAvg    = meta?.group_avg ?? 4.44;
   const catAvgs     = meta?.category_averages ?? {};
@@ -76,16 +82,7 @@ export default function BenchmarksPage() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[
-        { label: 'Overview', page: 'overview' },
-        { label: 'Benchmarks' },
-      ]} />
-
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Benchmarks</h1>
-          <p className="page-sub">ABG engagement scores vs. peer conglomerates, industry sectors and regional norms</p>
-        </div>
+      <div className="page-header" style={{ justifyContent: 'flex-end' }}>
         <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'right', maxWidth: 220, lineHeight: 1.5 }}>
           ABG Group Average<br />
           <span style={{ fontSize: 22, fontWeight: 800, color: '#F97316' }}>{groupAvg.toFixed(2)}</span>

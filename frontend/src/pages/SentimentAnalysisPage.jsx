@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { RotateCcw } from 'lucide-react';
-import Breadcrumb from '../components/shared/Breadcrumb';
+import { useState, useContext, useEffect } from 'react';
+import { AppContext } from '../context/AppContext';
 import Dropdown   from '../components/shared/Dropdown';
 
 /* ── Static data ──────────────────────────────────────────── */
@@ -50,16 +49,6 @@ const SAMPLES = [
       'Leadership is supportive and values our input.',
     ],
   },
-];
-
-const FILTERS_CFG = [
-  { label: 'Survey',           opts: ['Q4 2024 Employee Survey', 'Q3 2024', 'Q2 2024'] },
-  { label: 'Business Unit',    opts: ['All', 'ABG Corp', 'Tech', 'Operations'] },
-  { label: 'Department',       opts: ['All', 'HR', 'Finance', 'Engineering'] },
-  { label: 'Location',         opts: ['All', 'APAC', 'EMEA', 'Americas'] },
-  { label: 'Tenure',           opts: ['All', '0–1 yr', '1–3 yrs', '3+ yrs'] },
-  { label: 'Job Level',        opts: ['All', 'Junior', 'Mid', 'Senior', 'Lead'] },
-  { label: 'Include Inactive', opts: ['No', 'Yes'] },
 ];
 
 /* Sentiment over time — 12 months */
@@ -214,35 +203,18 @@ function TrendIcon({ t }) {
 
 /* ── Page ────────────────────────────────────────────────────── */
 export default function SentimentAnalysisPage() {
+  const { setBreadcrumb } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([{ label: 'Explore' }, { label: 'Sentiment Analysis' }]);
+  }, []);
+
   const [period,  setPeriod]  = useState('Monthly');
-  const [filters, setFilters] = useState({
-    survey:   'Q4 2024 Employee Survey',
-    bu:       'All',
-    dept:     'All',
-    location: 'All',
-    tenure:   'All',
-    level:    'All',
-    inactive: 'No',
-  });
-  const setF = (key, val) => setFilters(f => ({ ...f, [key]: val }));
-  const resetFilters = () => setFilters({
-    survey: 'Q4 2024 Employee Survey', bu: 'All', dept: 'All',
-    location: 'All', tenure: 'All', level: 'All', inactive: 'No',
-  });
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[{ label: 'Explore' }, { label: 'Sentiment Analysis' }]} />
-
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
-            <h1 className="page-title" style={{ margin: 0 }}>Sentiment Analysis</h1>
-            <InfoIcon />
-          </div>
-          <p className="page-sub" style={{ margin: 0 }}>Understand employee sentiments from open-text responses.</p>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap' }}>
           <button className="topbar-btn" style={{ fontSize: 11 }}>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="7" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="1" y="7" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="7" y="7" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/></svg>
@@ -252,38 +224,7 @@ export default function SentimentAnalysisPage() {
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3.5 6l3-3 3 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 10h9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
             Share
           </button>
-          <button className="topbar-btn topbar-btn-primary" style={{ fontSize: 11 }}>
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2v7M3.5 6.5l3 3 3-3" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 11h9" stroke="white" strokeWidth="1.3" strokeLinecap="round"/></svg>
-            Export
-          </button>
         </div>
-      </div>
-
-      {/* Filter bar */}
-      <div className="sa-filter-bar">
-        {[
-          { label: 'Survey',           key: 'survey',   opts: FILTERS_CFG[0].opts },
-          { label: 'Business Unit',    key: 'bu',       opts: FILTERS_CFG[1].opts },
-          { label: 'Department',       key: 'dept',     opts: FILTERS_CFG[2].opts },
-          { label: 'Location',         key: 'location', opts: FILTERS_CFG[3].opts },
-          { label: 'Tenure',           key: 'tenure',   opts: FILTERS_CFG[4].opts },
-          { label: 'Job Level',        key: 'level',    opts: FILTERS_CFG[5].opts },
-          { label: 'Include Inactive', key: 'inactive', opts: FILTERS_CFG[6].opts },
-        ].map(f => (
-          <div key={f.key} className="sa-filter-item">
-            <span className="sa-filter-label">{f.label}</span>
-            <Dropdown
-              variant="filter"
-              value={filters[f.key]}
-              options={f.opts}
-              onChange={v => setF(f.key, v)}
-            />
-          </div>
-        ))}
-        <button className="sa-reset-btn" onClick={resetFilters}>
-          <RotateCcw size={12} />
-          Reset Filters
-        </button>
       </div>
 
       {/* Row 1 — Score · Distribution · Over Time */}

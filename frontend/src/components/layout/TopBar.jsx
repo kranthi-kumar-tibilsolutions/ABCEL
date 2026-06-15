@@ -3,6 +3,15 @@ import { SlidersHorizontal, RotateCcw, Download, Upload, ChevronDown } from 'luc
 import { AppContext } from '../../context/AppContext';
 import Dropdown from '../shared/Dropdown';
 
+const SA_FILTERS_CFG = [
+  { key: 'business', opts: ['All', 'Finance', 'Operations', 'HR', 'Technology'] },
+  { key: 'year',     opts: ['2024', '2023', '2022'] },
+  { key: 'country',  opts: ['All', 'United Kingdom', 'United States', 'India', 'Australia'] },
+  { key: 'survey',   opts: ['Q4 2024 Employee Survey', 'Q3 2024 Employee Survey', 'Q2 2024 Employee Survey'] },
+  { key: 'dept',     opts: ['All', 'Engineering', 'Sales', 'Marketing', 'Finance'] },
+  { key: 'inactive', opts: ['No', 'Yes'] },
+];
+
 const PAGE_TITLES = {
   overview:              'Employee Engagement Intelligence',
   'business-detail':     null,
@@ -28,7 +37,11 @@ export default function TopBar() {
   const {
     setIsFiltersOpen, meta, businesses, activeFilters,
     page, selectedBusiness, selectedBU, selectedCluster,
-    rightPanelCollapsed,
+    rightPanelCollapsed, breadcrumb, navigate,
+    saFilters, setSaFilters,
+    outliersTopN, setOutliersTopN,
+    evFilters, setEvFilters,
+    senFilters, setSenFilters,
   } = useContext(AppContext);
 
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -122,13 +135,213 @@ export default function TopBar() {
     }
   };
 
+  const isOverviewPage = page === 'overview' || page === 'business-detail' || page === 'bu-detail' || page === 'cluster-detail';
+
+  const renderBreadcrumb = () => (
+    <nav style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+      {breadcrumb.map((item, i) => {
+        const isLast = i === breadcrumb.length - 1;
+        return (
+          <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            {i > 0 && <span style={{ color: 'var(--text-muted)' }}>›</span>}
+            {isLast
+              ? <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{item.label}</span>
+              : (
+                <button
+                  onClick={() => item.page && navigate(item.page, item.params || {})}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12, padding: 0 }}
+                >
+                  {item.label}
+                </button>
+              )
+            }
+          </span>
+        );
+      })}
+    </nav>
+  );
+
+  const renderExportDropdown = () => (
+    <div className="tb-dropdown" ref={exportRef}>
+      <button className="topbar-btn" onClick={() => setShowExportMenu(o => !o)}>
+        <Download size={13} />
+        Export
+        <ChevronDown size={11} style={{ transition: 'transform 0.2s', transform: showExportMenu ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+      </button>
+      {showExportMenu && (
+        <div className="tb-dropdown-menu" style={{ right: 0, left: 'auto' }}>
+          {exportOptions.map(opt => (
+            <button key={opt.value} className="tb-dropdown-item" onClick={() => handleExportSelect(opt.value)}>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  if (page === 'dynamic-persona-builder' && breadcrumb?.length) {
+    return (
+      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8 }}>
+        {renderBreadcrumb()}
+        <div className="topbar-spacer" />
+        {renderExportDropdown()}
+      </div>
+    );
+  }
+
+  if (page === 'statistical-analysis') {
+    return (
+      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8, gap: 8 }}>
+        {breadcrumb?.length > 0 && (
+          <>
+            {renderBreadcrumb()}
+            <div className="topbar-spacer" />
+          </>
+        )}
+        {SA_FILTERS_CFG.map(f => (
+          <Dropdown
+            key={f.key}
+            variant="filter"
+            value={saFilters[f.key]}
+            options={f.opts.map(o => ({ value: o, label: o }))}
+            onChange={v => setSaFilters(prev => ({ ...prev, [f.key]: v }))}
+          />
+        ))}
+
+        <button
+          className="topbar-btn"
+          onClick={() => setSaFilters({
+            survey: 'Q4 2024 Employee Survey', business: 'All',
+            year: '2024', country: 'All', dept: 'All', inactive: 'No',
+          })}
+          title="Reset filters"
+        >
+          <RotateCcw size={13} />
+        </button>
+      </div>
+    );
+  }
+
+  if (page === 'outliers' && breadcrumb?.length) {
+    return (
+      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8 }}>
+        {renderBreadcrumb()}
+        <div className="topbar-spacer" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+          <span style={{ fontWeight: 600 }}>Show top / bottom</span>
+          <select
+            value={outliersTopN}
+            onChange={e => setOutliersTopN(+e.target.value)}
+            style={{ padding: '4px 8px', border: '1px solid var(--border)', borderRadius: 6, background: 'var(--bg-card)', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', outline: 'none', color: 'var(--text-primary)' }}
+          >
+            {[3, 5, 10, 15, 20].map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
+          <span>units</span>
+        </div>
+        {renderExportDropdown()}
+      </div>
+    );
+  }
+
+  if (page === 'employee-voice' && breadcrumb?.length) {
+    const COHORT_OPTIONS = ['All Cohorts', 'Tenure < 2yr', 'Tenure 2–5yr', 'Tenure > 5yr', 'Manager', 'Non-Manager', 'Grade 1–3', 'Grade 4–6', 'Female', 'Male'];
+    const companyList = businesses ? ['All', ...businesses.map(b => b.name)] : ['All'];
+    return (
+      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8, gap: 8 }}>
+        {renderBreadcrumb()}
+        <div className="topbar-spacer" />
+        <Dropdown
+          variant="filter"
+          value={evFilters.cohort}
+          options={COHORT_OPTIONS.map(o => ({ value: o, label: o }))}
+          onChange={v => setEvFilters(prev => ({ ...prev, cohort: v }))}
+        />
+        <Dropdown
+          variant="filter"
+          value={evFilters.company}
+          options={companyList.map(o => ({ value: o, label: o }))}
+          onChange={v => setEvFilters({ cohort: evFilters.cohort, company: v, bu: 'All' })}
+        />
+        <Dropdown
+          variant="filter"
+          value={evFilters.bu}
+          options={['All'].map(o => ({ value: o, label: o }))}
+          onChange={v => setEvFilters(prev => ({ ...prev, bu: v }))}
+        />
+        {renderExportDropdown()}
+      </div>
+    );
+  }
+
+  if (page === 'sentiment-analysis' && breadcrumb?.length) {
+    const SEN_FILTERS_CFG = [
+      { key: 'survey',   opts: ['Q4 2024 Employee Survey', 'Q3 2024', 'Q2 2024'] },
+      { key: 'bu',       opts: ['All', 'ABG Corp', 'Tech', 'Operations'] },
+      { key: 'dept',     opts: ['All', 'HR', 'Finance', 'Engineering'] },
+      { key: 'location', opts: ['All', 'APAC', 'EMEA', 'Americas'] },
+      { key: 'tenure',   opts: ['All', '0–1 yr', '1–3 yrs', '3+ yrs'] },
+      { key: 'level',    opts: ['All', 'Junior', 'Mid', 'Senior', 'Lead'] },
+      { key: 'inactive', opts: ['No', 'Yes'] },
+    ];
+    return (
+      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8, gap: 6 }}>
+        {renderBreadcrumb()}
+        <div className="topbar-spacer" />
+        {SEN_FILTERS_CFG.map(f => (
+          <Dropdown
+            key={f.key}
+            variant="filter"
+            value={senFilters[f.key]}
+            options={f.opts.map(o => ({ value: o, label: o }))}
+            onChange={v => setSenFilters(prev => ({ ...prev, [f.key]: v }))}
+          />
+        ))}
+        <button
+          className="topbar-btn"
+          onClick={() => setSenFilters({
+            survey: 'Q4 2024 Employee Survey', bu: 'All', dept: 'All',
+            location: 'All', tenure: 'All', level: 'All', inactive: 'No',
+          })}
+          title="Reset filters"
+        >
+          <RotateCcw size={13} />
+        </button>
+        {renderExportDropdown()}
+      </div>
+    );
+  }
+
+  if (!isOverviewPage && breadcrumb?.length) {
+    return (
+      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8 }}>
+        {renderBreadcrumb()}
+        <div className="topbar-spacer" />
+        {renderExportDropdown()}
+      </div>
+    );
+  }
+
   return (
     <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8 }}>
-      {/* Filters */}
-      <button className="topbar-btn" onClick={() => setIsFiltersOpen(true)}>
-        <SlidersHorizontal size={13} />
-        Filters {filterCount > 0 && <span className="filter-badge">{filterCount}</span>}
-      </button>
+      {isOverviewPage && (
+        <>
+          {/* Filters */}
+          <button className="topbar-btn" onClick={() => setIsFiltersOpen(true)}>
+            <SlidersHorizontal size={13} />
+            Filters {filterCount > 0 && <span className="filter-badge">{filterCount}</span>}
+          </button>
+
+          {/* Compare to dropdown */}
+          <Dropdown
+            variant="topbar"
+            label="Compare to"
+            value={compareTo}
+            options={compareOptions}
+            onChange={setCompareTo}
+          />
+        </>
+      )}
 
       {/* Survey Wave dropdown */}
       <Dropdown
@@ -137,15 +350,6 @@ export default function TopBar() {
         value={surveyWave}
         options={waveOptions}
         onChange={setSurveyWave}
-      />
-
-      {/* Compare to dropdown */}
-      <Dropdown
-        variant="topbar"
-        label="Compare to"
-        value={compareTo}
-        options={compareOptions}
-        onChange={setCompareTo}
       />
 
       {/* Reset */}
