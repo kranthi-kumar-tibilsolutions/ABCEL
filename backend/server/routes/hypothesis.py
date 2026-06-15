@@ -26,16 +26,56 @@ def _read(f: str) -> list:
     return []
 
 
-# Map LLM-extracted variable names → flat field names in responses.json (DATA_REALITY_UPDATE §8)
+# Map LLM-extracted variable names → flat field names in responses.json
 VARIABLE_MAP = {
-    "engagement":             "engagement",
-    "leadership":             "leadership",
-    "performance culture":    "performance_culture",
-    "development":            "development_and_career",
-    "development and career": "development_and_career",
-    "manager effectiveness":  "manager_effectiveness",
-    "onboarding":             "onboarding",
-    "overall":                "overall",
+    "engagement":                   "engagement",
+    "leadership":                   "leadership",
+    "performance culture":          "performance_culture",
+    "performance_culture":          "performance_culture",
+    "development":                  "development_and_career",
+    "development and career":       "development_and_career",
+    "development_and_career":       "development_and_career",
+    "career growth":                "development_and_career",
+    "career_growth":                "development_and_career",
+    "career":                       "development_and_career",
+    "career growth opportunities":  "development_and_career",
+    "manager effectiveness":        "manager_effectiveness",
+    "manager_effectiveness":        "manager_effectiveness",
+    "manager":                      "manager_effectiveness",
+    "onboarding":                   "onboarding",
+    "overall":                      "overall",
+}
+
+# Normalize LLM-guessed group_filter dimension names to real field keys
+GROUP_FILTER_MAP = {
+    # theme aliases
+    "career_growth":               "development_and_career",
+    "career growth":               "development_and_career",
+    "career_growth_opportunities": "development_and_career",
+    "career_development":          "development_and_career",
+    "development":                 "development_and_career",
+    "development_career":          "development_and_career",
+    "performance":                 "performance_culture",
+    "performance_culture":         "performance_culture",
+    "manager_trust":               "manager_effectiveness",
+    "manager_effectiveness":       "manager_effectiveness",
+    "manager":                     "manager_effectiveness",
+    "leadership_trust":            "leadership",
+    "onboarding_experience":       "onboarding",
+    # demographic aliases
+    "is_people_manager":           "is_manager",
+    "people_manager":              "is_manager",
+    "manager_yn":                  "is_manager",
+    "talent_pool":                 "abglp",
+    "generation_group":            "generation",
+    "tenure_band":                 "tenure",
+    "tenure_group":                "tenure",
+    "job_band":                    "job_level",
+    "job_band_level":              "job_level",
+    "level":                       "job_level",
+    "age":                         "age_group",
+    "age_band":                    "age_group",
+    "score":                       "engagement",  # fallback for vague "score"
 }
 
 
@@ -71,21 +111,31 @@ async def run_test(req: TestRequest):
 Parse this hypothesis into structured test parameters.
 
 Available survey fields: {q_list}
-Available demographic fields: business, generation, gender, age_group, job_level, tenure, country, is_manager, abglp
+
+Available group_filter dimensions (EXACT field names — use one of these only):
+  Theme score fields: engagement, leadership, performance_culture, development_and_career, manager_effectiveness, onboarding, overall
+  Demographic fields: business, generation (values: Gen Z, Gen Y, Gen X, Baby Boomer), gender (values: Male, Female), age_group, job_level, tenure, country, is_manager (values: Yes/No), abglp (values: Yes/No)
+
+Available variable fields (what to measure as outcome):
+  engagement, leadership, performance_culture, development_and_career, manager_effectiveness, onboarding, overall
+
 Group average score for this survey: {group_avg}/5
 
 Hypothesis: "{req.hypothesis_text}"
 
-IMPORTANT: If the hypothesis compares against "average" or "group average", set hypothesized_mean to {group_avg}.
-Do NOT use the alpha value (0.05) as hypothesized_mean.
+RULES:
+- If hypothesis says "rate X high (score >= N)" → group_filter.dimension should be the theme field (e.g. development_and_career for Career Growth), operator="gte", value=N
+- If hypothesis says "group average" or "company average" → hypothesized_mean = {group_avg}
+- Do NOT use the alpha value (0.05) as hypothesized_mean
+- "Career Growth" → development_and_career, "Performance" → performance_culture, "Manager" → manager_effectiveness
 
 Return ONLY a JSON object — no explanation, no markdown:
 {{
   "h0": "<null hypothesis text>",
   "h1": "<alternative hypothesis text>",
   "test_type": "one_sample_z",
-  "variable": "<field name to measure — use a theme key like engagement, leadership, overall>",
-  "group_filter": {{ "dimension": "<demographic field>", "operator": "eq|gte|lte", "value": "<val>" }},
+  "variable": "<theme field to measure as outcome>",
+  "group_filter": {{ "dimension": "<EXACT field name from list above>", "operator": "eq|gte|lte", "value": "<val>" }},
   "hypothesized_mean": <number — use {group_avg} if comparing vs group average>,
   "threshold": <number or null>,
   "direction": "greater" | "less" | "two_tailed",
@@ -108,6 +158,18 @@ Return ONLY a JSON object — no explanation, no markdown:
                 "error":      params.get("parse_error") or "Could not parse hypothesis",
                 "suggestion": 'Try: "Employees who rate X high have higher Y scores than those who rate it low."',
             }
+
+        # Normalize group_filter dimension using alias map
+        gf_raw = params.get("group_filter")
+        if gf_raw and isinstance(gf_raw.get("dimension"), str):
+            dim_key = gf_raw["dimension"].lower().strip()
+            if dim_key in GROUP_FILTER_MAP:
+                params["group_filter"]["dimension"] = GROUP_FILTER_MAP[dim_key]
+
+        # Normalize variable name using alias map
+        raw_var = (params.get("variable") or "").lower().strip()
+        if raw_var in VARIABLE_MAP:
+            params["variable"] = VARIABLE_MAP[raw_var]
 
         # ── Step 2: Run z-test on real data ──
         test_group = list(units)
@@ -138,19 +200,13 @@ Return ONLY a JSON object — no explanation, no markdown:
         if f.get("job_level")  and f["job_level"]  != "All": test_group = [u for u in test_group if u.get("job_level")  == f["job_level"]]
         if f.get("tenure")     and f["tenure"]     != "All": test_group = [u for u in test_group if u.get("tenure")     == f["tenure"]]
 
-        # Map variable name → real field key (DATA_REALITY_UPDATE §8)
-        raw_key   = (params.get("variable") or "").lower().strip()
-        score_key = VARIABLE_MAP.get(raw_key) or raw_key.replace(" ", "_")
+        # score_key is already normalized above
+        score_key = (params.get("variable") or "engagement").replace(" ", "_")
 
-        # Score access: nested scores first, then flat field, then overall (20.5)
+        # Score access: flat field (already normalized), then overall fallback
         scores = [
             v for u in test_group
-            if (v := (
-                (u.get("scores") or {}).get(params.get("variable")) or
-                u.get(score_key) or
-                u.get("overall") or
-                0
-            )) > 0
+            if (v := (u.get(score_key) or u.get("overall") or 0)) > 0
         ]
 
         sample_mean = mean(scores)
