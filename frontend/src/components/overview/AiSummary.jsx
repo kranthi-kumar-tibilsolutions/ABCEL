@@ -158,13 +158,17 @@ export default function AiSummary({ maxBullets = 3 }) {
       {/* ── Loaded state ── */}
       {summaryData && !loading && (
         <>
-          {/* 3-column row: header | takeaway | illustration */}
-          <div className="ais-grid">
+          {/* grid: header | [bullets] | takeaway */}
+          <div className="ais-grid" style={{ gridTemplateColumns: bulletsOpen ? '200px minmax(0,1fr) minmax(0,1fr)' : '200px minmax(0,1fr)' }}>
 
-            {/* Col 1: header + sparkle + intro + buttons */}
+            {/* Col 1: badge + title + sparkle + view button + expand arrow */}
             <div className="ais-col-left">
               <div className="ais-top-row">
                 <AiBadge />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="ais-title">AI EXECUTIVE SUMMARY</div>
+                  <div className="ais-sub">{timeAgo}</div>
+                </div>
                 <button
                   className="ais-refresh-btn"
                   title="Regenerate"
@@ -172,25 +176,41 @@ export default function AiSummary({ maxBullets = 3 }) {
                 >
                   <RefreshCw size={13} />
                 </button>
-              </div>
-              <div>
-                <div className="ais-title">AI EXECUTIVE SUMMARY</div>
-                <div className="ais-sub">{timeAgo}</div>
+                <button
+                  className="ais-expand-btn"
+                  title={bulletsOpen ? 'Collapse findings' : 'Expand findings'}
+                  onClick={() => setBulletsOpen(v => !v)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                    style={{ transition: 'transform 0.2s', transform: bulletsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                    <path d="M5 2.5L9.5 7L5 11.5"
+                      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
               </div>
               <div className="ais-intro-block">
                 <SparkleCircle />
                 <p className="ais-intro-text">Here&rsquo;s what I found from this survey wave.</p>
               </div>
               <div style={{ flex: 1 }} />
-              <div className="ais-btn-row">
-                <button className="ais-view-btn" onClick={() => navigate && navigate('ai-insights')}>View full summary &rarr;</button>
-                <button className="ais-more-btn" onClick={() => setBulletsOpen(v => !v)}>
-                  {bulletsOpen ? 'Less ↑' : 'More ↓'}
-                </button>
-              </div>
+              <button className="ais-view-btn" onClick={() => navigate && navigate('ai-insights')}>View full summary &rarr;</button>
             </div>
 
-            {/* Col 2: key takeaway */}
+            {/* Col 2: bullet findings — only when expanded */}
+            {bulletsOpen && (
+              <div className="ais-col-bullets">
+                <ul className="ais-bullets">
+                  {bullets.map((b, i) => (
+                    <li key={i} className="ais-bullet">
+                      <CheckIcon />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Col 3 (or Col 2 when collapsed): key takeaway */}
             <div className="ais-col-takeaway">
               {takeaway && (
                 <>
@@ -212,26 +232,8 @@ export default function AiSummary({ maxBullets = 3 }) {
               )}
             </div>
 
-            {/* Col 3: illustration */}
-            <div className="ais-col-illus">
-              <DashboardIllustration />
-            </div>
-
           </div>
 
-          {/* Expandable bullets panel */}
-          {bulletsOpen && (
-            <div className="ais-bullets-panel">
-              <ul className="ais-bullets">
-                {bullets.map((b, i) => (
-                  <li key={i} className="ais-bullet">
-                    <CheckIcon />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </>
       )}
     </div>

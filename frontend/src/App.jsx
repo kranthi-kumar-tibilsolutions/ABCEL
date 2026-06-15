@@ -22,7 +22,27 @@ import InsightsStudio      from './pages/InsightsStudio';
 import TrendsPage          from './pages/TrendsPage';
 import EmployeeVoicePage   from './pages/EmployeeVoicePage';
 import ReportsPage         from './pages/ReportsPage';
-import BenchmarksPage      from './pages/BenchmarksPage';
+import BenchmarksPage         from './pages/BenchmarksPage';
+import HypothesisTestingPage        from './pages/HypothesisTestingPage';
+import SentimentAnalysisPage       from './pages/SentimentAnalysisPage';
+import StatisticalAnalysisPage     from './pages/StatisticalAnalysisPage';
+import DynamicPersonaBuilderPage   from './pages/DynamicPersonaBuilderPage';
+import SettingsPage                from './pages/SettingsPage';
+
+function ComingSoon({ title }) {
+  return (
+    <div className="page-container">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 12, color: 'var(--text-muted)' }}>
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <rect x="4" y="4" width="40" height="40" rx="10" stroke="#CBD5E1" strokeWidth="2"/>
+          <path d="M16 24h16M24 16v16" stroke="#CBD5E1" strokeWidth="2.5" strokeLinecap="round"/>
+        </svg>
+        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>{title}</div>
+        <div style={{ fontSize: 13 }}>Wireframes in review — coming soon</div>
+      </div>
+    </div>
+  );
+}
 
 const PAGE_MAP = {
   upload:           UploadPage,
@@ -39,6 +59,11 @@ const PAGE_MAP = {
   'employee-voice': EmployeeVoicePage,
   reports:          ReportsPage,
   benchmarks:       BenchmarksPage,
+  'hypothesis-testing':       HypothesisTestingPage,
+  'statistical-analysis':     StatisticalAnalysisPage,
+  'sentiment-analysis':       SentimentAnalysisPage,
+  'dynamic-persona-builder':  DynamicPersonaBuilderPage,
+  settings:                   SettingsPage,
 };
 
 export default function App() {

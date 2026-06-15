@@ -46,7 +46,7 @@ function PaperPlaneIcon() {
 }
 
 export default function ChatWithData() {
-  const { dimension } = useContext(AppContext);
+  const { dimension: ctxDimension } = useContext(AppContext);
   const [messages, setMessages] = useState([
     { role: 'assistant', content: "Hi! I'm your AI analyst. Ask me anything about employee engagement:" }
   ]);
@@ -73,7 +73,7 @@ export default function ChatWithData() {
         body:    JSON.stringify({
           message:   msg,
           history:   messages.slice(-6).map(m => ({ role: m.role, content: m.content })),
-          dimension,
+          dimension: ctxDimension,
         }),
       });
 

@@ -72,7 +72,7 @@ const CLUSTER_CONFIG = {
 };
 
 export default function ClusterCards() {
-  const { clusters, navigate } = useContext(AppContext);
+  const { clusters, navigate, activeFilters } = useContext(AppContext);
   const [expanded, setExpanded] = useState(new Set());
 
   if (!clusters) return null;
@@ -86,8 +86,23 @@ export default function ClusterCards() {
     });
   };
 
-  const total = Object.values(clusters).reduce((s, arr) => s + (arr?.length ?? 0), 0);
-  const entries = Object.entries(CLUSTER_CONFIG).filter(([key]) => clusters[key] !== undefined);
+  const { clusters: fclusters = [], minScore: ms = 0 } = activeFilters || {};
+
+  // Apply filters to each cluster's BU list
+  const filteredClusters = Object.fromEntries(
+    Object.entries(clusters).map(([key, items]) => [
+      key,
+      (items || []).filter(bu => ms <= 0 || (bu.overall ?? bu.score ?? 0) >= ms),
+    ])
+  );
+
+  const total = Object.values(filteredClusters).reduce((s, arr) => s + arr.length, 0);
+
+  // If cluster filter active, only show selected; else show all that exist
+  const entries = Object.entries(CLUSTER_CONFIG).filter(([key]) =>
+    filteredClusters[key] !== undefined &&
+    (fclusters.length === 0 || fclusters.includes(key))
+  );
 
   return (
     <div className="cluster-section">
@@ -110,7 +125,7 @@ export default function ClusterCards() {
 
       <div className="cluster-cards-grid">
         {entries.map(([key, cfg]) => {
-          const items = clusters[key] || [];
+          const items = filteredClusters[key] || [];
           const pct   = total > 0 ? Math.round((items.length / total) * 100) : 0;
 
           return (
