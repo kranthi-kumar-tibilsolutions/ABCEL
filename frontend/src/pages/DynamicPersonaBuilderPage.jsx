@@ -35,12 +35,12 @@ const DIM_COLORS = [
   { bg:'#FEF9C3', text:'#854D0E', border:'#FEF08A' },
 ];
 
-const FILTERS_CFG = [
-  { label:'Survey',    key:'survey',   opts:['Q4 2024 Employee Survey','Q3 2024 Employee Survey','Q2 2024'] },
-  { label:'Business',  key:'business', opts:['All','Finance','Operations','HR','Technology'] },
-  { label:'Year',      key:'year',     opts:['2024','2023','2022'] },
-  { label:'Country',   key:'country',  opts:['All','United Kingdom','United States','India'] },
-  { label:'Include Inactive Employees', key:'inactive', opts:['No','Yes'] },
+const BUSINESS_OPTS = [
+  'All','Aditya Birla New Age Hospitality Pvt. Ltd.','Birla Carbon','ABG Renewables',
+  'Aditya Birla Global Trading','Aditya Birla Mgmt Co. Pvt Ltd.','Apparels','Birla Estates',
+  'Birla Pivot','CFI','Cement HO','Century Group HO','Financial Services HO','Metals',
+  'Mining','Novel Jewels Ltd.','Paints HO','Pulp and Fibre HO','Textiles HO',
+  'ABG Headquarters','Grasim CFD','Novelis','Seamex',
 ];
 
 function InfoIcon() {
@@ -193,10 +193,7 @@ export default function DynamicPersonaBuilderPage() {
   const [personaName, setPersonaName] = useState('Custom Persona');
   const [dimensions,  setDimensions]  = useState([]);
   const [dims,        setDims]        = useState({});
-  const [filters,     setFilters]     = useState({
-    survey:'Q4 2024 Employee Survey', business:'All',
-    year:'2024', country:'All', inactive:'No',
-  });
+  const [business, setBusiness] = useState('All');
   const [viewBy,    setViewBy]    = useState('Themes');
   const [themes,    setThemes]    = useState([]);
   const [comps,     setComps]     = useState([]);
@@ -207,12 +204,8 @@ export default function DynamicPersonaBuilderPage() {
   const [applied,   setApplied]   = useState(false);
   const [apiError,  setApiError]  = useState(null);
 
-  const setF   = (k,v) => setFilters(f => ({ ...f, [k]: v }));
-  const setDim = (id,v) => setDims(d => ({ ...d, [id]: v }));
-  const resetAll = () => {
-    setFilters({ survey:'Q4 2024 Employee Survey', business:'All', year:'2024', country:'All', inactive:'No' });
-    setDims({});
-  };
+  const setDim  = (id,v) => setDims(d => ({ ...d, [id]: v }));
+  const resetAll = () => { setBusiness('All'); setDims({}); };
 
   /* Fetch available dimensions on mount and auto-load initial data */
   useEffect(() => {
@@ -348,19 +341,20 @@ export default function DynamicPersonaBuilderPage() {
         </div>
       </div>
 
-      {/* Filter bar */}
+      {/* Filter bar — Business only; country is India by default */}
       <div className="sa-filter-bar" style={{ marginBottom:12 }}>
-        {FILTERS_CFG.map(f => (
-          <div key={f.key} className="sa-filter-item">
-            <span className="sa-filter-label">{f.label}</span>
-            <Dropdown variant="filter" value={filters[f.key]}
-              options={f.opts} onChange={v => setF(f.key, v)}/>
-          </div>
-        ))}
+        <div className="sa-filter-item">
+          <span className="sa-filter-label">Business</span>
+          <Dropdown variant="filter" value={business} options={BUSINESS_OPTS} onChange={setBusiness}/>
+        </div>
         <button className="sa-reset-btn" onClick={resetAll}>
           <RotateCcw size={12} />
-          Reset Filters
+          Reset
         </button>
+        <span style={{ fontSize:10, color:'#92400E', background:'#FEF3C7', border:'1px solid #FDE68A',
+          borderRadius:4, padding:'2px 7px', marginLeft:4 }}>
+          Capability demo — business-level filtering will be live with unit-level data
+        </span>
       </div>
 
       {/* Main grid */}

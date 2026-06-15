@@ -2,13 +2,12 @@ import { useState, useMemo, useEffect } from 'react';
 import { RotateCcw } from 'lucide-react';
 import Dropdown from '../components/shared/Dropdown';
 
-const FILTER_CFG = [
-  { label:'Survey',                     key:'survey',   opts:['Q4 2024 Employee Survey','Q3 2024 Employee Survey','Q2 2024 Employee Survey'] },
-  { label:'Business',                   key:'business', opts:['All','Finance','Operations','HR','Technology'] },
-  { label:'Year',                       key:'year',     opts:['2024','2023','2022'] },
-  { label:'Country',                    key:'country',  opts:['All','United Kingdom','United States','India','Australia'] },
-  { label:'Department',                 key:'dept',     opts:['All','Engineering','Sales','Marketing','Finance'] },
-  { label:'Include Inactive Employees', key:'inactive', opts:['No','Yes'] },
+const BUSINESS_OPTS = [
+  'All','Aditya Birla New Age Hospitality Pvt. Ltd.','Birla Carbon','ABG Renewables',
+  'Aditya Birla Global Trading','Aditya Birla Mgmt Co. Pvt Ltd.','Apparels','Birla Estates',
+  'Birla Pivot','CFI','Cement HO','Century Group HO','Financial Services HO','Metals',
+  'Mining','Novel Jewels Ltd.','Paints HO','Pulp and Fibre HO','Textiles HO',
+  'ABG Headquarters','Grasim CFD','Novelis','Seamex',
 ];
 
 const TILE_CFG = [
@@ -209,10 +208,7 @@ export default function StatisticalAnalysisPage() {
   const [expanded,    setExpanded]    = useState(false);
   const [topCorr,     setTopCorr]     = useState('Top 20');
   const [topNet,      setTopNet]      = useState('Top 25');
-  const [filters,     setFilters]     = useState({
-    survey:'Q4 2024 Employee Survey', business:'All',
-    year:'2024', country:'All', dept:'All', inactive:'No',
-  });
+  const [business, setBusiness] = useState('All');
 
   /* ── API state ── */
   const [questions,   setQuestions]   = useState([]);
@@ -229,8 +225,7 @@ export default function StatisticalAnalysisPage() {
   const [insight,     setInsight]     = useState('');
   const [loading,     setLoading]     = useState(false);
 
-  const setF   = (k, v) => setFilters(f => ({ ...f, [k]: v }));
-  const resetF = () => setFilters({ survey:'Q4 2024 Employee Survey', business:'All', year:'2024', country:'All', dept:'All', inactive:'No' });
+  const resetF = () => setBusiness('All');
 
   /* fetch questions list on mount */
   useEffect(() => {
@@ -304,19 +299,20 @@ export default function StatisticalAnalysisPage() {
         </p>
       </div>
 
-      {/* filter bar */}
+      {/* filter bar — Business only; country is India by default */}
       <div className="sa-filter-bar" style={{ marginBottom:12 }}>
-        {FILTER_CFG.map(f => (
-          <div key={f.key} className="sa-filter-item">
-            <span className="sa-filter-label">{f.label}</span>
-            <Dropdown variant="filter" value={filters[f.key]}
-              options={f.opts} onChange={v => setF(f.key, v)}/>
-          </div>
-        ))}
+        <div className="sa-filter-item">
+          <span className="sa-filter-label">Business</span>
+          <Dropdown variant="filter" value={business} options={BUSINESS_OPTS} onChange={setBusiness}/>
+        </div>
         <button className="sa-reset-btn" onClick={resetF}>
           <RotateCcw size={12} />
-          Reset Filters
+          Reset
         </button>
+        <span style={{ fontSize:10, color:'#92400E', background:'#FEF3C7', border:'1px solid #FDE68A',
+          borderRadius:4, padding:'2px 7px', marginLeft:4 }}>
+          Capability demo — business-level filtering will be live with unit-level data
+        </span>
       </div>
 
       {/* top grid */}
