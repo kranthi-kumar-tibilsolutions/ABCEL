@@ -1,67 +1,34 @@
 import base64
 import json
-from fastapi import APIRouter
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 router = APIRouter()
 
-# Demo users — Group HR sees all companies, Company HR is scoped to one
-USERS = {
-    "admin@abg.com": {
-        "password": "abg2026",
-        "user": {
-            "id":      "U001",
-            "name":    "ABG Admin",
-            "email":   "admin@abg.com",
-            "role":    "group_hr",
-            "company": None,
-        },
-    },
-    "kranthi@abg.com": {
-        "password": "abg2026",
-        "user": {
-            "id":      "U002",
-            "name":    "Kranthi Kumar",
-            "email":   "kranthi@abg.com",
-            "role":    "group_hr",
-            "company": None,
-        },
-    },
-    "hr@cementho.com": {
-        "password": "cement2026",
-        "user": {
-            "id":      "U101",
-            "name":    "Cement HO HR",
-            "email":   "hr@cementho.com",
-            "role":    "company_hr",
-            "company": "Cement HO",
-        },
-    },
-    "hr@metals.com": {
-        "password": "metals2026",
-        "user": {
-            "id":      "U102",
-            "name":    "Metals HR",
-            "email":   "hr@metals.com",
-            "role":    "company_hr",
-            "company": "Metals",
-        },
-    },
-    "hr@novelis.com": {
-        "password": "novelis2026",
-        "user": {
-            "id":      "U103",
-            "name":    "Novelis HR",
-            "email":   "hr@novelis.com",
-            "role":    "company_hr",
-            "company": "Novelis",
-        },
-    },
-}
+_USERS_FILE = Path(__file__).resolve().parent.parent / "data" / "users.json"
 
 
-def _make_token(user: dict) -> str:
-    payload = json.dumps({"id": user["id"], "role": user["role"]})
+def _load_users() -> list:
+    try:
+        return json.loads(_USERS_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+
+def _public_user(u: dict) -> dict:
+    return {
+        "email":   u["email"],
+        "name":    u["name"],
+        "role":    u["role"],
+        "company": u.get("company"),
+        "theme":   u.get("theme", "abg"),
+    }
+
+
+def _make_token(u: dict) -> str:
+    payload = json.dumps({"email": u["email"], "role": u["role"]})
     return base64.b64encode(payload.encode()).decode()
 
 
@@ -72,11 +39,20 @@ class LoginRequest(BaseModel):
 
 @router.post("/login")
 async def login(req: LoginRequest):
-    record = USERS.get(req.email.lower().strip())
-    if not record or record["password"] != req.password:
-        from fastapi import HTTPException
+    users = _load_users()
+    user  = next(
+        (u for u in users if u["email"].lower() == req.email.lower().strip()),
+        None,
+    )
+    if not user or user.get("password") != req.password:
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    user  = record["user"]
-    token = _make_token(user)
-    return {"user": user, "token": token}
+    pub   = _public_user(user)
+    token = _make_token(pub)
+    return {"token": token, "user": pub}
+
+
+@router.get("/me")
+async def me():
+    # Placeholder — frontend uses localStorage, not server-side sessions
+    raise HTTPException(status_code=401, detail="Not authenticated")
