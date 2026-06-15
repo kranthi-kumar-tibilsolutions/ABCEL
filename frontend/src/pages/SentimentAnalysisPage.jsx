@@ -1,6 +1,9 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext , useEffect} from 'react';
+import { RotateCcw } from 'lucide-react';
+import Breadcrumb from '../components/shared/Breadcrumb';
 import { AppContext } from '../context/AppContext';
 import Dropdown   from '../components/shared/Dropdown';
+import { AppContext } from '../context/AppContext';
 
 /* ── Static data ──────────────────────────────────────────── */
 
@@ -189,7 +192,8 @@ function AlignBadge({ v }) {
   const s = map[v] || map['Consistent'];
   return (
     <span style={{ background: s.bg, color: s.c, fontSize: 9, fontWeight: 700,
-      padding: '2px 5px', borderRadius: 8, display: 'inline-block', lineHeight: 1.4, wordBreak: 'break-word' }}>
+      padding: '2px 6px', borderRadius: 8, display: 'inline-block', lineHeight: 1.5,
+      whiteSpace: 'normal', wordBreak: 'break-word', maxWidth: '100%' }}>
       {v}
     </span>
   );
@@ -203,13 +207,33 @@ function TrendIcon({ t }) {
 
 /* ── Page ────────────────────────────────────────────────────── */
 export default function SentimentAnalysisPage() {
-  const { setBreadcrumb } = useContext(AppContext);
+  const { rightPanelCollapsed } = useContext(AppContext);
+  const compact = !rightPanelCollapsed; // right panel is open → use compact sizes
 
-  useEffect(() => {
-    setBreadcrumb([{ label: 'Explore' }, { label: 'Sentiment Analysis' }]);
-  }, []);
+  const [period,           setPeriod]           = useState('Monthly');
+  const [activeSentiment,  setActiveSentiment]  = useState(null);
+  const [filters, setFilters] = useState({
+    survey:   'Q4 2024 Employee Survey',
+    bu:       'All',
+    dept:     'All',
+    location: 'All',
+    tenure:   'All',
+    level:    'All',
+    inactive: 'No',
+  });
+  const setF = (key, val) => setFilters(f => ({ ...f, [key]: val }));
+  const resetFilters = () => setFilters({
+    survey: 'Q4 2024 Employee Survey', bu: 'All', dept: 'All',
+    location: 'All', tenure: 'All', level: 'All', inactive: 'No',
+  });
 
-  const [period,  setPeriod]  = useState('Monthly');
+  const filteredTopics = activeSentiment
+    ? TOPIC_BREAKDOWN.filter(row =>
+        activeSentiment === 'positive' ? row.score >  0.10 :
+        activeSentiment === 'negative' ? row.score < -0.10 :
+        Math.abs(row.score) <= 0.10
+      )
+    : TOPIC_BREAKDOWN;
 
   return (
     <div className="page-container">
@@ -244,19 +268,45 @@ export default function SentimentAnalysisPage() {
 
         {/* Sentiment Distribution */}
         <div className="sa-card">
-          <div className="sa-card-title">Sentiment Distribution <InfoIcon /></div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div className="sa-card-title" style={{ marginBottom: 0 }}>Sentiment Distribution <InfoIcon /></div>
+            {activeSentiment && (
+              <button onClick={() => setActiveSentiment(null)} style={{
+                fontSize: 10, fontWeight: 600, color: 'var(--text-muted)',
+                background: 'none', border: '1px solid var(--border)',
+                borderRadius: 5, cursor: 'pointer', padding: '2px 7px', fontFamily: 'inherit',
+              }}>
+                Clear
+              </button>
+            )}
+          </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {[
-              { label: 'Negative', n: 1248, pct: '25.5%', bg: '#FEE2E2', c: '#DC2626' },
-              { label: 'Neutral',  n: 1612, pct: '33.0%', bg: '#F1F5F9', c: '#64748B' },
-              { label: 'Positive', n: 2032, pct: '41.5%', bg: '#DCFCE7', c: '#16A34A' },
-            ].map(s => (
-              <div key={s.label} style={{ flex: 1, background: s.bg, borderRadius: 8, padding: '10px 8px 8px', textAlign: 'center' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: s.c, marginBottom: 5 }}>{s.label}</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#0F172A', lineHeight: 1.1 }}>{s.n.toLocaleString()}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>{s.pct}</div>
-              </div>
-            ))}
+              { key: 'negative', label: 'Negative', n: 1248, pct: '25.5%', bg: '#FEE2E2', activeBg: '#FCA5A5', c: '#DC2626', border: '#DC2626' },
+              { key: 'neutral',  label: 'Neutral',  n: 1612, pct: '33.0%', bg: '#F1F5F9', activeBg: '#CBD5E1', c: '#64748B', border: '#64748B' },
+              { key: 'positive', label: 'Positive', n: 2032, pct: '41.5%', bg: '#DCFCE7', activeBg: '#86EFAC', c: '#16A34A', border: '#16A34A' },
+            ].map(s => {
+              const isActive  = activeSentiment === s.key;
+              const isDimmed  = activeSentiment && !isActive;
+              return (
+                <div
+                  key={s.key}
+                  onClick={() => setActiveSentiment(isActive ? null : s.key)}
+                  style={{
+                    flex: 1, borderRadius: 8, padding: '10px 8px 8px', textAlign: 'center',
+                    cursor: 'pointer', userSelect: 'none', transition: 'all 0.15s',
+                    background: isActive ? s.activeBg : s.bg,
+                    border: isActive ? `2px solid ${s.border}` : '2px solid transparent',
+                    opacity: isDimmed ? 0.45 : 1,
+                    transform: isActive ? 'scale(1.03)' : 'scale(1)',
+                  }}
+                >
+                  <div style={{ fontSize: 10, fontWeight: 700, color: s.c, marginBottom: 5 }}>{s.label}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: '#0F172A', lineHeight: 1.1 }}>{s.n.toLocaleString()}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>{s.pct}</div>
+                </div>
+              );
+            })}
           </div>
           <p style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 10 }}>Total Responses: 4,892</p>
         </div>
@@ -281,14 +331,16 @@ export default function SentimentAnalysisPage() {
       <div className="sa-grid-3">
 
         {/* Top Topics word cloud */}
-        <div className="sa-card">
+        <div className="sa-card" style={{ padding: compact ? '10px 12px' : undefined }}>
           <div className="sa-card-title">
             Top Topics
             <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 400 }}>(by volume)</span>
             <InfoIcon />
           </div>
-          <WordCloud />
-          <div style={{ display: 'flex', gap: 14, marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+          <div style={{ overflow: 'hidden', maxHeight: compact ? 130 : undefined }}>
+            <WordCloud />
+          </div>
+          <div style={{ display: 'flex', gap: 14, marginTop: 6, borderTop: '1px solid var(--border)', paddingTop: 6 }}>
             {[['#DC2626','Negative'],['#94A3B8','Neutral'],['#16A34A','Positive']].map(([c,l]) => (
               <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'var(--text-muted)' }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: c, flexShrink: 0, display: 'inline-block' }}/>
@@ -299,8 +351,19 @@ export default function SentimentAnalysisPage() {
         </div>
 
         {/* Topic Sentiment Breakdown */}
-        <div className="sa-card" style={{ padding: '14px 12px' }}>
-          <div className="sa-card-title">Topic Sentiment Breakdown <InfoIcon /></div>
+        <div className="sa-card" style={{ padding: compact ? '10px 10px' : '14px 12px' }}>
+          <div className="sa-card-title" style={{ marginBottom: 8 }}>
+            Topic Sentiment Breakdown <InfoIcon />
+            {activeSentiment && (
+              <span style={{
+                marginLeft: 4, fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 8,
+                background: activeSentiment === 'negative' ? '#FEE2E2' : activeSentiment === 'positive' ? '#DCFCE7' : '#F1F5F9',
+                color:      activeSentiment === 'negative' ? '#DC2626' : activeSentiment === 'positive' ? '#16A34A' : '#64748B',
+              }}>
+                {activeSentiment.charAt(0).toUpperCase() + activeSentiment.slice(1)} only
+              </span>
+            )}
+          </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <colgroup>
               <col style={{ width: '40%' }} />
@@ -324,16 +387,20 @@ export default function SentimentAnalysisPage() {
               </tr>
             </thead>
             <tbody>
-              {TOPIC_BREAKDOWN.map(row => {
+              {filteredTopics.length === 0 ? (
+                <tr><td colSpan={4} style={{ padding:'14px 4px', textAlign:'center', fontSize:10.5, color:'var(--text-muted)' }}>
+                  No topics match this sentiment filter.
+                </td></tr>
+              ) : filteredTopics.map(row => {
                 const c = row.score > 0.1 ? '#16A34A' : row.score < -0.1 ? '#DC2626' : '#94A3B8';
                 return (
                   <tr key={row.topic} style={{ borderBottom: '1px solid var(--bg-page)' }}>
-                    <td style={{ padding: '6px 4px 6px 0', fontWeight: 600, color: 'var(--text-primary)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.topic}</td>
-                    <td style={{ padding: '6px 4px', textAlign: 'right', color: 'var(--text-muted)', fontSize: 10.5 }}>{row.pct}%</td>
-                    <td style={{ padding: '6px 4px', textAlign: 'right', fontWeight: 700, color: c, fontSize: 11 }}>
+                    <td style={{ padding: compact ? '3px 4px 3px 0' : '6px 4px 6px 0', fontWeight: 600, color: 'var(--text-primary)', fontSize: compact ? 10 : 11, wordBreak: 'break-word' }}>{row.topic}</td>
+                    <td style={{ padding: compact ? '3px 4px' : '6px 4px', textAlign: 'right', color: 'var(--text-muted)', fontSize: compact ? 9.5 : 10.5 }}>{row.pct}%</td>
+                    <td style={{ padding: compact ? '3px 4px' : '6px 4px', textAlign: 'right', fontWeight: 700, color: c, fontSize: compact ? 10 : 11 }}>
                       {row.score > 0 ? '+' : ''}{row.score.toFixed(2)}
                     </td>
-                    <td style={{ padding: '6px 4px', textAlign: 'center' }}>
+                    <td style={{ padding: compact ? '3px 4px' : '6px 4px', textAlign: 'center' }}>
                       <TrendIcon t={row.trend} />
                     </td>
                   </tr>
@@ -344,23 +411,23 @@ export default function SentimentAnalysisPage() {
         </div>
 
         {/* Sentiments Validate Statistical Findings */}
-        <div className="sa-card" style={{ padding: '14px 12px' }}>
-          <div className="sa-card-title" style={{ marginBottom: 3, fontSize: 11 }}>
+        <div className="sa-card" style={{ padding: compact ? '10px 10px' : '14px 12px' }}>
+          <div className="sa-card-title" style={{ marginBottom: compact ? 2 : 3, fontSize: 11 }}>
             Sentiments Validate Statistical Findings <InfoIcon />
           </div>
-          <p style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 10 }}>
+          <p style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: compact ? 6 : 10 }}>
             Do open-text sentiments support key statistical drivers?
           </p>
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <colgroup>
-              <col style={{ width: '48%' }} />
-              <col style={{ width: '32%' }} />
-              <col style={{ width: '20%' }} />
+              <col style={{ width: '44%' }} />
+              <col style={{ width: '37%' }} />
+              <col style={{ width: '19%' }} />
             </colgroup>
             <thead>
               <tr style={{ borderBottom: '1.5px solid var(--border)' }}>
                 {['Driver & Finding', 'Alignment', 'Score'].map(h => (
-                  <th key={h} style={{ textAlign: 'left', padding: '3px 4px 6px', fontSize: 9, fontWeight: 700,
+                  <th key={h} style={{ textAlign: 'left', padding: compact ? '2px 4px 4px' : '3px 4px 6px', fontSize: 9, fontWeight: 700,
                     color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     {h}
                   </th>
@@ -370,18 +437,20 @@ export default function SentimentAnalysisPage() {
             <tbody>
               {VALIDATION.map(row => (
                 <tr key={row.driver} style={{ borderBottom: '1px solid var(--bg-page)', verticalAlign: 'top' }}>
-                  <td style={{ padding: '6px 4px' }}>
-                    <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 10.5, marginBottom: 2 }}>
+                  <td style={{ padding: compact ? '3px 4px' : '6px 4px' }}>
+                    <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: compact ? 10 : 10.5, marginBottom: 1 }}>
                       {row.driver}
                     </div>
-                    <div style={{ color: 'var(--text-secondary)', fontSize: 9, lineHeight: 1.4, wordBreak: 'break-word' }}>
-                      {row.finding}
-                    </div>
+                    {!compact && (
+                      <div style={{ color: 'var(--text-secondary)', fontSize: 9, lineHeight: 1.4, wordBreak: 'break-word' }}>
+                        {row.finding}
+                      </div>
+                    )}
                   </td>
-                  <td style={{ padding: '6px 4px', verticalAlign: 'top' }}>
+                  <td style={{ padding: compact ? '3px 4px' : '6px 4px', verticalAlign: 'top' }}>
                     <AlignBadge v={row.alignment} />
                   </td>
-                  <td style={{ padding: '6px 4px', verticalAlign: 'top' }}>
+                  <td style={{ padding: compact ? '3px 4px' : '6px 4px', verticalAlign: 'top' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                       <CircleScore pct={row.pct} />
                       <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-primary)' }}>{row.pct}%</span>
@@ -392,7 +461,7 @@ export default function SentimentAnalysisPage() {
             </tbody>
           </table>
           {/* Legend */}
-          <div style={{ display: 'flex', gap: 8, marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: compact ? 6 : 10, paddingTop: compact ? 5 : 8, borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
             {[
               ['#16A34A', 'Consistent (≥70%)'],
               ['#F97316', 'Partially (40–69%)'],
@@ -410,11 +479,22 @@ export default function SentimentAnalysisPage() {
 
       {/* Row 3 — Sample Responses */}
       <div className="sa-card">
-        <div className="sa-card-title" style={{ marginBottom: 14 }}>
-          Sample Responses by Sentiment <InfoIcon />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div className="sa-card-title" style={{ marginBottom: 0 }}>
+            Sample Responses by Sentiment <InfoIcon />
+          </div>
+          {activeSentiment && (
+            <span style={{
+              fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 10,
+              background: activeSentiment === 'negative' ? '#FEE2E2' : activeSentiment === 'positive' ? '#DCFCE7' : '#F1F5F9',
+              color: activeSentiment === 'negative' ? '#DC2626' : activeSentiment === 'positive' ? '#16A34A' : '#64748B',
+            }}>
+              Showing: {activeSentiment.charAt(0).toUpperCase() + activeSentiment.slice(1)} only
+            </span>
+          )}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 20 }}>
-          {SAMPLES.map(s => (
+        <div style={{ display: 'grid', gridTemplateColumns: activeSentiment ? '1fr' : 'repeat(3, minmax(0,1fr))', gap: 20 }}>
+          {SAMPLES.filter(s => !activeSentiment || s.type === activeSentiment).map(s => (
             <div key={s.type}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: s.color }}>{s.label}</span>

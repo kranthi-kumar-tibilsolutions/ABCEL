@@ -29,7 +29,7 @@ export default function EmployeeVoicePage() {
   return (
     <div className="page-container">
       {/* Task 18 — sentiment cards moved above the bar chart */}
-      <div className="kpi-grid" style={{ marginBottom: 16 }}>
+      <div className="kpi-grid" style={{ marginBottom: 16, gridTemplateColumns: 'repeat(3, 1fr)' }}>
         {[
           { label: 'Positive', value: '58%', color: '#16A34A', bg: '#DCFCE7' },
           { label: 'Mixed',    value: '28%', color: '#D97706', bg: '#FEF3C7' },

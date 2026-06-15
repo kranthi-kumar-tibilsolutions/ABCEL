@@ -1,5 +1,6 @@
-import { useState, useMemo, useContext, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
+import { RotateCcw } from 'lucide-react';
 import Dropdown from '../components/shared/Dropdown';
 
 /* ── static data ──────────────────────────────────────────────── */
@@ -138,11 +139,28 @@ function StrengthBadge({ r }) {
 }
 
 function Correlogram() {
-  const CS = 30, LW = 30, N = CORR_QS.length;
-  const W = LW + N * CS;
-  const H = LW + N * CS + 28;
+  const containerRef = useRef(null);
+  const [cw, setCw] = useState(0);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver(([e]) => setCw(e.contentRect.width));
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const N   = CORR_QS.length;
+  const LW  = 34;                                               // left label column width
+  const TH  = 20;                                               // top label row height
+  const CW  = cw > 0 ? Math.floor((cw - LW) / N) : 32;        // cell width — fills container
+  const CH  = 30;                                               // fixed cell height — keeps grid compact
+  const W   = LW + N * CW;
+  const H   = TH + N * CH + 26;
+  const vfs = Math.min(10, Math.max(7, CW * 0.15));            // value font scales with width
+  const lfs = 8;                                                // fixed label font size
+
   return (
-    <div style={{ overflowX:'auto' }}>
+    <div ref={containerRef}>
       <svg width={W} height={H} style={{ display:'block' }}>
         <defs>
           <linearGradient id="cgGrad" x1="0" x2="1">
@@ -154,23 +172,23 @@ function Correlogram() {
 
         {/* column labels */}
         {CORR_QS.map((q, j) => (
-          <text key={q} x={LW + j*CS + CS/2} y={LW-5}
-            textAnchor="middle" fontSize={8} fontWeight={600} fill="#64748B">{q}</text>
+          <text key={q} x={LW + j*CW + CW/2} y={TH - 5}
+            textAnchor="middle" fontSize={lfs} fontWeight={600} fill="#64748B">{q}</text>
         ))}
 
         {/* rows */}
         {CORR_QS.map((q, i) => (
           <g key={q}>
-            <text x={LW-3} y={LW + i*CS + CS/2 + 3}
-              textAnchor="end" fontSize={8} fontWeight={600} fill="#64748B">{q}</text>
+            <text x={LW - 4} y={TH + i*CH + CH/2 + lfs*0.38}
+              textAnchor="end" fontSize={lfs} fontWeight={600} fill="#64748B">{q}</text>
             {CORR_QS.map((_, j) => {
               const v = CORR_MATRIX[i][j];
               return (
                 <g key={j}>
-                  <rect x={LW + j*CS} y={LW + i*CS} width={CS-1} height={CS-1}
-                    fill={corrBg(v)} rx={1}/>
-                  <text x={LW + j*CS + CS/2} y={LW + i*CS + CS/2 + 3}
-                    textAnchor="middle" fontSize={7.5} fontWeight={600} fill={corrFg(v)}>
+                  <rect x={LW + j*CW} y={TH + i*CH} width={CW-2} height={CH-2}
+                    fill={corrBg(v)} rx={2}/>
+                  <text x={LW + j*CW + CW/2} y={TH + i*CH + CH/2 + vfs*0.38}
+                    textAnchor="middle" fontSize={vfs} fontWeight={600} fill={corrFg(v)}>
                     {v.toFixed(2)}
                   </text>
                 </g>
@@ -179,14 +197,13 @@ function Correlogram() {
           </g>
         ))}
 
-        {/* colour scale */}
-        <rect x={LW} y={LW + N*CS + 6} width={N*CS} height={7}
-          fill="url(#cgGrad)" rx={2}/>
-        <text x={LW}            y={LW + N*CS + 22} fontSize={7.5} fill="#94A3B8">-1.0</text>
-        <text x={LW + N*CS/2}   y={LW + N*CS + 22} textAnchor="middle" fontSize={7.5} fill="#94A3B8">0</text>
-        <text x={LW + N*CS}     y={LW + N*CS + 22} textAnchor="end"    fontSize={7.5} fill="#94A3B8">1.0</text>
+        {/* colour scale bar */}
+        <rect x={LW} y={TH + N*CH + 6} width={N*CW} height={7} fill="url(#cgGrad)" rx={2}/>
+        <text x={LW}           y={TH + N*CH + 22} fontSize={7.5} fill="#94A3B8">-1.0</text>
+        <text x={LW + N*CW/2}  y={TH + N*CH + 22} textAnchor="middle" fontSize={7.5} fill="#94A3B8">0</text>
+        <text x={LW + N*CW}    y={TH + N*CH + 22} textAnchor="end"    fontSize={7.5} fill="#94A3B8">1.0</text>
       </svg>
-      <p style={{ fontSize:9.5, color:'var(--text-muted)', margin:'4px 0 0' }}>
+      <p style={{ fontSize:9.5, color:'var(--text-muted)', margin:'6px 0 0' }}>
         Darker color indicates stronger correlation
       </p>
     </div>
@@ -271,19 +288,37 @@ export default function StatisticalAnalysisPage() {
             width:'100%', padding:'7px 8px', border:'1px solid var(--border)',
             borderRadius:6, background:'var(--bg-card)', fontSize:11,
             color:'var(--text-primary)', fontFamily:'inherit',
-            cursor:'pointer', outline:'none', marginBottom:10,
+            cursor:'pointer', outline:'none', marginBottom:12,
           }}>
             {QUESTIONS_LIST.map(q => <option key={q}>{q}</option>)}
           </select>
-          <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-            <div style={{ fontSize:10.5, color:'var(--text-muted)' }}>
-              <span style={{ fontWeight:600, color:'var(--text-secondary)' }}>Question Type: </span>
-              Likert Scale (1–5)
-            </div>
-            <div style={{ fontSize:10.5, color:'var(--text-muted)' }}>
-              <span style={{ fontWeight:600, color:'var(--text-secondary)' }}>Responses: </span>
-              4,892
-            </div>
+
+          {/* Metadata pills */}
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            {[
+              { label:'Question Type', value:'Likert Scale (1–5)' },
+              { label:'Responses',     value:'4,892'              },
+            ].map(({ label, value }) => (
+              <div key={label} style={{
+                display:'flex', alignItems:'center', justifyContent:'space-between',
+                padding:'6px 10px', borderRadius:7,
+                background:'var(--bg-page)', border:'1px solid var(--border)',
+              }}>
+                <span style={{ fontSize:10.5, fontWeight:600, color:'var(--text-secondary)' }}>{label}</span>
+                <span style={{ fontSize:10.5, color:'var(--text-primary)', fontWeight:700 }}>{value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ flex:1 }} />
+
+          {/* Tip at bottom */}
+          <div style={{
+            marginTop:12, padding:'7px 10px', borderRadius:7,
+            background:'#EFF6FF', border:'1px solid #BFDBFE',
+            fontSize:10, color:'#3B82F6', lineHeight:1.5,
+          }}>
+            Select a different question above to explore its correlation profile.
           </div>
         </div>
 
@@ -295,48 +330,47 @@ export default function StatisticalAnalysisPage() {
             Correlation Summary with Other Questions <InfoIcon />
           </div>
 
-          <div style={{ display:'flex', gap:10, alignItems:'stretch', flex:1 }}>
-
-            {/* 4 summary tiles */}
-            <div style={{ flex:1, minWidth:0, display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))', gap:8, alignContent:'start' }}>
-              {SUMMARY_TILES.map(t => (
-                <div key={t.label} style={{
-                  background:t.bg, border:`1px solid ${t.border}`,
-                  borderRadius:8, padding:'10px 12px',
-                }}>
-                  <div style={{ fontSize:10.5, fontWeight:700, color:t.tc, marginBottom:4 }}>
-                    {t.label}
-                  </div>
-                  <div style={{ fontSize:26, fontWeight:800, color:t.nc, lineHeight:1.1, marginBottom:2 }}>
-                    {t.count}
-                  </div>
-                  <div style={{ fontSize:10, color:t.tc, opacity:0.8, marginBottom:4 }}>{t.sub}</div>
-                  <div style={{ fontSize:10, color:t.tc, fontStyle:'italic', opacity:0.75 }}>{t.r}</div>
+          {/* 4 summary tiles */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))', gap:8, alignItems:'stretch', marginBottom:8 }}>
+            {SUMMARY_TILES.map(t => (
+              <div key={t.label} style={{
+                background:t.bg, border:`1px solid ${t.border}`,
+                borderRadius:8, padding:'7px 9px',
+                display:'flex', flexDirection:'column', gap:2,
+              }}>
+                <div style={{ fontSize:9.5, fontWeight:700, color:t.tc, lineHeight:1.25 }}>
+                  {t.label}
                 </div>
-              ))}
-            </div>
-
-            {/* Overall Insights */}
-            <div style={{
-              width:195, flexShrink:0,
-              background:'#FFFBEB', border:'1px solid #FDE68A',
-              borderRadius:8, padding:'10px 12px',
-              display:'flex', flexDirection:'column', justifyContent:'center',
-            }}>
-              <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:6 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink:0 }}>
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26A6.99 6.99 0 0019 9c0-3.87-3.13-7-7-7z"
-                    fill="#F59E0B"/>
-                  <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1z" fill="#F59E0B"/>
-                </svg>
-                <span style={{ fontSize:11, fontWeight:700, color:'#92400E' }}>Overall Insights</span>
+                <div style={{ fontSize:20, fontWeight:800, color:t.nc, lineHeight:1 }}>
+                  {t.count}
+                </div>
+                <div style={{ fontSize:9, color:t.tc, opacity:0.85 }}>{t.sub}</div>
+                <div style={{
+                  marginTop:4, paddingTop:4, borderTop:`1px solid ${t.border}`,
+                  fontSize:8.5, color:t.tc, fontStyle:'italic', opacity:0.8,
+                }}>{t.r}</div>
               </div>
-              <p style={{ fontSize:10.5, color:'#78350F', lineHeight:1.55, margin:0 }}>
+            ))}
+          </div>
+
+          {/* Overall Insights — full width below tiles */}
+          <div style={{
+            background:'#FFFBEB', border:'1px solid #FDE68A',
+            borderRadius:8, padding:'8px 12px',
+            display:'flex', alignItems:'flex-start', gap:8,
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink:0, marginTop:1 }}>
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26A6.99 6.99 0 0019 9c0-3.87-3.13-7-7-7z"
+                fill="#F59E0B"/>
+              <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1z" fill="#F59E0B"/>
+            </svg>
+            <div>
+              <span style={{ fontSize:10.5, fontWeight:700, color:'#92400E' }}>Overall Insights&nbsp;—&nbsp;</span>
+              <span style={{ fontSize:10, color:'#78350F', lineHeight:1.55 }}>
                 Q12 has the strongest positive correlation with Q24 (r&nbsp;=&nbsp;0.71) and
                 strongest negative correlation with Q57 (r&nbsp;=&nbsp;−0.46).
-              </p>
+              </span>
             </div>
-
           </div>
         </div>
       </div>
