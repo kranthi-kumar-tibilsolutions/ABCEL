@@ -40,6 +40,14 @@ export const AppContext = createContext({
   setInsightsData:  () => {},
   focusAreasData:   null,
   setFocusAreasData:() => {},
+
+  // Auth
+  user:   null,
+  logout: () => {},
+
+  // Right panel
+  rightPanelCollapsed:    false,
+  setRightPanelCollapsed: () => {},
 });
 
 export const useApp = () => useContext(AppContext);

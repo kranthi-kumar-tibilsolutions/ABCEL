@@ -28,6 +28,7 @@ export default function TopBar() {
   const {
     setIsFiltersOpen, meta, businesses, activeFilters,
     page, selectedBusiness, selectedBU, selectedCluster,
+    rightPanelCollapsed,
   } = useContext(AppContext);
 
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -93,6 +94,7 @@ export default function TopBar() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [showExportMenu]);
 
+
   const handleExportSelect = async (val) => {
     setShowExportMenu(false);
     if (val === 'csv') {
@@ -121,21 +123,7 @@ export default function TopBar() {
   };
 
   return (
-    <div className="topbar">
-      {/* Left — page title */}
-      <div className="topbar-title-block">
-        <span className="topbar-page-title">{pageTitle}</span>
-        {page === 'overview'
-          ? <span className="topbar-page-sub">
-              <span style={{ color: 'var(--blue-primary)', fontWeight: 700 }}>Listen.</span>
-              {' Understand. Lead.'}
-            </span>
-          : <span className="topbar-page-sub">{pageSubtitle}</span>
-        }
-      </div>
-
-      <div className="topbar-spacer" />
-
+    <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8 }}>
       {/* Filters */}
       <button className="topbar-btn" onClick={() => setIsFiltersOpen(true)}>
         <SlidersHorizontal size={13} />
@@ -165,6 +153,8 @@ export default function TopBar() {
         <RotateCcw size={13} />
         Reset
       </button>
+
+      <div className="topbar-spacer" />
 
       {/* Export */}
       <div className="tb-dropdown" ref={exportRef}>

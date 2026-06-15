@@ -1,5 +1,14 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import abgLogo from '../assets/abg.avif';
+import { useState, useRef, useCallback, useEffect, useContext } from 'react';
+import Lottie from 'lottie-react';
+import { AppContext } from '../context/AppContext';
+import loaderAnim from '../assets/loader.json';
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 const STAGES = {
   idle:       { label: '',                                  step: 0 },
@@ -12,12 +21,19 @@ const STAGES = {
 };
 
 export default function UploadPage({ onUploadComplete }) {
+  const { user, logout } = useContext(AppContext);
   const [stage,      setStage]      = useState('idle');
   const [logLine,    setLogLine]    = useState('');
   const [errorMsg,   setErrorMsg]   = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [hasData,    setHasData]    = useState(false);
+  const [navigating, setNavigating] = useState(false);
   const inputRef = useRef(null);
+
+  const goToDashboard = useCallback(() => {
+    setNavigating(true);
+    setTimeout(() => onUploadComplete(), 5000);
+  }, [onUploadComplete]);
 
   useEffect(() => {
     fetch('/api/status')
@@ -56,7 +72,7 @@ export default function UploadPage({ onUploadComplete }) {
           try {
             const { stage: s, message: m } = JSON.parse(payload);
             if (s === 'error') { setErrorMsg(m); setStage('error'); return; }
-            if (s === 'ready') { setStage('ready'); setTimeout(() => onUploadComplete(), 800); return; }
+            if (s === 'ready') { setStage('ready'); goToDashboard(); return; }
             setStage(s);
             setLogLine(m);
           } catch {}
@@ -66,7 +82,7 @@ export default function UploadPage({ onUploadComplete }) {
       setErrorMsg('Upload failed. Is the server running?');
       setStage('error');
     }
-  }, [onUploadComplete]);
+  }, [goToDashboard]);
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
@@ -82,12 +98,12 @@ export default function UploadPage({ onUploadComplete }) {
       const res = await fetch('/api/load-sample', { method: 'POST' });
       if (res.ok) {
         setStage('ready');
-        setTimeout(() => onUploadComplete(), 800);
+        goToDashboard();
       } else {
-        onUploadComplete();
+        goToDashboard();
       }
     } catch {
-      onUploadComplete();
+      goToDashboard();
     }
   };
 
@@ -95,14 +111,20 @@ export default function UploadPage({ onUploadComplete }) {
   const stageInfo    = STAGES[stage] || STAGES.idle;
 
   return (
+    <>
     <div className="upload-page">
-      {/* Logo */}
-      <div className="upload-logo">
-        <img src={abgLogo} alt="ABG" width="48" height="48" style={{ objectFit: 'contain', borderRadius: 6 }} />
-        <div>
-          <div className="upload-logo-title">ABG VIBES 2026</div>
-          <div className="upload-logo-sub">Employee Engagement Intelligence</div>
-        </div>
+    <div className="upload-card">
+      {/* Back button */}
+      <button className="upload-page-back-btn" onClick={logout} aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11.03 3.97a1 1 0 0 1 0 1.41L6.91 9.5H19a1 1 0 0 1 0 2H6.91l4.12 4.12a1 1 0 0 1-1.41 1.41l-5.83-5.83a1 1 0 0 1 0-1.41l5.83-5.83a1 1 0 0 1 1.41 0z"/>
+        </svg>
+      </button>
+
+      {/* Greeting */}
+      <div className="upload-header">
+        <div className="upload-logo-title">{getGreeting()}{user?.name ? `, ${user.name}` : ''}</div>
+        <div className="upload-subtitle">Let's get your engagement data ready</div>
       </div>
 
       {/* Drop zone */}
@@ -146,7 +168,6 @@ export default function UploadPage({ onUploadComplete }) {
       {/* Progress */}
       {isProcessing && (
         <div className="upload-progress">
-          <div className="progress-spinner" />
           <div className="progress-stage">{stageInfo.label}</div>
           <div className="progress-log">{logLine}</div>
           <div className="progress-bar">
@@ -156,20 +177,10 @@ export default function UploadPage({ onUploadComplete }) {
       )}
 
       {/* Ready */}
-      {stage === 'ready' && (
+      {stage === 'ready' && !navigating && (
         <div className="upload-ready">
           <div className="ready-icon">✓</div>
           <div className="ready-title">Dashboard ready!</div>
-        </div>
-      )}
-
-      {/* Feature bullets */}
-      {stage === 'idle' && (
-        <div className="upload-features">
-          <div className="feature-item">✓ ABG Vibes format supported (WTW platform)</div>
-          <div className="feature-item">✓ Data stays on your server — never sent externally</div>
-          <div className="feature-item">✓ AI insights generated automatically</div>
-          <div className="feature-item">✓ Schema-agnostic — works with any column naming</div>
         </div>
       )}
 
@@ -177,19 +188,28 @@ export default function UploadPage({ onUploadComplete }) {
       {hasData && stage === 'idle' && (
         <button
           className="sample-btn"
-          style={{ background: 'var(--blue-primary)', color: '#fff', fontWeight: 700, borderColor: 'transparent' }}
-          onClick={onUploadComplete}
+          style={{ background: 'var(--abg-orange)', color: '#fff', fontWeight: 700, borderColor: 'transparent' }}
+          onClick={goToDashboard}
         >
-          Continue to Dashboard with existing data →
+          Go to Dashboard →
         </button>
       )}
 
       {/* Sample data option */}
       {(stage === 'idle' || stage === 'error') && (
         <button className="sample-btn" onClick={handleSampleData}>
-          Or use sample data to explore the dashboard →
+          Try with sample data →
         </button>
       )}
     </div>
+    </div>
+
+    {navigating && (
+      <div className="login-loading-overlay">
+        <Lottie animationData={loaderAnim} loop autoplay style={{ width: 180, height: 60 }} />
+        <div className="login-loading-text">Loading dashboard…</div>
+      </div>
+    )}
+    </>
   );
 }
