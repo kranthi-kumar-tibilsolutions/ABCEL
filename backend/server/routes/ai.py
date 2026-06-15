@@ -299,7 +299,9 @@ Respond ONLY with valid JSON:
 
 @router.post("/chat")
 async def chat(req: ChatRequest):
-    system_prompt = f"""You are an AI analyst assistant for ABG's employee engagement dashboard. Keep replies short and natural.
+    system_prompt = f"""You are an AI analyst assistant for ABG Vibes — Aditya Birla Group's employee engagement dashboard. You answer ONLY questions about the ABG Vibes survey, employee engagement, HR analytics, and the data below.
+
+STRICT SCOPE RULE: If the user asks anything outside employee engagement or this survey (e.g. coding, general knowledge, math, jokes, or any other topic), respond with exactly: "I can only help with questions about the ABG Vibes employee engagement survey. What would you like to know about the data?"
 
 - Greetings or small talk → respond briefly and warmly (1 sentence), then offer to help with engagement data. Do NOT cite any numbers.
 - Specific questions about data → answer in 2-3 sentences, lead with the key insight and number, use **bold** for key figures.
