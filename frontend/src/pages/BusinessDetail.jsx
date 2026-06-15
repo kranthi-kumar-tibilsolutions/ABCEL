@@ -121,7 +121,15 @@ export default function BusinessDetail() {
               <div style={{ height: 280 }}>
                 <Radar data={radarData} options={{
                   responsive: true, maintainAspectRatio: false,
-                  plugins: { legend: { display: false } },
+                  plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                      callbacks: {
+                        title: (items) => items[0]?.label ?? '',
+                        label: (item)  => `Score: ${Number(item.raw).toFixed(2)} / 5`,
+                      },
+                    },
+                  },
                   scales: { r: { min: 0, max: 5, ticks: { stepSize: 1, font: { size: 10 } }, pointLabels: { font: { size: 10 } } } },
                 }} />
               </div>

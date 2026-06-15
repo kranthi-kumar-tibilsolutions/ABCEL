@@ -1,8 +1,7 @@
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { AppContext } from '../context/AppContext';
 import Badge      from '../components/shared/Badge';
 import Breadcrumb from '../components/shared/Breadcrumb';
-import Sparkline  from '../components/shared/Sparkline';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -12,16 +11,48 @@ function scoreColor(s) {
   return '#DC2626';
 }
 
-export default function BusinessOverview() {
-  const { businesses, navigate } = useContext(AppContext);
+const SORT_OPTIONS = [
+  { field: 'score',      label: 'Engagement Score' },
+  { field: 'responses', label: 'No. of Responses'  },
+];
 
-  if (!businesses?.length) return (
+function SortArrow({ dir }) {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+      {dir === 'asc'
+        ? <path d="M5 2L9 8H1L5 2Z" fill="currentColor"/>
+        : <path d="M5 8L1 2H9L5 8Z" fill="currentColor"/>}
+    </svg>
+  );
+}
+
+export default function BusinessOverview() {
+  const { businesses, filteredBusinesses, navigate } = useContext(AppContext);
+  const [sortField, setSortField] = useState('score');
+  const [sortDir,   setSortDir]   = useState('desc');
+
+  const list = filteredBusinesses ?? businesses ?? [];
+
+  if (!list.length) return (
     <div className="page-container">
-      <p style={{ color: 'var(--text-muted)', padding: 24 }}>No data available.</p>
+      <p style={{ color: 'var(--text-muted)', padding: 24 }}>No businesses match the current filters.</p>
     </div>
   );
 
-  const sorted = [...businesses].sort((a,b) => (b.overall??b.score??0)-(a.overall??a.score??0));
+  const handleSort = (field) => {
+    if (field === sortField) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
+    else { setSortField(field); setSortDir('desc'); }
+  };
+
+  const sorted = [...list].sort((a, b) => {
+    const va = sortField === 'score'
+      ? +(a.overall ?? a.score ?? 0)
+      : +(a.respondent_count ?? 0);
+    const vb = sortField === 'score'
+      ? +(b.overall ?? b.score ?? 0)
+      : +(b.respondent_count ?? 0);
+    return sortDir === 'desc' ? vb - va : va - vb;
+  });
 
   return (
     <div className="page-container">
@@ -33,7 +64,20 @@ export default function BusinessOverview() {
       <div className="page-header">
         <div>
           <h1 className="page-title">All Businesses</h1>
-          <p className="page-sub">{businesses.length} businesses · Ranked by engagement score</p>
+          <p className="page-sub">{list.length} businesses{list.length !== businesses?.length ? ` (filtered from ${businesses.length})` : ''} · Ranked by engagement score</p>
+        </div>
+        <div className="biz-sort-row">
+          <span className="biz-sort-label">Sort by</span>
+          {SORT_OPTIONS.map(opt => (
+            <button
+              key={opt.field}
+              className={`biz-sort-btn${sortField === opt.field ? ' active' : ''}`}
+              onClick={() => handleSort(opt.field)}
+            >
+              {opt.label}
+              {sortField === opt.field && <SortArrow dir={sortDir} />}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -55,13 +99,8 @@ export default function BusinessOverview() {
                 </div>
               </div>
               <div className="biz-card-name" title={biz.name}>{biz.name}</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+              <div style={{ marginTop: 8 }}>
                 <Badge status={biz.band} />
-                <Sparkline
-                  direction={sc >= 4.2 ? 'up' : sc <= 3.7 ? 'down' : 'flat'}
-                  width={50}
-                  height={22}
-                />
               </div>
               {biz.respondent_count && (
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>

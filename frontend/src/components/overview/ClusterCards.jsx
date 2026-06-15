@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
 
 const CLUSTER_CONFIG = {
@@ -72,12 +72,37 @@ const CLUSTER_CONFIG = {
 };
 
 export default function ClusterCards() {
-  const { clusters, navigate } = useContext(AppContext);
+  const { clusters, navigate, activeFilters } = useContext(AppContext);
+  const [expanded, setExpanded] = useState(new Set());
 
   if (!clusters) return null;
 
-  const total = Object.values(clusters).reduce((s, arr) => s + (arr?.length ?? 0), 0);
-  const entries = Object.entries(CLUSTER_CONFIG).filter(([key]) => clusters[key] !== undefined);
+  const toggle = (key, e) => {
+    e.stopPropagation();
+    setExpanded(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
+
+  const { clusters: fclusters = [], minScore: ms = 0 } = activeFilters || {};
+
+  // Apply filters to each cluster's BU list
+  const filteredClusters = Object.fromEntries(
+    Object.entries(clusters).map(([key, items]) => [
+      key,
+      (items || []).filter(bu => ms <= 0 || (bu.overall ?? bu.score ?? 0) >= ms),
+    ])
+  );
+
+  const total = Object.values(filteredClusters).reduce((s, arr) => s + arr.length, 0);
+
+  // If cluster filter active, only show selected; else show all that exist
+  const entries = Object.entries(CLUSTER_CONFIG).filter(([key]) =>
+    filteredClusters[key] !== undefined &&
+    (fclusters.length === 0 || fclusters.includes(key))
+  );
 
   return (
     <div className="cluster-section">
@@ -100,7 +125,7 @@ export default function ClusterCards() {
 
       <div className="cluster-cards-grid">
         {entries.map(([key, cfg]) => {
-          const items = clusters[key] || [];
+          const items = filteredClusters[key] || [];
           const pct   = total > 0 ? Math.round((items.length / total) * 100) : 0;
 
           return (
@@ -129,21 +154,33 @@ export default function ClusterCards() {
               {/* Description */}
               <p className="cc-desc">{cfg.desc}</p>
 
-              {/* Top BUs */}
+              {/* Top BUs — collapsible */}
               {items.length > 0 && (
                 <div className="cc-bu-list">
-                  <div className="cc-bu-list-label">Top BUs</div>
-                  {items.slice(0, 3).map((bu, i) => {
-                    const score = bu.overall ?? bu.score;
-                    return (
-                      <div key={i} className="cc-bu-row">
-                        <span className="cc-bu-name">{bu.name || bu}</span>
-                        <span className="cc-bu-score" style={{ color: cfg.color, background: cfg.border }}>
-                          {score ? Number(score).toFixed(2) : '—'}
-                        </span>
-                      </div>
-                    );
-                  })}
+                  <button className="cc-bu-toggle" onClick={e => toggle(key, e)}>
+                    <span className="cc-bu-list-label">Top BUs</span>
+                    <svg
+                      width="14" height="14" viewBox="0 0 14 14" fill="none"
+                      style={{ transition: 'transform 0.2s', transform: expanded.has(key) ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}
+                    >
+                      <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                  {expanded.has(key) && (
+                    <div className="cc-bu-items">
+                      {items.slice(0, 3).map((bu, i) => {
+                        const score = bu.overall ?? bu.score;
+                        return (
+                          <div key={i} className="cc-bu-row">
+                            <span className="cc-bu-name">{bu.name || bu}</span>
+                            <span className="cc-bu-score" style={{ color: cfg.color, background: cfg.border }}>
+                              {score ? Number(score).toFixed(2) : '—'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 
