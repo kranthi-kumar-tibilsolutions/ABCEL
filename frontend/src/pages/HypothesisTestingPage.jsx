@@ -1,33 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Breadcrumb from '../components/shared/Breadcrumb';
-
-/* ── Static data ─────────────────────────────────────────── */
-
-const TEMPLATES = [
-  'Employees with higher recognition feel more engaged.',
-  'Managers have higher trust in leadership than individual contributors.',
-  'Employees in APAC have higher wellbeing scores than the company average.',
-  'There is no difference in engagement scores between new joiners and employees with 3+ years tenure.',
-];
-
-const HISTORY = [
-  { id: 'H-1023', text: 'Employees who rate recognition high have higher engagement than those who rate it low.', result: 'Validated', filters: 'Company: ABG Corp | Department: All | Tenure: All', pz: '0.0081', alpha: '0.05', date: 'May 12, 2024' },
-  { id: 'H-1022', text: 'Managers have higher trust in leadership than individual contributors.', result: 'Validated', filters: 'Company: ABG Corp | Department: All | Tenure: All', pz: '0.0215', alpha: '0.05', date: 'May 10, 2024' },
-  { id: 'H-1021', text: 'There is no difference in wellbeing scores between remote and in-office employees.', result: 'Rejected', filters: 'Company: ABG Corp | Department: All | Tenure: All', pz: '0.2431', alpha: '0.05', date: 'May 8, 2024' },
-  { id: 'H-1020', text: 'Employees in APAC have higher engagement scores than the company average.', result: 'Validated', filters: 'Company: ABG Corp | Region: APAC | Tenure: All', pz: '0.0032', alpha: '0.05', date: 'May 5, 2024' },
-];
-
-const DUMMY_RESULT = {
-  status: 'Validated',
-  description: 'There is sufficient evidence to support your hypothesis.',
-  z: 2.45, pz: 0.0143, alpha: 0.05,
-  h0: 'μ₁ ≤ 3.5', ha: 'μ₁ > 3.5',
-  testType: 'One-tailed Z-Test (Greater than)',
-  confidenceLevel: '0.05',
-  criticalZ: 1.645,
-  decision: 'Reject H₀',
-  sampleMean: 4.12, popMean: 3.5, stdDev: 0.45, sampleSize: 220,
-};
 
 /* ── Bell Curve SVG ──────────────────────────────────────── */
 function BellCurve({ critZ = 1.645, testZ = 2.45 }) {
@@ -49,7 +21,6 @@ function BellCurve({ critZ = 1.645, testZ = 2.45 }) {
   const testXpx = toX(testZ);
   const axisY   = 106;
 
-  // Rejection region: polygon from critZ along curve to xMax, back along axis
   const rejPts = pts.filter(([x]) => x >= critXpx - 1);
   const rejPath = rejPts.length
     ? `M${critXpx.toFixed(1)},${toY(pdf(critZ)).toFixed(1)} `
@@ -64,36 +35,20 @@ function BellCurve({ critZ = 1.645, testZ = 2.45 }) {
           <line x1="0" y1="0" x2="0" y2="5" stroke="#16A34A" strokeWidth="1.8" strokeOpacity="0.35"/>
         </pattern>
       </defs>
-
-      {/* Hatched rejection region */}
       <path d={rejPath} fill="url(#hatch)" />
       <path d={rejPath} fill="none" stroke="#86EFAC" strokeWidth="0.8" />
-
-      {/* Curve */}
       <path d={curvePath} fill="none" stroke="#475569" strokeWidth="1.8" />
-
-      {/* X-axis */}
       <line x1="20" y1={axisY} x2={W - 20} y2={axisY} stroke="#CBD5E1" strokeWidth="1" />
-
-      {/* Critical Z — dashed */}
       <line x1={critXpx} y1={toY(pdf(critZ))} x2={critXpx} y2={axisY}
         stroke="#94A3B8" strokeWidth="1.3" strokeDasharray="4,3" />
-
-      {/* Test Z — solid green */}
       <line x1={testXpx} y1={toY(pdf(testZ))} x2={testXpx} y2={axisY}
         stroke="#16A34A" strokeWidth="2" />
-
-      {/* Z = label above test line */}
       <text x={testXpx + 5} y={toY(pdf(testZ)) - 4} fontSize="8.5" fill="#16A34A" fontWeight="700" fontFamily="inherit">
         Z = {testZ}
       </text>
-
-      {/* Axis labels */}
       <text x={toX(0)}  y={axisY + 12} textAnchor="middle" fontSize="9" fill="#94A3B8" fontFamily="inherit">0</text>
       <text x={critXpx} y={axisY + 12} textAnchor="middle" fontSize="9" fill="#94A3B8" fontFamily="inherit">{critZ}</text>
       <text x={testXpx} y={axisY + 12} textAnchor="middle" fontSize="9" fill="#16A34A" fontFamily="inherit">{testZ}</text>
-
-      {/* Legend */}
       <line x1="20" y1={H - 8} x2="38" y2={H - 8} stroke="#94A3B8" strokeWidth="1.3" strokeDasharray="4,2" />
       <text x="42" y={H - 4} fontSize="8" fill="#94A3B8" fontFamily="inherit">Critical Z (α = 0.05)</text>
       <rect x="145" y={H - 14} width="10" height="9" fill="url(#hatch)" stroke="#86EFAC" strokeWidth="0.5" />
@@ -127,18 +82,84 @@ function ResultBadge({ result }) {
   );
 }
 
+function filtersToString(f) {
+  if (!f || typeof f !== 'object') return 'Company: ABG Group | All Filters';
+  const parts = Object.entries(f)
+    .filter(([, v]) => v && v !== 'All')
+    .map(([k, v]) => `${k}: ${v}`);
+  return parts.length ? parts.join(' | ') : 'Company: ABG Group | All Filters';
+}
+
 /* ── Page ────────────────────────────────────────────────── */
 export default function HypothesisTestingPage() {
   const [input,       setInput]       = useState('');
-  const [result,      setResult]      = useState(DUMMY_RESULT);
+  const [result,      setResult]      = useState(null);
   const [showDetails, setShowDetails] = useState(true);
   const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState(null);
+  const [templates,   setTemplates]   = useState([]);
+  const [history,     setHistory]     = useState([]);
 
-  const handleTest = () => {
+  useEffect(() => {
+    fetch('/api/hypothesis/templates')
+      .then(r => r.json())
+      .then(d => setTemplates((d.templates || []).map(t => t.text)));
+    loadHistory();
+  }, []);
+
+  const loadHistory = () => {
+    fetch('/api/hypothesis/history?limit=10')
+      .then(r => r.json())
+      .then(d => setHistory(d.items || []));
+  };
+
+  const handleTest = async () => {
     if (!input.trim() || loading) return;
     setLoading(true);
     setResult(null);
-    setTimeout(() => { setResult(DUMMY_RESULT); setShowDetails(true); setLoading(false); }, 1200);
+    setError(null);
+    try {
+      const res = await fetch('/api/hypothesis/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hypothesis_text: input, filters: {}, alpha: 0.05 }),
+      });
+      const data = await res.json();
+      if (data.success && data.result) {
+        const r = data.result;
+        const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Inconclusive';
+        setResult({
+          status:     cap(r.verdict),
+          description: r.interpretation || `${cap(r.verdict)}: p(z) = ${r.p_value?.toFixed(4)}, z = ${r.z?.toFixed(3)}`,
+          z:           r.z,
+          pz:          r.p_value,
+          alpha:       r.alpha,
+          h0:          r.h0 || 'μ₁ ≤ μ₀',
+          ha:          r.h1 || 'μ₁ > μ₀',
+          testType:    r.test_type,
+          confidenceLevel: String(r.alpha),
+          criticalZ:   r.critical_z,
+          decision:    r.decision,
+          sampleMean:  r.sample_mean,
+          popMean:     r.pop_mean,
+          stdDev:      r.std_dev,
+          sampleSize:  r.n,
+        });
+        setShowDetails(true);
+        loadHistory();
+      } else {
+        setError(data.error || 'Could not run test. Try rephrasing the hypothesis.');
+      }
+    } catch (e) {
+      setError(e.message || 'Network error.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    await fetch(`/api/hypothesis/history/${id}`, { method: 'DELETE' });
+    loadHistory();
   };
 
   const r = result || {};
@@ -147,7 +168,6 @@ export default function HypothesisTestingPage() {
     <div className="page-container">
       <Breadcrumb items={[{ label: 'Explore' }, { label: 'Hypothesis Testing' }]} />
 
-      {/* Page header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
           <h1 className="page-title" style={{ margin: 0 }}>Hypothesis Testing</h1>
@@ -160,9 +180,7 @@ export default function HypothesisTestingPage() {
         <p className="page-sub" style={{ margin: 0 }}>Validate assumptions using HR survey data and statistical tests.</p>
       </div>
 
-      {/* ── Top two-column row ── */}
       <div className="ht-top-grid">
-
         {/* Left: Enter hypothesis */}
         <div className="ht-card">
           <div className="ht-section-label">1. Enter Your Hypothesis</div>
@@ -177,6 +195,11 @@ export default function HypothesisTestingPage() {
             />
             <div className="ht-char-count">{input.length} / 500</div>
           </div>
+          {error && (
+            <div style={{ fontSize: 11, color: '#DC2626', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 6, padding: '7px 10px', marginBottom: 8 }}>
+              {error}
+            </div>
+          )}
           <div>
             <button className="ht-test-btn" onClick={handleTest} disabled={!input.trim() || loading}>
               {loading ? 'Analysing…' : 'Test Hypothesis'}
@@ -188,8 +211,8 @@ export default function HypothesisTestingPage() {
         <div className="ht-card">
           <div className="ht-section-label">Try a Template</div>
           <div className="ht-templates-list">
-            {TEMPLATES.map((t, i) => (
-              <button key={i} className="ht-template-row" onClick={() => { setInput(t); setResult(null); }}>
+            {templates.map((t, i) => (
+              <button key={i} className="ht-template-row" onClick={() => { setInput(t); setResult(null); setError(null); }}>
                 <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
                   <rect x="2" y="1" width="10" height="13" rx="1.5" stroke="#94A3B8" strokeWidth="1.2"/>
                   <path d="M4.5 5h6M4.5 7.5h6M4.5 10h4" stroke="#94A3B8" strokeWidth="1.1" strokeLinecap="round"/>
@@ -201,14 +224,12 @@ export default function HypothesisTestingPage() {
               </button>
             ))}
           </div>
-          <button className="ht-view-all-link">View all templates</button>
         </div>
       </div>
 
-      {/* ── Result section (shown after test) ── */}
+      {/* Result section */}
       {result && (
         <>
-          {/* Result banner */}
           <div className="ht-result-banner">
             <div className="ht-result-left">
               <div className={`ht-result-circle ${r.status === 'Validated' ? 'ht-circle-ok' : 'ht-circle-fail'}`}>
@@ -224,16 +245,11 @@ export default function HypothesisTestingPage() {
                 </div>
                 <div className="ht-result-desc">{r.description}</div>
                 <div className="ht-result-stats">
-                  <span>Z = <strong>{r.z}</strong></span>
+                  <span>Z = <strong>{r.z?.toFixed(3)}</strong></span>
                   <span className="ht-pipe">|</span>
-                  <span>p(z) = <strong>{r.pz}</strong></span>
+                  <span>p(z) = <strong>{r.pz?.toFixed(4)}</strong></span>
                   <span className="ht-pipe">|</span>
                   <span>α (confidence) = <strong>{r.alpha}</strong></span>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="7" cy="7" r="6.5" stroke="#94A3B8" strokeWidth="1.2"/>
-                    <circle cx="7" cy="4.5" r="0.7" fill="#94A3B8"/>
-                    <rect x="6.4" y="6" width="1.2" height="3.8" rx="0.6" fill="#94A3B8"/>
-                  </svg>
                 </div>
               </div>
             </div>
@@ -246,22 +262,20 @@ export default function HypothesisTestingPage() {
             </button>
           </div>
 
-          {/* Statistical breakdown */}
           {showDetails && (
             <div className="ht-breakdown-card">
               <div className="ht-breakdown-title">2. Statistical Breakdown (Z-Test)</div>
               <div className="ht-breakdown-grid">
 
-                {/* Col 1 — Hypothesis */}
                 <div className="ht-bc ht-bc-divider">
                   <div className="ht-bc-head">Hypothesis</div>
                   <div className="ht-hyp-row">
                     <span className="ht-hyp-label">H₀ (Null):</span>
-                    <span className="ht-hyp-val">μ₁ ≤ 3.5</span>
+                    <span className="ht-hyp-val">{r.h0}</span>
                   </div>
                   <div className="ht-hyp-row">
                     <span className="ht-hyp-label">Hₐ (Alternative):</span>
-                    <span className="ht-hyp-val">μ₁ &gt; 3.5</span>
+                    <span className="ht-hyp-val">{r.ha}</span>
                   </div>
                   <div className="ht-hyp-stack">
                     <span className="ht-hyp-label">Test Type</span>
@@ -273,17 +287,16 @@ export default function HypothesisTestingPage() {
                   </div>
                 </div>
 
-                {/* Col 2 — Results */}
                 <div className="ht-bc ht-bc-divider">
                   <div className="ht-bc-head">Results</div>
                   <table className="ht-res-table">
                     <tbody>
                       {[
-                        { l: 'Z (test statistic)',    v: r.z },
-                        { l: 'p(z) (one-tailed)',     v: r.pz },
+                        { l: 'Z (test statistic)',         v: r.z?.toFixed(3) },
+                        { l: 'p(z) (one-tailed)',          v: r.pz?.toFixed(4) },
                         { l: `Critical Z (α = ${r.alpha})`, v: r.criticalZ },
-                        { l: 'Decision',              v: r.decision },
-                        { l: 'Conclusion',            v: <span className="ht-green" style={{ fontWeight: 700 }}>Hypothesis Validated</span> },
+                        { l: 'Decision',                   v: r.decision },
+                        { l: 'Conclusion',                 v: <span className={r.status === 'Validated' ? 'ht-green' : 'ht-red'} style={{ fontWeight: 700 }}>Hypothesis {r.status}</span> },
                       ].map(({ l, v }) => (
                         <tr key={l}>
                           <td className="ht-res-label">{l}</td>
@@ -294,17 +307,13 @@ export default function HypothesisTestingPage() {
                   </table>
                 </div>
 
-                {/* Col 3 — Visual */}
                 <div className="ht-bc ht-bc-divider">
                   <div className="ht-bc-head">Visual Representation</div>
                   <BellCurve critZ={r.criticalZ} testZ={r.z} />
                 </div>
 
-                {/* Col 4 — Underlying Working */}
                 <div className="ht-bc">
                   <div className="ht-bc-head">Underlying Working</div>
-
-                  {/* Formula */}
                   <div className="ht-formula-wrap">
                     <div className="ht-formula-line">
                       <span className="ht-f-var">Z</span>
@@ -313,13 +322,9 @@ export default function HypothesisTestingPage() {
                       <span className="ht-f-eq">=</span>
                       <Frac num={`${r.sampleMean} − ${r.popMean}`} den={`${r.stdDev} / √${r.sampleSize}`} />
                       <span className="ht-f-eq">=</span>
-                      <Frac num="0.62" den="0.091" />
-                      <span className="ht-f-eq">=</span>
-                      <span className="ht-f-result">{r.z}</span>
+                      <span className="ht-f-result">{r.z?.toFixed(3)}</span>
                     </div>
                   </div>
-
-                  {/* Legend */}
                   <div className="ht-legend">
                     {[
                       ['X̄',  `Sample mean (${r.sampleMean})`],
@@ -334,13 +339,11 @@ export default function HypothesisTestingPage() {
                       </div>
                     ))}
                   </div>
-
-                  {/* p(z) interpretation */}
                   <div className="ht-pz-block">
                     <div className="ht-pz-head">p(z) Interpretation</div>
                     <div className="ht-pz-text">
-                      p(z) = {r.pz} is less than α = {r.alpha},<br />
-                      so the result is statistically significant.
+                      p(z) = {r.pz?.toFixed(4)} is {r.pz < r.alpha ? 'less' : 'greater'} than α = {r.alpha},<br />
+                      so the result is {r.pz < r.alpha ? 'statistically significant' : 'not statistically significant'}.
                     </div>
                   </div>
                 </div>
@@ -351,7 +354,7 @@ export default function HypothesisTestingPage() {
         </>
       )}
 
-      {/* ── Previous Hypotheses ── */}
+      {/* Previous Hypotheses */}
       <div className="ht-history-card">
         <div className="ht-history-hdr">
           <span className="ht-section-label" style={{ fontSize: 14 }}>Previous Hypotheses</span>
@@ -376,38 +379,42 @@ export default function HypothesisTestingPage() {
               </tr>
             </thead>
             <tbody>
-              {HISTORY.map(h => (
-                <tr key={h.id}>
-                  <td className="ht-id">{h.id}</td>
-                  <td className="ht-hyp-text">{h.text}</td>
-                  <td><ResultBadge result={h.result} /></td>
-                  <td className="ht-filters">{h.filters}</td>
-                  <td>{h.pz}</td>
-                  <td>{h.alpha}</td>
-                  <td className="ht-date">{h.date}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="ht-act-btn" title="View">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <ellipse cx="7" cy="7" rx="5.5" ry="3.5" stroke="currentColor" strokeWidth="1.3"/>
-                          <circle cx="7" cy="7" r="1.6" stroke="currentColor" strokeWidth="1.3"/>
-                        </svg>
-                      </button>
-                      <button className="ht-act-btn ht-act-del" title="Delete">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <path d="M2.5 4h9M5.5 4V2.5h3V4M3.5 4l.5 7.5h6L10.5 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M6 6.5v3.5M8 6.5v3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {history.length === 0 ? (
+                <tr><td colSpan={8} style={{ textAlign:'center', color:'var(--text-muted)', fontSize:11, padding:'16px 0' }}>
+                  No hypotheses tested yet. Run a test above to see results here.
+                </td></tr>
+              ) : history.map(h => {
+                const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+                return (
+                  <tr key={h.id}>
+                    <td className="ht-id">{h.id}</td>
+                    <td className="ht-hyp-text">{h.hypothesis}</td>
+                    <td><ResultBadge result={cap(h.result)} /></td>
+                    <td className="ht-filters">{filtersToString(h.filters_applied)}</td>
+                    <td>{h.p_value?.toFixed(4) ?? '—'}</td>
+                    <td>{h.alpha}</td>
+                    <td className="ht-date">{h.date_tested}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="ht-act-btn" title="View" onClick={() => setInput(h.hypothesis)}>
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <ellipse cx="7" cy="7" rx="5.5" ry="3.5" stroke="currentColor" strokeWidth="1.3"/>
+                            <circle cx="7" cy="7" r="1.6" stroke="currentColor" strokeWidth="1.3"/>
+                          </svg>
+                        </button>
+                        <button className="ht-act-btn ht-act-del" title="Delete" onClick={() => handleDelete(h.id)}>
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M2.5 4h9M5.5 4V2.5h3V4M3.5 4l.5 7.5h6L10.5 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M6 6.5v3.5M8 6.5v3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </div>
-        <div className="ht-view-all-row">
-          <button className="ht-view-all-link">View all hypotheses →</button>
         </div>
       </div>
 

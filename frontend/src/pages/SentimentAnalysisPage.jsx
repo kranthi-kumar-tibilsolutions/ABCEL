@@ -259,6 +259,23 @@ export default function SentimentAnalysisPage() {
         </div>
       </div>
 
+      {/* Illustrative data notice */}
+      <div style={{
+        display:'flex', alignItems:'center', gap:8,
+        margin:'10px 0', padding:'8px 12px',
+        background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:8,
+      }}>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink:0 }}>
+          <path d="M7 1.5L12.5 12H1.5L7 1.5z" fill="#F59E0B" stroke="#D97706" strokeWidth="0.5"/>
+          <path d="M7 5.5v3M7 9.5v.5" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+        </svg>
+        <span style={{ fontSize:10.5, color:'#92400E', lineHeight:1.4 }}>
+          <strong>Illustrative data:</strong> Sentiment analysis requires open-text responses (free-form comments).
+          The WTW Vibes survey uses Likert-scale questions only, so the figures below are representative examples.
+          When open-text data becomes available, this page will update automatically.
+        </span>
+      </div>
+
       {/* Filter bar */}
       <div className="sa-filter-bar">
         {[
