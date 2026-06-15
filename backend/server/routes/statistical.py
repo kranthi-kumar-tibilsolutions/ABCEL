@@ -202,7 +202,7 @@ async def get_network(
         base_scores = _scores(filtered, question_id)
         n_base      = len(base_scores)
 
-        edges = sorted(
+        all_edges = sorted(
             [
                 {
                     "source":    question_id,
@@ -219,7 +219,10 @@ async def get_network(
             ],
             key=lambda x: -abs(x["r"]),
         )
-        edges = [e for e in edges if abs(e["r"]) >= 0.2][:top]
+        # Take top N by absolute r — no hard threshold so the graph always renders
+        edges = all_edges[:top]
+        # Attach max_r so frontend can scale edge thickness/opacity relatively
+        max_r = abs(edges[0]["r"]) if edges else 1
 
         node_ids = set([question_id] + [e["target"] for e in edges])
 
@@ -236,7 +239,7 @@ async def get_network(
             for q_id in node_ids
         ]
 
-        return {"nodes": nodes, "edges": edges}
+        return {"nodes": nodes, "edges": edges, "max_r": round(max_r, 4)}
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
 

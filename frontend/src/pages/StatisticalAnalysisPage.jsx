@@ -127,48 +127,58 @@ function Correlogram({ qs = [], matrix = [] }) {
   );
 }
 
-/* NetworkGraph: position nodes radially based on |r| */
-function positionNodes(backendNodes, edges, CX=300, CY=215) {
-  const center = backendNodes.find(n => n.is_center);
+/* NetworkGraph: relative scaling — strongest edge is always visible */
+function positionNodes(backendNodes, edges, maxR, CX=300, CY=215) {
+  const center  = backendNodes.find(n => n.is_center);
   const others  = backendNodes.filter(n => !n.is_center);
-  const edgeMap = new Map((edges || []).map(e => [e.target, e.r ?? e.weight ?? 0]));
+  const edgeMap = new Map((edges || []).map(e => [e.target, e.r ?? 0]));
+  // Sort by |r| descending (already sorted from backend, but re-sort for safety)
   const sorted  = [...others].sort((a, b) => Math.abs(edgeMap.get(b.id) || 0) - Math.abs(edgeMap.get(a.id) || 0));
   const N = sorted.length || 1;
   const placed = sorted.map((node, i) => {
-    const angle  = (2 * Math.PI * i) / N - Math.PI / 2;
-    const r      = edgeMap.get(node.id) || 0;
-    const radius = Math.abs(r) >= 0.40 ? 120 : Math.abs(r) >= 0.20 ? 155 : 185;
+    const angle = (2 * Math.PI * i) / N - Math.PI / 2;
+    const r     = edgeMap.get(node.id) || 0;
+    // Rank-based radius: strongest (rank 0) closest, weakest farthest
+    const rank   = N === 1 ? 0.5 : i / (N - 1);
+    const radius = 110 + 85 * rank;        // 110 (closest) → 195 (farthest)
     return { ...node, x: CX + radius * Math.cos(angle), y: CY + radius * Math.sin(angle), edgeR: r };
   });
   return { center: center ? { ...center, x: CX, y: CY, edgeR: 1 } : null, others: placed };
 }
 
-function NetworkGraph({ nodes = [], edges = [] }) {
+function NetworkGraph({ nodes = [], edges = [], maxR: propMaxR }) {
   const CX = 300, CY = 215;
-  const { center, others } = positionNodes(nodes, edges, CX, CY);
+  // Use backend-supplied maxR, or compute from edges, minimum 0.01 to avoid /0
+  const maxR = propMaxR || Math.max(...edges.map(e => Math.abs(e.r || 0)), 0.01);
+  const { center, others } = positionNodes(nodes, edges, maxR, CX, CY);
 
   if (!center) {
     return <div style={{ color:'var(--text-muted)', fontSize:11, padding:12 }}>No network data</div>;
   }
 
+  const relColor = r => r > 0 ? '#22C55E' : r < 0 ? '#EF4444' : '#CBD5E1';
+  const relOpacity = r => 0.30 + 0.65 * (Math.abs(r) / maxR);
+  const relStroke  = r => 1.0  + 2.50 * (Math.abs(r) / maxR);
+  const relNodeR   = (r, rank) => 12 - 4 * rank;   // 12 (strongest) → 8 (weakest)
+
   return (
     <div style={{ background:'var(--bg-page)', borderRadius:8, overflow:'hidden' }}>
-      <svg viewBox="0 0 600 475" style={{ width:'100%', height:'auto', display:'block' }}>
+      <svg viewBox="0 0 600 470" style={{ width:'100%', height:'auto', display:'block' }}>
         {/* edges */}
         {others.map(n => (
           <line key={n.id}
             x1={CX} y1={CY} x2={n.x} y2={n.y}
-            stroke={edgeColor(n.edgeR)}
-            strokeWidth={edgeStroke(n.edgeR)}
-            strokeOpacity={Math.abs(n.edgeR) < 0.15 ? 0.35 : 0.70}
+            stroke={relColor(n.edgeR)}
+            strokeWidth={relStroke(n.edgeR)}
+            strokeOpacity={relOpacity(n.edgeR)}
           />
         ))}
         {/* peripheral nodes */}
-        {others.map(n => {
-          const a    = Math.abs(n.edgeR);
-          const nr   = a >= 0.45 ? 14 : a >= 0.25 ? 12 : 10;
-          const fill   = n.edgeR > 0.15 ? '#DCFCE7' : n.edgeR < -0.15 ? '#FEE2E2' : '#F1F5F9';
-          const stroke = n.edgeR > 0.15 ? '#22C55E' : n.edgeR < -0.15 ? '#EF4444' : '#CBD5E1';
+        {others.map((n, i) => {
+          const rank  = others.length === 1 ? 0 : i / (others.length - 1);
+          const nr    = relNodeR(n.edgeR, rank);
+          const fill   = n.edgeR > 0 ? '#DCFCE7' : n.edgeR < 0 ? '#FEE2E2' : '#F1F5F9';
+          const stroke = n.edgeR > 0 ? '#22C55E' : n.edgeR < 0 ? '#EF4444' : '#CBD5E1';
           const short  = (n.label || n.id).slice(0, 6);
           return (
             <g key={n.id}>
@@ -215,6 +225,7 @@ export default function StatisticalAnalysisPage() {
   const [corrMatrix,  setCorrMatrix]  = useState([]);
   const [netNodes,    setNetNodes]    = useState([]);
   const [netEdges,    setNetEdges]    = useState([]);
+  const [netMaxR,     setNetMaxR]     = useState(1);
   const [insight,     setInsight]     = useState('');
   const [loading,     setLoading]     = useState(false);
 
@@ -252,6 +263,7 @@ export default function StatisticalAnalysisPage() {
       setCorrMatrix(cgData.matrix || []);
       setNetNodes(netData.nodes || []);
       setNetEdges(netData.edges || []);
+      setNetMaxR(netData.max_r || 1);
       setInsight(insData.insight || '');
     }).finally(() => setLoading(false));
   }, [selQId]);
@@ -501,13 +513,12 @@ export default function StatisticalAnalysisPage() {
           </div>
           {loading
             ? <div style={{ color:'var(--text-muted)', fontSize:11, padding:8 }}>Loading…</div>
-            : <NetworkGraph nodes={netNodes} edges={netEdges} />
+            : <NetworkGraph nodes={netNodes} edges={netEdges} maxR={netMaxR} />
           }
           <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginTop:8 }}>
             {[
               { color:'#22C55E', label:'Positive Correlation'    },
               { color:'#EF4444', label:'Negative Correlation'    },
-              { color:'#CBD5E1', label:'No / Weak Correlation'   },
             ].map(l => (
               <div key={l.label} style={{ display:'flex', alignItems:'center', gap:4 }}>
                 <div style={{ width:20, height:3, background:l.color, borderRadius:2 }}/>
@@ -516,7 +527,7 @@ export default function StatisticalAnalysisPage() {
             ))}
           </div>
           <p style={{ fontSize:9, color:'var(--text-muted)', margin:'4px 0 0' }}>
-            Edge thickness represents strength of correlation (|r|)
+            Edge thickness and opacity represent <em>relative</em> correlation strength (max r = {netMaxR?.toFixed(3) ?? '—'})
           </p>
         </div>
 
