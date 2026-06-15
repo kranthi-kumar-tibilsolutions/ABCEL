@@ -205,6 +205,7 @@ export default function DynamicPersonaBuilderPage() {
   const [takeaways, setTakeaways] = useState([]);
   const [loading,   setLoading]   = useState(false);
   const [applied,   setApplied]   = useState(false);
+  const [apiError,  setApiError]  = useState(null);
 
   const setF   = (k,v) => setFilters(f => ({ ...f, [k]: v }));
   const setDim = (id,v) => setDims(d => ({ ...d, [id]: v }));
@@ -229,6 +230,7 @@ export default function DynamicPersonaBuilderPage() {
 
   const applyPersona = async (filtersList, name) => {
     setLoading(true);
+    setApiError(null);
     try {
       const res = await fetch('/api/persona/query', {
         method:'POST',
@@ -240,16 +242,23 @@ export default function DynamicPersonaBuilderPage() {
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setApiError(data.detail || `Server error ${res.status}`);
+        return;
+      }
       if (data.themes) {
         setThemes(data.themes);
         setComps(data.comparisons || []);
         setPersonaN(data.persona_n || 0);
         setDiffSummary(data.diff_summary || { vs_overall:0, vs_cohorts:{} });
         setApplied(true);
+        setApiError(null);
         loadTakeaways(name, data.themes, data.persona_n);
+      } else {
+        setApiError(data.error || 'No data returned from server.');
       }
     } catch (e) {
-      console.error(e);
+      setApiError(e.message || 'Network error.');
     } finally {
       setLoading(false);
     }
@@ -466,7 +475,15 @@ export default function DynamicPersonaBuilderPage() {
               </button>
             </div>
 
-            {/* Cohort chips */}
+            {/* API error banner */}
+            {apiError && (
+              <div style={{ fontSize:11, color:'#DC2626', background:'#FEF2F2', border:'1px solid #FECACA',
+                borderRadius:6, padding:'7px 10px', marginBottom:10 }}>
+                {apiError}
+              </div>
+            )}
+
+          {/* Cohort chips */}
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12, flexWrap:'wrap' }}>
               <span style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600, whiteSpace:'nowrap' }}>
                 Sample Size: {loading ? '…' : personaN.toLocaleString()}

@@ -50,19 +50,26 @@ THEMES = [
     {"label": "Onboarding",            "key": "onboarding"},
 ]
 
-# Real built-in cohorts (DATA_REALITY_UPDATE §10)
+# Built-in cohorts — values validated against actual responses.json data
 BUILTIN_COHORTS = {
-    "gen_z":        {"label": "Gen Z",                "filter": [{"dimension": "generation", "operator": "eq", "value": "Gen Z"}]},
-    "gen_y":        {"label": "Gen Y (Millennials)",  "filter": [{"dimension": "generation", "operator": "eq", "value": "Gen Y"}]},
-    "female":       {"label": "Female Employees",     "filter": [{"dimension": "gender",     "operator": "eq", "value": "Female"}]},
-    "new_joiners":  {"label": "New Joiners (0-2 yrs)","filter": [{"dimension": "tenure",     "operator": "eq", "value": "0-2 years"}]},
-    "junior_mgmt":  {"label": "Junior Management",    "filter": [{"dimension": "job_level",  "operator": "eq", "value": "Junior Management"}]},
-    "senior_mgmt":  {"label": "Senior Management",    "filter": [{"dimension": "job_level",  "operator": "eq", "value": "Senior Management"}]},
-    "abglp":        {"label": "ABGLP Talent Pool",    "filter": [{"dimension": "abglp",      "operator": "eq", "value": "Yes"}]},
-    "managers":     {"label": "People Managers",      "filter": [{"dimension": "is_manager", "operator": "eq", "value": "Yes"}]},
-    "age_under_25": {"label": "Age Under 25",         "filter": [{"dimension": "age_group",  "operator": "eq", "value": "21-25"}]},
-    "age_30_35":    {"label": "Age 30-35",            "filter": [{"dimension": "age_group",  "operator": "eq", "value": "30-35"}]},
-    "age_40_plus":  {"label": "Age 40+",              "filter": [{"dimension": "age_group",  "operator": "eq", "value": "40-45"}]},
+    "gen_z":        {"label": "Gen Z",                   "filter": [{"dimension": "generation", "operator": "eq", "value": "Gen Z"}]},
+    "gen_y":        {"label": "Gen Y (Millennials)",     "filter": [{"dimension": "generation", "operator": "eq", "value": "Gen Y"}]},
+    "gen_x":        {"label": "Gen X",                   "filter": [{"dimension": "generation", "operator": "eq", "value": "Gen X"}]},
+    "female":       {"label": "Female Employees",        "filter": [{"dimension": "gender",     "operator": "eq", "value": "Female"}]},
+    "male":         {"label": "Male Employees",          "filter": [{"dimension": "gender",     "operator": "eq", "value": "Male"}]},
+    "new_joiners":  {"label": "New Joiners (0-2 yrs)",   "filter": [{"dimension": "tenure",     "operator": "eq", "value": "0-2"}]},
+    "mid_tenure":   {"label": "Mid-Tenure (2-5 yrs)",    "filter": [{"dimension": "tenure",     "operator": "eq", "value": "2-5"}]},
+    "senior_tenure":{"label": "Senior Tenure (10+ yrs)", "filter": [{"dimension": "tenure",     "operator": "eq", "value": "10-15"}]},
+    "junior_mgmt":  {"label": "Junior Management",       "filter": [{"dimension": "job_level",  "operator": "eq", "value": "Junior Management"}]},
+    "middle_mgmt":  {"label": "Middle Management",       "filter": [{"dimension": "job_level",  "operator": "eq", "value": "Middle Management"}]},
+    "senior_mgmt":  {"label": "Senior Management",       "filter": [{"dimension": "job_level",  "operator": "eq", "value": "Senior Management"}]},
+    "non_mgmt":     {"label": "Non-Management",          "filter": [{"dimension": "job_level",  "operator": "eq", "value": "Non Management"}]},
+    "abglp":        {"label": "ABGLP Talent Pool",       "filter": [{"dimension": "abglp",      "operator": "eq", "value": "Yes"}]},
+    "managers":     {"label": "People Managers",         "filter": [{"dimension": "is_manager", "operator": "eq", "value": "Yes"}]},
+    "ic":           {"label": "Individual Contributors", "filter": [{"dimension": "is_manager", "operator": "eq", "value": "No"}]},
+    "age_under_25": {"label": "Age Under 25",            "filter": [{"dimension": "age_group",  "operator": "eq", "value": "21-25"}]},
+    "age_30_35":    {"label": "Age 30-35",               "filter": [{"dimension": "age_group",  "operator": "eq", "value": "30-35"}]},
+    "age_40_45":    {"label": "Age 40-45",               "filter": [{"dimension": "age_group",  "operator": "eq", "value": "40-45"}]},
 }
 
 
@@ -161,13 +168,15 @@ async def persona_query(req: QueryRequest):
         overall_scores = _compute_group_scores(units, THEMES)
         overall_n      = len(units)
 
-        # Resolve comparison cohorts
+        # Resolve comparison cohorts — skip any with fewer than 10 respondents
         comparisons = []
         for cohort_id in req.comparison_cohorts:
             cohort_def = BUILTIN_COHORTS.get(cohort_id)
             if not cohort_def:
                 continue
             cohort_group = _apply_filters(units, cohort_def["filter"])
+            if len(cohort_group) < 10:
+                continue   # too small to compute reliable stats
             comparisons.append({
                 "id":     cohort_id,
                 "label":  cohort_def["label"],

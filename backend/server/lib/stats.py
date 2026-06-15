@@ -53,6 +53,8 @@ def correlation_category(r: float) -> str:
 
 # == twoSampleZTest(meanA, meanB, stdA, stdB, nA, nB) ==
 def two_sample_z_test(mean_a, mean_b, std_a, std_b, n_a, n_b) -> dict:
+    if not n_a or not n_b:
+        return {"z": 0, "p": 1, "significant": False}
     se = math.sqrt((std_a ** 2 / n_a) + (std_b ** 2 / n_b))
     if se == 0:
         return {"z": 0, "p": 1, "significant": False}
