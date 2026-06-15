@@ -2,6 +2,13 @@ import { useContext, useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import abgLogo from '../../assets/abg.avif';
+import ultratechLogo from '../../assets/aditya_birla_ultratech.jpg';
+import novelisLogo from '../../assets/aditya_birla_novilis.jpg';
+
+const COMPANY_LOGOS = {
+  ultratech: ultratechLogo,
+  novelis:   novelisLogo,
+};
 
 export default function AppHeader() {
   const { user, logout, navigate } = useContext(AppContext);
@@ -10,6 +17,7 @@ export default function AppHeader() {
   const userRef = useRef(null);
 
   const brandTitle = user?.role === 'company' ? user.company : 'ABG VIBES 2025';
+  const brandLogo  = COMPANY_LOGOS[user?.theme] || abgLogo;
 
   useEffect(() => {
     function handleClick(e) {
@@ -22,7 +30,7 @@ export default function AppHeader() {
   return (
     <header className="app-header">
       <div className="app-header-brand">
-        <img src={abgLogo} alt="ABG" width="28" height="28" style={{ objectFit: 'contain', borderRadius: 4 }} />
+        <img src={brandLogo} alt={brandTitle} width="28" height="28" style={{ objectFit: 'contain', borderRadius: 4 }} />
         <div className="app-header-brand-block">
           <div className="app-header-title">{brandTitle}</div>
           <div className="app-header-subtitle">Employee Engagement</div>

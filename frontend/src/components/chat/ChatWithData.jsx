@@ -1,11 +1,25 @@
 import { useContext, useState, useRef, useEffect } from 'react';
 import { AppContext } from '../../context/AppContext';
+import { apiFetch } from '../../utils/api';
 
 const SUGGESTED = [
   'Which business has improved the most?',
   'Which BUs are in Open Conflict cluster?',
   'What drives engagement the most?',
   'Show BUs with high polarization',
+];
+
+const FOCUS_AREAS = [
+  'Engagement',
+  'Leadership',
+  'Performance Culture',
+  'Development & Career',
+  'Manager Effectiveness',
+  'Onboarding',
+  'Gender',
+  'Generation',
+  'Tenure',
+  'Job Band',
 ];
 
 function AiChatIcon() {
@@ -46,13 +60,19 @@ function PaperPlaneIcon() {
 }
 
 export default function ChatWithData() {
-  const { dimension: ctxDimension } = useContext(AppContext);
+  const { dimension: ctxDimension, businesses, user } = useContext(AppContext);
   const [messages, setMessages] = useState([
     { role: 'assistant', content: "Hi! I'm your AI analyst. Ask me anything about employee engagement:" }
   ]);
   const [input,   setInput]   = useState('');
   const [loading, setLoading] = useState(false);
+  const [focusArea,     setFocusArea]     = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
   const bottomRef = useRef(null);
+
+  // Company users are already scoped to their own company server-side —
+  // hide the company filter for them.
+  const showCompanyFilter = user?.role !== 'company' && (businesses?.length ?? 0) > 1;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -67,13 +87,15 @@ export default function ChatWithData() {
     setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await apiFetch('/api/chat', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
-          message:   msg,
-          history:   messages.slice(-6).map(m => ({ role: m.role, content: m.content })),
-          dimension: ctxDimension,
+          message:      msg,
+          history:      messages.slice(-6).map(m => ({ role: m.role, content: m.content })),
+          dimension:    ctxDimension,
+          focusArea:    focusArea || null,
+          companyFilter: companyFilter || null,
         }),
       });
 
@@ -123,6 +145,30 @@ export default function ChatWithData() {
         <span className="chat-title">CHAT WITH DATA</span>
         <span className="chat-beta">Beta</span>
         <span className="chat-sub">Your AI analyst</span>
+      </div>
+
+      <div className="chat-filters">
+        <select
+          className="chat-filter-select"
+          value={focusArea}
+          onChange={e => setFocusArea(e.target.value)}
+          title="Focus area"
+        >
+          <option value="">All focus areas</option>
+          {FOCUS_AREAS.map(f => <option key={f} value={f}>{f}</option>)}
+        </select>
+
+        {showCompanyFilter && (
+          <select
+            className="chat-filter-select"
+            value={companyFilter}
+            onChange={e => setCompanyFilter(e.target.value)}
+            title="Company"
+          >
+            <option value="">All companies</option>
+            {businesses.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
+          </select>
+        )}
       </div>
 
       <div className="chat-messages">

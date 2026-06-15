@@ -1,7 +1,6 @@
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useMemo, useState, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import { Line, Bar } from 'react-chartjs-2';
-import Breadcrumb from '../components/shared/Breadcrumb';
 
 // Task 15 — wave labels instead of months
 const MOCK_WAVES = ['Vibes 2022', 'Vibes 2023', 'Vibes Q1 2024', 'Vibes Q2 2024', 'Vibes 2025', 'Vibes 2026'];
@@ -21,7 +20,14 @@ function catScoresForWave(waveIdx) {
 }
 
 export default function TrendsPage() {
-  const { businesses, meta } = useContext(AppContext);
+  const { businesses, meta, setBreadcrumb } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Overview', page: 'overview' },
+      { label: 'Trends' },
+    ]);
+  }, []);
   const [drillWave, setDrillWave] = useState(null);
 
   const top5 = useMemo(() =>
@@ -96,16 +102,6 @@ export default function TrendsPage() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[
-        { label: 'Overview', page: 'overview' },
-        { label: 'Trends' },
-      ]} />
-
-      <div className="page-header">
-        <h1 className="page-title">Trends</h1>
-        <p className="page-sub">Engagement trend analysis across survey waves (illustrative)</p>
-      </div>
-
       {/* Group trend — click a point to drill down */}
       <div className="chart-card" style={{ marginBottom: 16 }}>
         <div className="chart-title" style={{ display:'flex', alignItems:'center', gap:8 }}>

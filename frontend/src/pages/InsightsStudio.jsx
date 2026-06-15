@@ -1,6 +1,6 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
-import Breadcrumb from '../components/shared/Breadcrumb';
+import { apiFetch } from '../utils/api';
 import Skeleton   from '../components/shared/Skeleton';
 
 const SKILLS = [
@@ -17,7 +17,15 @@ const SKILLS = [
 const DIMENSIONS = ['Business Unit','Gender','Generation','Tenure','Job Band'];
 
 export default function InsightsStudio() {
-  useContext(AppContext);
+  const { setBreadcrumb } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Overview', page: 'overview' },
+      { label: 'Insights Studio' },
+    ]);
+  }, []);
+
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [dimension,      setDimension]      = useState('Business Unit');
   const [result,         setResult]         = useState(null);
@@ -40,7 +48,7 @@ export default function InsightsStudio() {
     setSteps([]);
 
     try {
-      const res = await fetch('/api/skill-analysis', {
+      const res = await apiFetch('/api/skill-analysis', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ skills: selectedSkills, dimension }),
@@ -86,17 +94,6 @@ export default function InsightsStudio() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[
-        { label: 'Overview', page: 'overview' },
-        { label: 'Insights Studio' },
-      ]} />
-
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Insights Studio</h1>
-          <p className="page-sub">Agentic skill analysis — the AI reasons through your data and surfaces actionable intelligence</p>
-        </div>
-      </div>
 
       {/* Config panel */}
       <div className="chart-card">

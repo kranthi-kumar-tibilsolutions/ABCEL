@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
+import { apiFetch } from '../../utils/api';
 import Skeleton from '../shared/Skeleton';
 
 function AiBadge() {
@@ -92,7 +93,7 @@ export default function AiSummary({ maxBullets = 3 }) {
     setShowWhy(false);
     setLoading(true);
     setError(null);
-    fetch('/api/summary', {
+    apiFetch('/api/summary', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ dimension }),

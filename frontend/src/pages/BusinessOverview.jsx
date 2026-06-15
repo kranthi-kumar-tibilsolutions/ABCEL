@@ -1,7 +1,6 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Badge      from '../components/shared/Badge';
-import Breadcrumb from '../components/shared/Breadcrumb';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -27,7 +26,15 @@ function SortArrow({ dir }) {
 }
 
 export default function BusinessOverview() {
-  const { businesses, filteredBusinesses, navigate } = useContext(AppContext);
+  const { businesses, filteredBusinesses, navigate, setBreadcrumb } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Overview', page: 'overview' },
+      { label: 'All Businesses' },
+    ]);
+  }, []);
+
   const [sortField, setSortField] = useState('score');
   const [sortDir,   setSortDir]   = useState('desc');
 
@@ -56,16 +63,7 @@ export default function BusinessOverview() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[
-        { label: 'Overview', page: 'overview' },
-        { label: 'All Businesses' },
-      ]} />
-
       <div className="page-header">
-        <div>
-          <h1 className="page-title">All Businesses</h1>
-          <p className="page-sub">{list.length} businesses{list.length !== businesses?.length ? ` (filtered from ${businesses.length})` : ''} · Ranked by engagement score</p>
-        </div>
         <div className="biz-sort-row">
           <span className="biz-sort-label">Sort by</span>
           {SORT_OPTIONS.map(opt => (

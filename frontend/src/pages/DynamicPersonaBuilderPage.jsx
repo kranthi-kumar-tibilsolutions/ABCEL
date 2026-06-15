@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useContext } from 'react';
 import { RotateCcw } from 'lucide-react';
+import { AppContext } from '../context/AppContext';
 import { Radar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -18,6 +19,14 @@ const DIMS_DEFAULT = {
   'Region': 'APAC', 'Tenure': '> 3 Years', 'Job Level': 'Manager',
   'Potential': 'High', 'Function': 'All', 'Employment Type': 'Full-time',
 };
+
+const DPB_FILTERS_CFG = [
+  { label: 'Business', key: 'business', opts: ['All', 'Finance', 'Operations', 'HR', 'Technology'] },
+  { label: 'Year',     key: 'year',     opts: ['2024', '2023', '2022'] },
+  { label: 'Country',  key: 'country',  opts: ['All', 'United Kingdom', 'United States', 'India'] },
+  { label: 'Survey',   key: 'survey',   opts: ['Q4 2024 Employee Survey', 'Q3 2024 Employee Survey', 'Q2 2024'] },
+  { label: 'Inactive', key: 'inactive', opts: ['No', 'Yes'] },
+];
 
 const DIMENSIONS_CFG = [
   { name:'Region',          opts:['All','APAC','EMEA','Americas','Global'],                        color:{ bg:'#EFF6FF', text:'#1D4ED8', border:'#BFDBFE' } },
@@ -50,14 +59,6 @@ const STAT_SUMMARY = [
   { vs:'Overall (All Employees)', val:'5 / 5 Significant', color:'#15803D', bg:'#DCFCE7', border:'#86EFAC' },
   { vs:'New Joiners (<1 yr)',      val:'5 / 5 Significant', color:'#15803D', bg:'#DCFCE7', border:'#86EFAC' },
   { vs:'Engineers - APAC',        val:'3 / 5 Significant', color:'#B45309', bg:'#FEF3C7', border:'#FDE68A' },
-];
-
-const FILTERS_CFG = [
-  { label:'Survey',    key:'survey',   opts:['Q4 2024 Employee Survey','Q3 2024 Employee Survey','Q2 2024'] },
-  { label:'Business',  key:'business', opts:['All','Finance','Operations','HR','Technology'] },
-  { label:'Year',      key:'year',     opts:['2024','2023','2022'] },
-  { label:'Country',   key:'country',  opts:['All','United Kingdom','United States','India'] },
-  { label:'Include Inactive Employees', key:'inactive', opts:['No','Yes'] },
 ];
 
 /* ── helpers ──────────────────────────────────────────────────── */
@@ -248,20 +249,27 @@ function RadarChart({ personaScores, cohortScores }) {
 
 /* ── main page ────────────────────────────────────────────────── */
 export default function DynamicPersonaBuilderPage() {
+  const {
+    dpbResetSignal, setDpbResetSignal,
+    dpbFilters, setDpbFilters,
+    setBreadcrumb,
+  } = useContext(AppContext);
   const [personaName, setPersonaName] = useState('High Potential Managers - APAC');
   const [dims,    setDims]    = useState({ ...DIMS_DEFAULT });
-  const [filters, setFilters] = useState({
-    survey:'Q4 2024 Employee Survey', business:'All',
-    year:'2024', country:'All', inactive:'No',
-  });
   const [viewBy, setViewBy] = useState('Themes');
 
-  const setF   = (k,v) => setFilters(f => ({ ...f, [k]: v }));
   const setDim = (k,v) => setDims(d => ({ ...d, [k]: v }));
-  const resetAll = () => {
-    setFilters({ survey:'Q4 2024 Employee Survey', business:'All', year:'2024', country:'All', inactive:'No' });
-    setDims({ ...DIMS_DEFAULT });
-  };
+
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Persona Explorer' },
+      { label: 'Dynamic Persona Builder' },
+    ]);
+  }, []);
+
+  useEffect(() => {
+    if (dpbResetSignal) setDims({ ...DIMS_DEFAULT });
+  }, [dpbResetSignal]);
 
   const personaRadarScores = Object.fromEntries(
     THEMES_DATA.filter(t => !t.isTotal).map(t => [t.name, t.persona])
@@ -275,28 +283,33 @@ export default function DynamicPersonaBuilderPage() {
   return (
     <div className="page-container">
 
-      {/* ── Header ── */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10, gap:12 }}>
-        <div style={{ minWidth:0 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:3 }}>
-            <h1 style={{ fontSize:17, fontWeight:800, color:'var(--text-primary)', margin:0 }}>
-              Dynamic Persona Builder
-            </h1>
-            <InfoIcon />
-          </div>
-          <p style={{ fontSize:11.5, color:'var(--text-muted)', margin:0 }}>
-            Build custom personas with advanced filters and compare against overall and other cohorts.
-          </p>
+      {/* ── Filters + actions ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          {DPB_FILTERS_CFG.map(f => (
+            <Dropdown
+              key={f.key}
+              variant="topbar"
+              label={f.label}
+              value={dpbFilters[f.key]}
+              options={f.opts.map(o => ({ value: o, label: o }))}
+              onChange={v => setDpbFilters(prev => ({ ...prev, [f.key]: v }))}
+            />
+          ))}
+          <button className="topbar-btn" onClick={() => setDpbResetSignal(s => s + 1)} title="Reset filters">
+            <RotateCcw size={13} />
+          </button>
         </div>
-        <div style={{ display:'flex', gap:7, flexShrink:0 }}>
-          <button className="dpb-btn-outline">
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button className="topbar-btn">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
               <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
               <path d="M17 21v-8H7v8M7 3v5h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
             </svg>
-            Save Persona
+            Save
           </button>
-          <button className="dpb-btn-outline">
+          <button className="topbar-btn">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
               <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="1.8"/>
               <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="1.8"/>
@@ -305,7 +318,7 @@ export default function DynamicPersonaBuilderPage() {
             </svg>
             Share
           </button>
-          <button className="dpb-btn-primary">
+          <button className="topbar-btn topbar-btn-primary">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
