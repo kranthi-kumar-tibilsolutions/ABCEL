@@ -79,8 +79,8 @@ const BOTTOM_NAV = [];
 
 export default function Sidebar() {
   const { page, navigate } = useContext(AppContext);
-  const [collapsed,  setCollapsed]  = useState(false);
-  const [openGroups, setOpenGroups] = useState({ 'persona-explorer': true, explore: true });
+  const [collapsed,    setCollapsed]    = useState(false);
+  const [openGroups,   setOpenGroups]   = useState({ 'persona-explorer': true, explore: true });
 
   const toggleGroup   = id => setOpenGroups(g => ({ ...g, [id]: !g[id] }));
   const groupActiveId = id => (NAV.find(n => n.id === id)?.children || []).map(c => c.id).includes(page);
