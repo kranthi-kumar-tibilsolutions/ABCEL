@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useContext } from 'react';
 import { AppContext } from '../context/AppContext';
 import { RotateCcw } from 'lucide-react';
 import Dropdown from '../components/shared/Dropdown';
