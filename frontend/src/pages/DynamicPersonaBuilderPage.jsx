@@ -327,29 +327,6 @@ export default function DynamicPersonaBuilderPage() {
         </div>
       </div>
 
-      {/* ── Filter bar ── */}
-      <div className="sa-filter-bar" style={{ marginBottom:12 }}>
-        {FILTERS_CFG.map(f => (
-          <div key={f.key} className="sa-filter-item">
-            <span className="sa-filter-label">{f.label}</span>
-            <Dropdown variant="filter" value={filters[f.key]}
-              options={f.opts} onChange={v => setF(f.key, v)}/>
-          </div>
-        ))}
-        <button
-          onClick={resetAll}
-          style={{
-            display:'flex', alignItems:'center', gap:5, alignSelf:'flex-end',
-            border:'none', background:'none', cursor:'pointer',
-            color:'#2563EB', fontSize:12, fontWeight:500,
-            fontFamily:'inherit', padding:'5px 2px', whiteSpace:'nowrap', flexShrink:0,
-          }}
-        >
-          <RotateCcw size={13} />
-          Reset Filters
-        </button>
-      </div>
-
       {/* ── Main grid ── */}
       <div className="dpb-main-grid">
 
