@@ -2,7 +2,14 @@ import { useState, useMemo, useEffect } from 'react';
 import { RotateCcw } from 'lucide-react';
 import Dropdown from '../components/shared/Dropdown';
 
-// Filter config built dynamically from real data — see useEffect below
+const FILTER_CFG = [
+  { label:'Survey',                     key:'survey',   opts:['Q4 2024 Employee Survey','Q3 2024 Employee Survey','Q2 2024 Employee Survey'] },
+  { label:'Business',                   key:'business', opts:['All','Finance','Operations','HR','Technology'] },
+  { label:'Year',                       key:'year',     opts:['2024','2023','2022'] },
+  { label:'Country',                    key:'country',  opts:['All','United Kingdom','United States','India','Australia'] },
+  { label:'Department',                 key:'dept',     opts:['All','Engineering','Sales','Marketing','Finance'] },
+  { label:'Include Inactive Employees', key:'inactive', opts:['No','Yes'] },
+];
 
 const TILE_CFG = [
   { key:'strong_positive', label:'Strong Positive',       r:'r ≥ 0.50',         bg:'#DCFCE7', border:'#86EFAC', tc:'#15803D', nc:'#15803D' },
@@ -202,16 +209,15 @@ export default function StatisticalAnalysisPage() {
   const [expanded,    setExpanded]    = useState(false);
   const [topCorr,     setTopCorr]     = useState('Top 20');
   const [topNet,      setTopNet]      = useState('Top 25');
-
-  /* filter state — only Business and Country are wired to the API */
-  const [bizOpts,     setBizOpts]     = useState(['All']);
-  const [countryOpts, setCountryOpts] = useState(['All']);
-  const [business,    setBusiness]    = useState('All');
-  const [country,     setCountry]     = useState('India');   // default India
+  const [filters,     setFilters]     = useState({
+    survey:'Q4 2024 Employee Survey', business:'All',
+    year:'2024', country:'All', dept:'All', inactive:'No',
+  });
 
   /* ── API state ── */
   const [questions,   setQuestions]   = useState([]);
   const [selQId,      setSelQId]      = useState('');
+  const [selQText,    setSelQText]    = useState('');
   const [nResp,       setNResp]       = useState(0);
   const [tabCounts,   setTabCounts]   = useState({ all:0, strong_positive:0, moderate_positive:0, weak_none:0, negative:0 });
   const [correlations,setCorrelations]= useState([]);
@@ -223,47 +229,32 @@ export default function StatisticalAnalysisPage() {
   const [insight,     setInsight]     = useState('');
   const [loading,     setLoading]     = useState(false);
 
-  const resetF = () => { setBusiness('All'); setCountry('India'); };
+  const setF   = (k, v) => setFilters(f => ({ ...f, [k]: v }));
+  const resetF = () => setFilters({ survey:'Q4 2024 Employee Survey', business:'All', year:'2024', country:'All', dept:'All', inactive:'No' });
 
-  /* Build query string from active filters */
-  const filterQS = () => {
-    const p = new URLSearchParams();
-    if (business !== 'All') p.set('business', business);
-    if (country  !== 'All') p.set('country',  country);
-    return p.toString() ? `?${p}` : '';
-  };
-
-  /* Fetch real filter options + questions on mount */
+  /* fetch questions list on mount */
   useEffect(() => {
-    fetch('/api/persona/dimensions')
-      .then(r => r.json())
-      .then(d => {
-        const dims = d.dimensions || [];
-        const biz  = dims.find(x => x.id === 'business');
-        const ctr  = dims.find(x => x.id === 'country');
-        if (biz) setBizOpts(['All', ...biz.values]);
-        if (ctr) setCountryOpts(['All', ...ctr.values]);
-      });
-
     fetch('/api/statistical/questions')
       .then(r => r.json())
       .then(d => {
         const qs = d.questions || [];
         setQuestions(qs);
-        if (qs.length > 0) setSelQId(qs[0].id);
+        if (qs.length > 0) {
+          setSelQId(qs[0].id);
+          setSelQText(qs[0].text);
+        }
       });
   }, []);
 
-  /* Re-fetch all charts whenever question OR filters change */
+  /* fetch correlation data whenever selected question changes */
   useEffect(() => {
     if (!selQId) return;
     setLoading(true);
-    const qs = filterQS();
     Promise.all([
-      fetch(`/api/statistical/correlations/${selQId}${qs}`).then(r => r.json()),
-      fetch(`/api/statistical/correlogram/${selQId}${qs}`).then(r => r.json()),
-      fetch(`/api/statistical/network/${selQId}${qs}`).then(r => r.json()),
-      fetch(`/api/statistical/insights/${selQId}${qs}`).then(r => r.json()),
+      fetch(`/api/statistical/correlations/${selQId}`).then(r => r.json()),
+      fetch(`/api/statistical/correlogram/${selQId}`).then(r => r.json()),
+      fetch(`/api/statistical/network/${selQId}`).then(r => r.json()),
+      fetch(`/api/statistical/insights/${selQId}`).then(r => r.json()),
     ]).then(([corrData, cgData, netData, insData]) => {
       setNResp(corrData.n || 0);
       setTabCounts(corrData.tab_counts || { all:0, strong_positive:0, moderate_positive:0, weak_none:0, negative:0 });
@@ -275,7 +266,7 @@ export default function StatisticalAnalysisPage() {
       setNetMaxR(netData.max_r || 1);
       setInsight(insData.insight || '');
     }).finally(() => setLoading(false));
-  }, [selQId, business, country]);   // re-runs on filter change
+  }, [selQId]);
 
   const tabRows = useMemo(() => {
     switch (activeTab) {
@@ -294,9 +285,8 @@ export default function StatisticalAnalysisPage() {
   ];
 
   const handleQChange = (e) => {
-    const id = parseInt(e.target.value, 10);
-    const q  = questions.find(q => q.id === id);
-    if (q) setSelQId(q.id);
+    const q = questions.find(q => q.id === e.target.value);
+    if (q) { setSelQId(q.id); setSelQText(q.text); }
   };
 
   return (
@@ -314,16 +304,15 @@ export default function StatisticalAnalysisPage() {
         </p>
       </div>
 
-      {/* filter bar — Business + Country only, wired to real data */}
+      {/* filter bar */}
       <div className="sa-filter-bar" style={{ marginBottom:12 }}>
-        <div className="sa-filter-item">
-          <span className="sa-filter-label">Business</span>
-          <Dropdown variant="filter" value={business} options={bizOpts} onChange={setBusiness}/>
-        </div>
-        <div className="sa-filter-item">
-          <span className="sa-filter-label">Country</span>
-          <Dropdown variant="filter" value={country} options={countryOpts} onChange={setCountry}/>
-        </div>
+        {FILTER_CFG.map(f => (
+          <div key={f.key} className="sa-filter-item">
+            <span className="sa-filter-label">{f.label}</span>
+            <Dropdown variant="filter" value={filters[f.key]}
+              options={f.opts} onChange={v => setF(f.key, v)}/>
+          </div>
+        ))}
         <button className="sa-reset-btn" onClick={resetF}>
           <RotateCcw size={12} />
           Reset Filters

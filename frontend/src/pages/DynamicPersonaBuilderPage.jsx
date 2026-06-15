@@ -35,7 +35,13 @@ const DIM_COLORS = [
   { bg:'#FEF9C3', text:'#854D0E', border:'#FEF08A' },
 ];
 
-// Filter options fetched dynamically — see useEffect below
+const FILTERS_CFG = [
+  { label:'Survey',    key:'survey',   opts:['Q4 2024 Employee Survey','Q3 2024 Employee Survey','Q2 2024'] },
+  { label:'Business',  key:'business', opts:['All','Finance','Operations','HR','Technology'] },
+  { label:'Year',      key:'year',     opts:['2024','2023','2022'] },
+  { label:'Country',   key:'country',  opts:['All','United Kingdom','United States','India'] },
+  { label:'Include Inactive Employees', key:'inactive', opts:['No','Yes'] },
+];
 
 function InfoIcon() {
   return (
@@ -187,10 +193,10 @@ export default function DynamicPersonaBuilderPage() {
   const [personaName, setPersonaName] = useState('Custom Persona');
   const [dimensions,  setDimensions]  = useState([]);
   const [dims,        setDims]        = useState({});
-  const [bizOpts,     setBizOpts]     = useState(['All']);
-  const [countryOpts, setCountryOpts] = useState(['All']);
-  const [business,    setBusiness]    = useState('All');
-  const [country,     setCountry]     = useState('India');   // default India
+  const [filters,     setFilters]     = useState({
+    survey:'Q4 2024 Employee Survey', business:'All',
+    year:'2024', country:'All', inactive:'No',
+  });
   const [viewBy,    setViewBy]    = useState('Themes');
   const [themes,    setThemes]    = useState([]);
   const [comps,     setComps]     = useState([]);
@@ -201,14 +207,14 @@ export default function DynamicPersonaBuilderPage() {
   const [applied,   setApplied]   = useState(false);
   const [apiError,  setApiError]  = useState(null);
 
+  const setF   = (k,v) => setFilters(f => ({ ...f, [k]: v }));
   const setDim = (id,v) => setDims(d => ({ ...d, [id]: v }));
   const resetAll = () => {
-    setBusiness('All');
-    setCountry('India');
-    setDims(Object.fromEntries(dimensions.map(d => [d.id, 'All'])));
+    setFilters({ survey:'Q4 2024 Employee Survey', business:'All', year:'2024', country:'All', inactive:'No' });
+    setDims({});
   };
 
-  /* Fetch available dimensions + filter options on mount */
+  /* Fetch available dimensions on mount and auto-load initial data */
   useEffect(() => {
     fetch('/api/persona/dimensions')
       .then(r => r.json())
@@ -218,10 +224,6 @@ export default function DynamicPersonaBuilderPage() {
         const defaults = {};
         dims.forEach(dim => { defaults[dim.id] = 'All'; });
         setDims(defaults);
-        const biz = dims.find(x => x.id === 'business');
-        const ctr = dims.find(x => x.id === 'country');
-        if (biz) setBizOpts(['All', ...biz.values]);
-        if (ctr) setCountryOpts(['All', ...ctr.values]);
       });
     applyPersona([], 'All Employees (Default)');
   }, []);
@@ -230,9 +232,6 @@ export default function DynamicPersonaBuilderPage() {
     setLoading(true);
     setApiError(null);
     try {
-      const surveyFilters = {};
-      if (business !== 'All') surveyFilters.business = business;
-      if (country  !== 'All') surveyFilters.country  = country;
       const res = await fetch('/api/persona/query', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
@@ -240,7 +239,6 @@ export default function DynamicPersonaBuilderPage() {
           filters: filtersList,
           comparison_cohorts: COMPARISON_COHORTS,
           persona_name: name,
-          survey_filters: surveyFilters,
         }),
       });
       const data = await res.json();
@@ -352,14 +350,13 @@ export default function DynamicPersonaBuilderPage() {
 
       {/* Filter bar */}
       <div className="sa-filter-bar" style={{ marginBottom:12 }}>
-        <div className="sa-filter-item">
-          <span className="sa-filter-label">Business</span>
-          <Dropdown variant="filter" value={business} options={bizOpts} onChange={setBusiness}/>
-        </div>
-        <div className="sa-filter-item">
-          <span className="sa-filter-label">Country</span>
-          <Dropdown variant="filter" value={country} options={countryOpts} onChange={setCountry}/>
-        </div>
+        {FILTERS_CFG.map(f => (
+          <div key={f.key} className="sa-filter-item">
+            <span className="sa-filter-label">{f.label}</span>
+            <Dropdown variant="filter" value={filters[f.key]}
+              options={f.opts} onChange={v => setF(f.key, v)}/>
+          </div>
+        ))}
         <button className="sa-reset-btn" onClick={resetAll}>
           <RotateCcw size={12} />
           Reset Filters
