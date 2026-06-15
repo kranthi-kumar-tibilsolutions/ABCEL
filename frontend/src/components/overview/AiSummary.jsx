@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
+import { apiFetch } from '../../utils/api';
 import Skeleton from '../shared/Skeleton';
 
 function AiBadge() {
@@ -92,7 +93,7 @@ export default function AiSummary({ maxBullets = 3 }) {
     setShowWhy(false);
     setLoading(true);
     setError(null);
-    fetch('/api/summary', {
+    apiFetch('/api/summary', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ dimension }),
@@ -159,16 +160,16 @@ export default function AiSummary({ maxBullets = 3 }) {
       {summaryData && !loading && (
         <>
           {/* grid: header | [bullets] | takeaway */}
-          <div className="ais-grid" style={{ gridTemplateColumns: bulletsOpen ? '200px minmax(0,1fr) minmax(0,1fr)' : '200px minmax(0,1fr)' }}>
+          <div className="ais-grid" style={{
+            gridTemplateColumns: bulletsOpen ? '200px 1fr 1fr' : '200px 0fr 1fr',
+            transition: 'grid-template-columns 0.35s ease',
+          }}>
 
-            {/* Col 1: badge + title + sparkle + view button */}
+            {/* Col 1: badge + title + sparkle + view button + expand arrow */}
             <div className="ais-col-left">
               <div className="ais-top-row">
                 <AiBadge />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="ais-title">AI EXECUTIVE SUMMARY</div>
-                  <div className="ais-sub">{timeAgo}</div>
-                </div>
+                <div style={{ flex: 1 }} />
                 <button
                   className="ais-refresh-btn"
                   title="Regenerate"
@@ -176,6 +177,21 @@ export default function AiSummary({ maxBullets = 3 }) {
                 >
                   <RefreshCw size={13} />
                 </button>
+                <button
+                  className="ais-expand-btn"
+                  title={bulletsOpen ? 'Collapse findings' : 'Expand findings'}
+                  onClick={() => setBulletsOpen(v => !v)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                    style={{ transition: 'transform 0.2s', transform: bulletsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                    <path d="M5 2.5L9.5 7L5 11.5"
+                      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div>
+                <div className="ais-title">AI EXECUTIVE SUMMARY</div>
+                <div className="ais-sub">{timeAgo}</div>
               </div>
               <div className="ais-intro-block">
                 <SparkleCircle />
@@ -185,19 +201,22 @@ export default function AiSummary({ maxBullets = 3 }) {
               <button className="ais-view-btn" onClick={() => navigate && navigate('ai-insights')}>View full summary &rarr;</button>
             </div>
 
-            {/* Col 2: bullet findings — only when expanded */}
-            {bulletsOpen && (
-              <div className="ais-col-bullets">
-                <ul className="ais-bullets">
-                  {bullets.map((b, i) => (
-                    <li key={i} className="ais-bullet">
-                      <CheckIcon />
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {/* Col 2: bullet findings — always rendered, animates in/out */}
+            <div className="ais-col-bullets" style={{
+              opacity: bulletsOpen ? 1 : 0,
+              pointerEvents: bulletsOpen ? 'auto' : 'none',
+              height: bulletsOpen ? undefined : 0,
+              transition: 'opacity 0.25s ease',
+            }}>
+              <ul className="ais-bullets">
+                {bullets.map((b, i) => (
+                  <li key={i} className="ais-bullet">
+                    <CheckIcon />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
             {/* Col 3 (or Col 2 when collapsed): key takeaway */}
             <div className="ais-col-takeaway">
@@ -223,12 +242,6 @@ export default function AiSummary({ maxBullets = 3 }) {
 
           </div>
 
-          {/* Footer: View More toggle — centered below the entire card content */}
-          <div className="ais-card-footer">
-            <button className="ais-more-btn" onClick={() => setBulletsOpen(v => !v)}>
-              {bulletsOpen ? 'View Less ↑' : 'View More ↓'}
-            </button>
-          </div>
         </>
       )}
     </div>

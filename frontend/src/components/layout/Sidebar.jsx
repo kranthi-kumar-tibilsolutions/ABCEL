@@ -1,5 +1,4 @@
 import { useContext, useState } from 'react';
-import abgLogo from '../../assets/abg.avif';
 import { AppContext } from '../../context/AppContext';
 
 const NAV = [
@@ -46,14 +45,14 @@ const NAV = [
     ),
     children: [
       { id: 'bu-explorer',           label: 'BU Explorer' },
-      { id: 'insights-studio',      label: 'Insights Studio' },
-      { id: 'ai-insights',          label: 'AI Insights' },
-      { id: 'trends',               label: 'Trends Over Time' },
-      { id: 'outliers',             label: 'Outliers & Alerts' },
-      { id: 'employee-voice',       label: 'Employee Voice' },
-      { id: 'hypothesis-testing',   label: 'Hypothesis Testing' },
-      { id: 'statistical-analysis', label: 'Statistical Analysis' },
-      { id: 'sentiment-analysis',   label: 'Sentiment Analysis' },
+      { id: 'insights-studio',       label: 'Insights Studio' },
+      { id: 'ai-insights',           label: 'AI Insights' },
+      { id: 'trends',                label: 'Trends Over Time' },
+      { id: 'outliers',              label: 'Outliers & Alerts' },
+      { id: 'employee-voice',        label: 'Employee Voice' },
+      { id: 'hypothesis-testing',    label: 'Hypothesis Testing' },
+      { id: 'statistical-analysis',  label: 'Statistical Analysis' },
+      { id: 'sentiment-analysis',    label: 'Sentiment Analysis' },
     ],
   },
   {
@@ -76,55 +75,18 @@ const NAV = [
   },
 ];
 
-const BOTTOM_NAV = [
-  {
-    id: 'help', label: 'Help',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/>
-        <path d="M6.5 6c0-1 .67-1.5 1.5-1.5s1.5.67 1.5 1.5c0 .83-.67 1.33-1.5 1.67V9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-        <circle cx="8" cy="11" r=".6" fill="currentColor"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'settings', label: 'Settings',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.4"/>
-        <path d="M8 1.5v1M8 13.5v1M1.5 8h1M13.5 8h1M3.4 3.4l.7.7M11.9 11.9l.7.7M3.4 12.6l.7-.7M11.9 4.1l.7-.7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-];
-
-function AbgLogo() {
-  return (
-    <img src={abgLogo} alt="ABG" width="36" height="36" style={{ flexShrink: 0, objectFit: 'contain', borderRadius: 4 }} />
-  );
-}
+const BOTTOM_NAV = [];
 
 export default function Sidebar() {
   const { page, navigate } = useContext(AppContext);
-  const [collapsed,    setCollapsed]    = useState(false);
-  const [openGroups,   setOpenGroups]   = useState({ 'persona-explorer': true, explore: true });
+  const [collapsed,  setCollapsed]  = useState(false);
+  const [openGroups, setOpenGroups] = useState({ 'persona-explorer': true, explore: true });
 
   const toggleGroup   = id => setOpenGroups(g => ({ ...g, [id]: !g[id] }));
   const groupActiveId = id => (NAV.find(n => n.id === id)?.children || []).map(c => c.id).includes(page);
 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-
-      {/* Logo */}
-      <div className="sidebar-logo">
-        <AbgLogo />
-        {!collapsed && (
-          <div className="sidebar-brand-block">
-            <div className="sidebar-brand">ABG VIBES 2025</div>
-            <div className="sidebar-subbrand">Employee Engagement</div>
-          </div>
-        )}
-      </div>
 
       {/* Main nav */}
       <nav className="sidebar-nav">
@@ -169,13 +131,15 @@ export default function Sidebar() {
           }
 
           return (
-            <div
-              key={item.id}
-              className={`nav-item ${page === item.id ? 'active' : ''}`}
-              onClick={() => navigate(item.id)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              {!collapsed && <span className="nav-label">{item.label}</span>}
+            <div key={item.id}>
+              {item.divider && !collapsed && <div className="nav-divider" />}
+              <div
+                className={`nav-item ${page === item.id ? 'active' : ''}`}
+                onClick={() => navigate(item.id)}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                {!collapsed && <span className="nav-label">{item.label}</span>}
+              </div>
             </div>
           );
         })}

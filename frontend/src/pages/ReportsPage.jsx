@@ -1,10 +1,16 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
-import Breadcrumb from '../components/shared/Breadcrumb';
 import Papa from 'papaparse';
 
 export default function ReportsPage() {
-  const { businesses, units, clusters, meta } = useContext(AppContext);
+  const { businesses, units, clusters, meta, setBreadcrumb } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Overview', page: 'overview' },
+      { label: 'Reports' },
+    ]);
+  }, []);
 
   const downloadCsv = (data, filename) => {
     const csv = Papa.unparse(data);
@@ -99,7 +105,7 @@ export default function ReportsPage() {
             Cluster:  cluster,
             Unit:     item.name ?? item,
             Business: item.business ?? '',
-            Score:    item.overall ?? '',
+            Score:    item.score ?? '',
           }))
         );
         downloadCsv(rows, 'abg_clusters.csv');
@@ -110,18 +116,6 @@ export default function ReportsPage() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[
-        { label: 'Overview', page: 'overview' },
-        { label: 'Reports' },
-      ]} />
-
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Reports</h1>
-          <p className="page-sub">Export engagement data and generate reports</p>
-        </div>
-      </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginTop: 8 }}>
         {REPORT_CARDS.map((r) => (
           <div key={r.title} className="chart-card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

@@ -37,9 +37,8 @@ const SkeletonLines = () => (
 );
 
 export default function RightPanel() {
-  const { insightsData, navigate } = useContext(AppContext);
+  const { insightsData, navigate, rightPanelCollapsed: collapsed, setRightPanelCollapsed: setCollapsed } = useContext(AppContext);
   const [activeTab, setActiveTab] = useState('All Insights');
-  const [collapsed, setCollapsed] = useState(false);
   const [insightsExpanded, setInsightsExpanded] = useState(false);
 
   const trends   = insightsData?.topTrends || [];
@@ -61,12 +60,8 @@ export default function RightPanel() {
   );
 
   return (
+    <>
     <aside className={`right-panel ${collapsed ? 'collapsed' : ''}`}>
-      {/* Collapse button */}
-      <div className="rp-collapse-btn" onClick={() => setCollapsed(c => !c)}>
-        {collapsed ? '«' : '»'}
-      </div>
-
       {/* Insights card */}
       <div className="rp-insights-card">
         <div className="rp-tabs">
@@ -134,5 +129,24 @@ export default function RightPanel() {
       {/* Chat card */}
       <ChatWithData />
     </aside>
+
+    {/* Floating AI toggle button */}
+    <button
+      className="rp-fab"
+      onClick={() => setCollapsed(c => !c)}
+      title={collapsed ? 'Open insights & chat' : 'Close insights & chat'}
+    >
+      {collapsed ? (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2l1.8 4.6L18.4 8l-4.6 1.8L12 14.4l-1.8-4.6L5.6 8l4.6-1.8L12 2z" fill="currentColor"/>
+          <path d="M19 14l.9 2.3L22.2 17l-2.3.9L19 20.2l-.9-2.3L15.8 17l2.3-.9L19 14z" fill="currentColor"/>
+        </svg>
+      ) : (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
+        </svg>
+      )}
+    </button>
+    </>
   );
 }

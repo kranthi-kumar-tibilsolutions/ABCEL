@@ -1,7 +1,6 @@
-import { useContext, useState, useMemo } from 'react';
+import { useContext, useState, useMemo, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Badge      from '../components/shared/Badge';
-import Breadcrumb from '../components/shared/Breadcrumb';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -12,7 +11,15 @@ function scoreColor(s) {
 }
 
 export default function BUExplorer() {
-  const { units, businesses, navigate } = useContext(AppContext);
+  const { units, businesses, navigate, setBreadcrumb } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Overview', page: 'overview' },
+      { label: 'BU Explorer' },
+    ]);
+  }, []);
+
   const [search, setSearch] = useState('');
   const [filterBiz, setFilterBiz] = useState('');
   const [sortBy, setSortBy] = useState('score');
@@ -62,38 +69,31 @@ export default function BUExplorer() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[
-        { label: 'Overview', page: 'overview' },
-        { label: 'BU Explorer' },
-      ]} />
+      <div className="bu-explorer-card">
+        <div className="bu-explorer-card-header">
+          <p className="page-sub" style={{ margin: 0 }}>{filtered.length} of {units?.length ?? 0} units</p>
 
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Business Unit Explorer</h1>
-          <p className="page-sub">{filtered.length} of {units?.length ?? 0} units</p>
+          {/* Filters */}
+          <div className="bu-filters">
+            <input
+              className="bu-search"
+              placeholder="Search business units…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <select
+              className="bu-filter-select"
+              value={filterBiz}
+              onChange={e => setFilterBiz(e.target.value)}
+            >
+              <option value="">All Businesses</option>
+              {bizList.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </div>
         </div>
-      </div>
-
-      {/* Filters */}
-      <div className="bu-filters">
-        <input
-          className="bu-search"
-          placeholder="Search business units…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-        <select
-          className="bu-filter-select"
-          value={filterBiz}
-          onChange={e => setFilterBiz(e.target.value)}
-        >
-          <option value="">All Businesses</option>
-          {bizList.map(b => <option key={b} value={b}>{b}</option>)}
-        </select>
-      </div>
 
       {/* Table */}
-      <table className="data-table" style={{ marginTop: 16 }}>
+      <table className="data-table" style={{ marginTop: 0, border: 'none', borderRadius: 0 }}>
         <thead>
           <tr>
             <th>#</th>
@@ -135,6 +135,7 @@ export default function BUExplorer() {
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

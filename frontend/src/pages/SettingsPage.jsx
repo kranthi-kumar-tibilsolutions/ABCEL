@@ -1,61 +1,56 @@
 import { useState } from 'react';
 
-function SectionCard({ title, description, children }) {
+function InfoIcon() {
   return (
-    <div style={{
-      background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 12, overflow: 'hidden',
-    }}>
-      <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>{title}</div>
-        {description && (
-          <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{description}</div>
-        )}
+    <svg width="13" height="13" viewBox="0 0 12 12" fill="none"
+      style={{ flexShrink: 0, color: 'var(--text-muted)', cursor: 'default', marginTop: 1 }}>
+      <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/>
+      <path d="M6 5.5v3M6 3.5v.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function SettingSection({ title, children }) {
+  return (
+    <div className="sa-card" style={{ marginBottom: 14 }}>
+      <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 14,
+        paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
+        {title}
       </div>
-      <div style={{ padding: '0' }}>{children}</div>
+      {children}
     </div>
   );
 }
 
-function SettingRow({ label, description, control, last }) {
+function SettingRow({ label, description, children }) {
   return (
-    <div style={{
-      display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-      gap: 24, padding: '14px 20px',
-      borderBottom: last ? 'none' : '1px solid var(--border)',
-    }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+      gap: 24, paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid var(--border)' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 3 }}>{label}</div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 3 }}>
+          {label}
+        </div>
         {description && (
-          <div style={{ fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>{description}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            {description}
+          </div>
         )}
       </div>
-      <div style={{ flexShrink: 0 }}>{control}</div>
+      <div style={{ flexShrink: 0 }}>
+        {children}
+      </div>
     </div>
-  );
-}
-
-function ComingSoonBadge() {
-  return (
-    <span style={{
-      fontSize: 10, fontWeight: 700, padding: '2px 7px',
-      borderRadius: 10, background: '#F1F5F9', color: '#94A3B8',
-      border: '1px solid #E2E8F0', whiteSpace: 'nowrap',
-    }}>
-      Coming soon
-    </span>
   );
 }
 
 export default function SettingsPage() {
-  const [minSample, setMinSample] = useState(5);
+  const [minSample, setMinSample] = useState(30);
 
-  const clamp = v => Math.max(1, Math.min(50, v));
+  const presets = [10, 25, 30, 50, 100];
 
   return (
     <div className="page-container">
 
-      {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 4px' }}>
           Settings
@@ -65,170 +60,100 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 780 }}>
+      <SettingSection title="Data &amp; Analysis">
 
-        {/* ── Analysis Parameters ── */}
-        <SectionCard
-          title="Analysis Parameters"
-          description="Control how data is segmented and displayed across the platform."
-        >
-          {/* Minimum Sample Size — main feature */}
-          <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
-                    Minimum Sample Size
-                  </span>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10,
-                    background: '#FEF3C7', color: '#B45309', border: '1px solid #FDE68A',
-                  }}>
-                    Placeholder
-                  </span>
-                </div>
-                <p style={{ fontSize: 11.5, color: 'var(--text-muted)', margin: '0 0 12px', lineHeight: 1.55 }}>
-                  Sets the minimum number of respondents required before a group's data is shown.
-                  Groups below this threshold will be hidden to protect respondent anonymity.
-                </p>
+        {/* Minimum sample size */}
+        <div style={{ paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Minimum Sample Size
+                </span>
+                <InfoIcon />
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 10 }}>
+                Segments with fewer respondents than this threshold will be suppressed to protect anonymity
+                and avoid statistically unreliable scores.
+              </div>
 
-                {/* Stepper control */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {/* Preset chips */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                {presets.map(p => (
                   <button
-                    onClick={() => setMinSample(v => clamp(v - 1))}
+                    key={p}
+                    onClick={() => setMinSample(p)}
                     style={{
-                      width: 30, height: 30, borderRadius: 7,
-                      border: '1px solid var(--border)', background: 'var(--bg-page)',
-                      cursor: 'pointer', fontSize: 16, fontWeight: 600,
-                      color: 'var(--text-secondary)', display: 'flex',
-                      alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600,
+                      cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+                      border: minSample === p ? 'none' : '1px solid var(--border)',
+                      background: minSample === p ? 'var(--blue-primary)' : 'var(--bg-page)',
+                      color: minSample === p ? '#fff' : 'var(--text-secondary)',
                     }}
-                  >−</button>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <input
-                      type="number"
-                      value={minSample}
-                      min={1}
-                      max={50}
-                      onChange={e => setMinSample(clamp(Number(e.target.value) || 1))}
-                      style={{
-                        width: 56, height: 30, textAlign: 'center',
-                        border: '1px solid var(--border)', borderRadius: 7,
-                        fontSize: 13, fontWeight: 700, color: 'var(--text-primary)',
-                        background: 'var(--bg-card)', fontFamily: 'inherit',
-                        outline: 'none',
-                      }}
-                    />
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>respondents</span>
-                  </div>
-                  <button
-                    onClick={() => setMinSample(v => clamp(v + 1))}
-                    style={{
-                      width: 30, height: 30, borderRadius: 7,
-                      border: '1px solid var(--border)', background: 'var(--bg-page)',
-                      cursor: 'pointer', fontSize: 16, fontWeight: 600,
-                      color: 'var(--text-secondary)', display: 'flex',
-                      alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    }}
-                  >+</button>
+                  >
+                    {p}
+                  </button>
+                ))}
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>or enter custom:</span>
+                <input
+                  type="number"
+                  min={5}
+                  max={500}
+                  value={minSample}
+                  onChange={e => setMinSample(Math.max(5, Math.min(500, Number(e.target.value) || 5)))}
+                  style={{
+                    width: 64, padding: '4px 8px', borderRadius: 6,
+                    border: '1px solid var(--border)', fontSize: 12,
+                    color: 'var(--text-primary)', background: 'var(--bg-card)',
+                    fontFamily: 'inherit', outline: 'none', textAlign: 'center',
+                  }}
+                />
+              </div>
 
-                  {/* Quick presets */}
-                  <div style={{ display: 'flex', gap: 5, marginLeft: 8 }}>
-                    {[5, 10, 25].map(n => (
-                      <button
-                        key={n}
-                        onClick={() => setMinSample(n)}
-                        style={{
-                          padding: '4px 10px', borderRadius: 6, fontSize: 11,
-                          border: '1px solid var(--border)',
-                          background: minSample === n ? 'var(--blue-primary)' : 'var(--bg-page)',
-                          color: minSample === n ? '#fff' : 'var(--text-secondary)',
-                          fontWeight: minSample === n ? 700 : 400,
-                          cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-                        }}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              {/* Placeholder notice */}
+              <div style={{
+                display: 'flex', alignItems: 'flex-start', gap: 8,
+                padding: '9px 12px', borderRadius: 8,
+                background: '#FFFBEB', border: '1px solid #FDE68A',
+              }}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                  <path d="M8 2L14.5 13.5H1.5L8 2Z" stroke="#D97706" strokeWidth="1.4"
+                    strokeLinejoin="round" fill="#FEF3C7"/>
+                  <path d="M8 6v3.5M8 11.5v.5" stroke="#D97706" strokeWidth="1.4" strokeLinecap="round"/>
+                </svg>
+                <span style={{ fontSize: 10.5, color: '#92400E', lineHeight: 1.55 }}>
+                  <strong>Placeholder — no functional effect yet.</strong> Segment suppression logic will be wired
+                  once clean, structured data is available. The threshold selected here will be applied automatically
+                  across all pages when data segmentation is implemented.
+                </span>
               </div>
             </div>
 
-            {/* Placeholder note */}
+            {/* Live preview badge */}
             <div style={{
-              marginTop: 14, display: 'flex', gap: 10, alignItems: 'flex-start',
-              padding: '10px 14px', borderRadius: 8,
-              background: '#EFF6FF', border: '1px solid #BFDBFE',
+              flexShrink: 0, textAlign: 'center', padding: '14px 20px', borderRadius: 10,
+              border: '1px solid var(--border)', background: 'var(--bg-page)', minWidth: 90,
             }}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-                <circle cx="8" cy="8" r="6.5" fill="#3B82F6"/>
-                <path d="M8 7v4M8 5v.5" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
-              </svg>
-              <div>
-                <div style={{ fontSize: 11.5, fontWeight: 700, color: '#1D4ED8', marginBottom: 3 }}>
-                  Placeholder — no filtering applied yet
-                </div>
-                <div style={{ fontSize: 11, color: '#3B82F6', lineHeight: 1.55 }}>
-                  This control is for planning purposes only. Real data segmentation based on sample
-                  size thresholds will be enforced once clean, structured data is available.
-                  The value set here will be used to configure the logic at that point.
-                </div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--blue-primary)', lineHeight: 1 }}>
+                {minSample}
+              </div>
+              <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 4, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                respondents
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Confidence level — coming soon filler row */}
-          <SettingRow
-            label="Confidence Level"
-            description="Statistical confidence threshold used for significance testing across the platform."
-            control={<ComingSoonBadge />}
-          />
-          <SettingRow
-            label="Outlier Detection Sensitivity"
-            description="Adjust how aggressively statistical outliers are flagged in analysis views."
-            control={<ComingSoonBadge />}
-            last
-          />
-        </SectionCard>
+        {/* Placeholder for future rows */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)' }}>
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+            <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <span style={{ fontSize: 11 }}>More analysis settings coming soon</span>
+        </div>
 
-        {/* ── Display Preferences ── */}
-        <SectionCard
-          title="Display Preferences"
-          description="Customise how scores and comparisons are presented."
-        >
-          <SettingRow
-            label="Score Rounding"
-            description="Number of decimal places to show for engagement scores."
-            control={<ComingSoonBadge />}
-          />
-          <SettingRow
-            label="Benchmark Overlay"
-            description="Show industry benchmark lines on charts by default."
-            control={<ComingSoonBadge />}
-            last
-          />
-        </SectionCard>
+      </SettingSection>
 
-        {/* ── Data & Privacy ── */}
-        <SectionCard
-          title="Data & Privacy"
-          description="Manage data retention, anonymisation rules, and export controls."
-        >
-          <SettingRow
-            label="Anonymisation Mode"
-            description="Apply additional masking to individual-level data in exports and views."
-            control={<ComingSoonBadge />}
-          />
-          <SettingRow
-            label="Data Retention Period"
-            description="How long survey response data is stored before being archived."
-            control={<ComingSoonBadge />}
-            last
-          />
-        </SectionCard>
-
-      </div>
     </div>
   );
 }

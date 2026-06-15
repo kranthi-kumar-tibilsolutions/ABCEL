@@ -1,7 +1,6 @@
-import { useContext, useMemo, useState } from 'react';
+import { useContext, useMemo, useState, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import { Bar } from 'react-chartjs-2';
-import Breadcrumb from '../components/shared/Breadcrumb';
 import BENCHMARKS from '../data/benchmarks.json';
 
 const TYPE_LABELS = { peer: 'Peer Conglomerate', industry: 'Industry', regional: 'Regional / Norm' };
@@ -32,8 +31,15 @@ function GapBar({ score, groupAvg }) {
 }
 
 export default function BenchmarksPage() {
-  const { businesses, meta } = useContext(AppContext);
+  const { businesses, meta, setBreadcrumb } = useContext(AppContext);
   const [activeTab, setActiveTab] = useState('peers');
+
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Overview', page: 'overview' },
+      { label: 'Benchmarks' },
+    ]);
+  }, []);
 
   const groupAvg    = meta?.group_avg ?? 4.44;
   const catAvgs     = meta?.category_averages ?? {};
@@ -76,22 +82,6 @@ export default function BenchmarksPage() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[
-        { label: 'Overview', page: 'overview' },
-        { label: 'Benchmarks' },
-      ]} />
-
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Benchmarks</h1>
-          <p className="page-sub">ABG engagement scores vs. peer conglomerates, industry sectors and regional norms</p>
-        </div>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'right', maxWidth: 220, lineHeight: 1.5 }}>
-          ABG Group Average<br />
-          <span style={{ fontSize: 22, fontWeight: 800, color: '#F97316' }}>{groupAvg.toFixed(2)}</span>
-        </div>
-      </div>
-
       {/* Position summary cards */}
       {(() => {
         const aboveAll  = allExternal.filter(e => groupAvg > e.score).length;
@@ -99,8 +89,9 @@ export default function BenchmarksPage() {
         const indiaTop  = BENCHMARKS.regional.find(r => r.name === 'India Top Quartile')?.score ?? 4.45;
         const globalAvg = BENCHMARKS.regional.find(r => r.name === 'Global Average')?.score ?? 3.85;
         return (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
             {[
+              { label: 'ABG Group Average', value: groupAvg.toFixed(2), color: '#F97316', bg: '#FFF7ED' },
               { label: 'Benchmarks Exceeded', value: `${aboveAll} / ${totalComp}`, color: '#16A34A', bg: '#F0FDF4' },
               { label: 'vs India Top Quartile', value: groupAvg >= indiaTop ? 'Top Quartile' : `${(groupAvg - indiaTop).toFixed(2)} gap`, color: groupAvg >= indiaTop ? '#15803D' : '#D97706', bg: groupAvg >= indiaTop ? '#F0FDF4' : '#FFFBEB' },
               { label: 'vs Global Average', value: `+${(groupAvg - globalAvg).toFixed(2)}`, color: '#2563EB', bg: '#EFF6FF' },
@@ -115,7 +106,7 @@ export default function BenchmarksPage() {
       })()}
 
       {/* Tabs + bar chart */}
-      <div className="chart-card" style={{ marginBottom: 24 }}>
+      <div className="chart-card">
         <div style={{ display: 'flex', gap: 2, marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
           {tabs.map(t => (
             <button
@@ -159,7 +150,7 @@ export default function BenchmarksPage() {
       </div>
 
       {/* Detailed comparison table */}
-      <div className="chart-card" style={{ marginBottom: 24 }}>
+      <div className="chart-card">
         <div className="chart-title" style={{ marginBottom: 12 }}>Full Benchmark Comparison</div>
         <table className="data-table">
           <thead>
@@ -203,7 +194,7 @@ export default function BenchmarksPage() {
 
       {/* Category-level benchmarks */}
       {catRows.length > 0 && (
-        <div className="chart-card" style={{ marginBottom: 24 }}>
+        <div className="chart-card">
           <div className="chart-title" style={{ marginBottom: 4 }}>Category-Level Benchmark</div>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>ABG category scores vs India median and top-quartile norms</p>
           <table className="data-table">

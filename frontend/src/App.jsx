@@ -1,9 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import Lottie from 'lottie-react';
+import loaderAnim from './assets/loader.json';
 import { AppContext }      from './context/AppContext';
+import { getAuth, setAuth, apiFetch } from './utils/api';
+import AppHeader           from './components/layout/AppHeader';
 import Sidebar             from './components/layout/Sidebar';
 import TopBar              from './components/layout/TopBar';
 import RightPanel          from './components/layout/RightPanel';
 import FilterDrawer        from './components/layout/FilterDrawer';
+import LoginPage           from './pages/LoginPage';
 import UploadPage          from './pages/UploadPage';
 import Overview            from './pages/Overview';
 import BusinessDetail      from './pages/BusinessDetail';
@@ -62,6 +67,9 @@ const PAGE_MAP = {
 };
 
 export default function App() {
+  const [auth,           setAuthState]      = useState(null);
+  const [authChecked,    setAuthChecked]    = useState(false);
+  const [loggingOut,     setLoggingOut]     = useState(false);
   const [page,           setPage]           = useState('upload');
   const [navHistory,     setNavHistory]     = useState([]);
   const [dimension,      setDimension]      = useState('overall');
@@ -69,6 +77,23 @@ export default function App() {
   const [selectedBU,     setSelectedBU]     = useState(null);
   const [selectedCluster,setSelectedCluster]= useState(null);
   const [isFiltersOpen,  setIsFiltersOpen]  = useState(false);
+  const [dpbFilters,     setDpbFilters]     = useState({
+    survey: 'Q4 2024 Employee Survey', business: 'All',
+    year: '2024', country: 'All', inactive: 'No',
+  });
+  const [dpbResetSignal, setDpbResetSignal] = useState(0);
+  const [saFilters,     setSaFilters]     = useState({
+    survey: 'Q4 2024 Employee Survey', business: 'All',
+    year: '2024', country: 'All', dept: 'All', inactive: 'No',
+  });
+  const [breadcrumb,     setBreadcrumb]     = useState([]);
+  const [outliersTopN, setOutliersTopN] = useState(5);
+  const [evFilters, setEvFilters] = useState({ cohort: 'All Cohorts', company: 'All', bu: 'All' });
+  const [senFilters, setSenFilters] = useState({
+    survey: 'Q4 2024 Employee Survey', bu: 'All', dept: 'All',
+    location: 'All', tenure: 'All', level: 'All', inactive: 'No',
+  });
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(true);
   const [activeFilters,  setActiveFilters]  = useState({});
   const [businesses,     setBusinesses]     = useState(null);
   const [units,          setUnits]          = useState(null);
@@ -85,6 +110,7 @@ export default function App() {
     if (params.business !== undefined) setSelectedBusiness(params.business);
     if (params.unit     !== undefined) setSelectedBU(params.unit);
     if (params.cluster  !== undefined) setSelectedCluster(params.cluster);
+    if (nextPage !== page) setBreadcrumb([]);
     setPage(nextPage);
   }, [page]);
 
@@ -93,6 +119,7 @@ export default function App() {
       if (!prev.length) return prev;
       const next = [...prev];
       const target = next.pop();
+      setBreadcrumb([]);
       setPage(target);
       return next;
     });
@@ -101,58 +128,76 @@ export default function App() {
   const fetchData = useCallback(async () => {
     try {
       const [bRes, uRes, cRes, coRes, mRes] = await Promise.all([
-        fetch('/api/businesses'),
-        fetch('/api/units'),
-        fetch('/api/clusters'),
-        fetch('/api/cohorts'),
-        fetch('/api/meta'),
+        apiFetch('/api/businesses'),
+        apiFetch('/api/units'),
+        apiFetch('/api/clusters'),
+        apiFetch('/api/cohorts'),
+        apiFetch('/api/meta'),
       ]);
-      let bizList = null, metaObj = null;
-      if (bRes.ok)  { bizList  = await bRes.json(); setBusinesses(bizList); }
+      if (bRes.ok)  setBusinesses(await bRes.json());
       if (uRes.ok)  setUnits(await uRes.json());
       if (cRes.ok)  setClusters(await cRes.json());
       if (coRes.ok) setCohorts(await coRes.json());
-      if (mRes.ok)  { metaObj  = await mRes.json(); setMeta(metaObj); }
+      if (mRes.ok)  setMeta(await mRes.json());
       setDataLoaded(true);
 
-      const buildFallbackInsights = () => {
-        const sorted = [...(bizList || [])].sort((a, b) => (b.overall ?? 0) - (a.overall ?? 0));
-        const top    = sorted[0];
-        const bottom = sorted[sorted.length - 1];
-        const avg    = metaObj?.group_avg ?? 4.44;
-        const n      = sorted.length;
-        return {
-          topTrends: [
-            { direction: 'up',   text: `${top?.name ?? 'Top business'} leads engagement at ${top?.overall?.toFixed(2) ?? avg}/5` },
-            { direction: 'up',   text: `Group average stands at ${avg}/5 across ${n} businesses` },
-            { direction: 'down', text: `${bottom?.name ?? 'Lowest business'} is the lowest-scoring at ${bottom?.overall?.toFixed(2) ?? avg}/5` },
-          ],
-          outliers: [
-            { direction: 'down', text: `${bottom?.name ?? 'Lowest business'} is ${(avg - (bottom?.overall ?? avg)).toFixed(2)} below group average` },
-            { direction: 'up',   text: `${top?.name ?? 'Top business'} is ${((top?.overall ?? avg) - avg).toFixed(2)} above group average` },
-            { direction: 'down', text: `${metaObj?.weakest_category ?? 'Performance Culture'} is the weakest category group-wide` },
-          ],
-          summary: `${metaObj?.survey_name ?? 'ABG Vibes 2026'}: group average ${avg}/5 across ${n} businesses. ${top?.name ?? ''} leads; ${bottom?.name ?? ''} needs attention.`,
-        };
-      };
-
-      // Auto-fetch right-panel insights (non-blocking); fall back to data-derived content on AI failure
-      fetch('/api/insights', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      // Auto-fetch right-panel insights (non-blocking)
+      apiFetch('/api/insights', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
         .then(r => r.ok ? r.json() : null)
-        .then(d => { setInsightsData((d && !d.error) ? d : buildFallbackInsights()); })
-        .catch(() => { setInsightsData(buildFallbackInsights()); });
+        .then(d => { if (d && !d.error) setInsightsData(d); })
+        .catch(() => {});
     } catch (e) {
       console.error('Failed to fetch data', e);
     }
   }, []);
 
+  // Restore session on load and validate the stored token
   useEffect(() => {
+    const stored = getAuth();
+    if (!stored) { setAuthChecked(true); return; }
+    apiFetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.user) setAuthState(stored);
+        else setAuth(null);
+      })
+      .catch(() => setAuth(null))
+      .finally(() => setAuthChecked(true));
+  }, []);
+
+  useEffect(() => {
+    if (!auth) return;
     // Pre-load data silently — but never skip the upload page automatically.
     // UploadPage will show a "Continue" button when data is already present.
-    fetch('/api/status')
+    apiFetch('/api/status')
       .then(r => r.json())
       .then(d => { if (d.ready) fetchData(); })
       .catch(() => {});
+  }, [auth, fetchData]);
+
+  const handleLogin = useCallback((user, token) => {
+    const next = { user, token };
+    setAuth(next);
+    setAuthState(next);
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    setLoggingOut(true);
+    setTimeout(() => {
+      setAuth(null);
+      setAuthState(null);
+      setBusinesses(null);
+      setUnits(null);
+      setClusters(null);
+      setCohorts(null);
+      setMeta(null);
+      setDataLoaded(false);
+      setSummaryData(null);
+      setInsightsData(null);
+      setFocusAreasData(null);
+      setPage('upload');
+      setLoggingOut(false);
+    }, 3000);
   }, []);
 
   // Derived filtered businesses — respects cluster + minScore filters
@@ -160,7 +205,8 @@ export default function App() {
     if (!businesses) return null;
     const { clusters: fc, minScore: ms } = activeFilters;
     return businesses.filter(b => {
-      if (ms > 0 && (b.overall ?? 0) < ms) return false;
+      if (fc?.length && !fc.includes(b.cluster)) return false;
+      if (ms > 0 && (b.overall ?? b.score ?? 0) < ms) return false;
       return true;
     });
   }, [businesses, activeFilters]);
@@ -181,37 +227,69 @@ export default function App() {
     businesses, units, clusters, cohorts, meta,
     filteredBusinesses,
     isFiltersOpen, setIsFiltersOpen,
+    dpbFilters, setDpbFilters,
+    dpbResetSignal, setDpbResetSignal,
+    saFilters, setSaFilters,
+    breadcrumb, setBreadcrumb,
+    outliersTopN, setOutliersTopN,
+    evFilters, setEvFilters,
+    senFilters, setSenFilters,
     activeFilters, setActiveFilters,
     summaryData,    setSummaryData,
     insightsData,   setInsightsData,
     focusAreasData, setFocusAreasData,
+    user: auth?.user ?? null,
+    logout: handleLogout,
+    rightPanelCollapsed, setRightPanelCollapsed,
   };
 
   const PageComponent = PAGE_MAP[page] ?? Overview;
 
+  if (!authChecked) return null;
+
+  const loggingOutOverlay = loggingOut && (
+    <div className="login-loading-overlay">
+      <Lottie animationData={loaderAnim} loop autoplay style={{ width: 180, height: 60 }} />
+      <div className="login-loading-text">Signing out…</div>
+    </div>
+  );
+
+  if (!auth) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  const themeClass = auth?.user?.theme && auth.user.theme !== 'abg' ? `theme-${auth.user.theme}` : '';
+
   if (page === 'upload') {
     return (
       <AppContext.Provider value={ctx}>
-        <UploadPage onUploadComplete={handleUploadComplete} />
+        <div className={themeClass}>
+          <UploadPage onUploadComplete={handleUploadComplete} />
+        </div>
+        {loggingOutOverlay}
       </AppContext.Provider>
     );
   }
 
   return (
     <AppContext.Provider value={ctx}>
-      <div className="shell">
-        <Sidebar />
-        <div className="main-area">
-          <TopBar />
-          <div className="content-with-panel">
-            <div className="content">
-              <PageComponent />
+      <div className={`app-shell ${themeClass}`}>
+        <AppHeader />
+        <div className="shell">
+          <Sidebar />
+          <div className="main-area">
+            <TopBar />
+            <div className="content-with-panel">
+              <div className="content">
+                <PageComponent />
+              </div>
+              <RightPanel />
             </div>
-            <RightPanel />
           </div>
+          <FilterDrawer />
         </div>
-        <FilterDrawer />
       </div>
+      {loggingOutOverlay}
     </AppContext.Provider>
   );
 }

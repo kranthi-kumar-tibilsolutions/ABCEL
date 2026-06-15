@@ -1,7 +1,6 @@
-import { useContext, useMemo } from 'react';
+import { useContext, useMemo, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Badge      from '../components/shared/Badge';
-import Breadcrumb from '../components/shared/Breadcrumb';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -12,19 +11,27 @@ function scoreColor(s) {
 }
 
 export default function OutliersPage() {
-  const { units, businesses, navigate } = useContext(AppContext);
+  const { units, businesses, navigate, setBreadcrumb, outliersTopN } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Overview', page: 'overview' },
+      { label: 'Outliers & Alerts' },
+    ]);
+  }, []);
+  const topN = outliersTopN;
 
   const { top5, bottom5, highVariance } = useMemo(() => {
     if (!units?.length) return { top5: [], bottom5: [], highVariance: [] };
     const sorted = [...units].sort((a,b) => (+(b.score??b.overall??0))-(+(a.score??a.overall??0)));
-    const top5   = sorted.slice(0, 5);
-    const bottom5 = sorted.slice(-5).reverse();
+    const top5   = sorted.slice(0, topN);
+    const bottom5 = sorted.slice(-topN).reverse();
     const highVariance = units
       .filter(u => u.variance != null && u.variance > 0.8)
       .sort((a,b) => (b.variance??0)-(a.variance??0))
       .slice(0, 10);
     return { top5, bottom5, highVariance };
-  }, [units]);
+  }, [units, topN]);
 
   const { topBiz, bottomBiz } = useMemo(() => {
     if (!businesses?.length) return { topBiz: [], bottomBiz: [] };
@@ -34,16 +41,6 @@ export default function OutliersPage() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[
-        { label: 'Overview', page: 'overview' },
-        { label: 'Outliers & Alerts' },
-      ]} />
-
-      <div className="page-header">
-        <h1 className="page-title">Outliers & Alerts</h1>
-        <p className="page-sub">Units requiring immediate attention or recognition</p>
-      </div>
-
       <div className="outliers-grid">
         {/* Top performers */}
         <div className="chart-card">

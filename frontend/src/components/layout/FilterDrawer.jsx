@@ -1,5 +1,6 @@
 import { useContext, useState, useEffect } from 'react';
 import { AppContext } from '../../context/AppContext';
+import Dropdown from '../shared/Dropdown';
 
 const CLUSTERS = [
   { id: 'thriving',  label: 'Thriving',  color: '#16A34A' },
@@ -9,11 +10,10 @@ const CLUSTERS = [
 ];
 
 export default function FilterDrawer() {
-  const { isFiltersOpen, setIsFiltersOpen, activeFilters, setActiveFilters, meta } = useContext(AppContext);
+  const { isFiltersOpen, setIsFiltersOpen, activeFilters, setActiveFilters, meta, businesses, units } = useContext(AppContext);
 
   const [local, setLocal] = useState(activeFilters);
 
-  // sync local state when drawer opens
   useEffect(() => {
     if (isFiltersOpen) setLocal(activeFilters);
   }, [isFiltersOpen]);
@@ -22,6 +22,13 @@ export default function FilterDrawer() {
 
   const selectedClusters = local.clusters || [];
   const minScore         = local.minScore  ?? 0;
+  const selectedCompany  = local.company   || 'all';
+  const selectedBU       = local.bu        || 'all';
+
+  const companyList = businesses ? businesses.map(b => b.name) : [];
+  const buList      = selectedCompany !== 'all' && units
+    ? units.filter(u => u.business === selectedCompany).map(u => u.name)
+    : [];
 
   const toggleCluster = (id) =>
     setLocal(prev => ({
@@ -34,7 +41,16 @@ export default function FilterDrawer() {
   const apply = () => { setActiveFilters(local); setIsFiltersOpen(false); };
   const clear = () => { setActiveFilters({}); setLocal({}); setIsFiltersOpen(false); };
 
-  const activeCount = (selectedClusters.length > 0 ? 1 : 0) + (minScore > 0 ? 1 : 0);
+  const activeCount =
+    (selectedClusters.length > 0 ? 1 : 0) +
+    (minScore > 0 ? 1 : 0) +
+    (selectedCompany !== 'all' ? 1 : 0) +
+    (selectedBU !== 'all' ? 1 : 0);
+
+  const sectionLabel = {
+    fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+    letterSpacing: '0.06em', color: 'var(--text-secondary)', marginBottom: 10,
+  };
 
   return (
     <>
@@ -116,6 +132,39 @@ export default function FilterDrawer() {
                 <span style={{ color: c.color, fontWeight: 600, fontSize: 13, flex: 1 }}>{c.label}</span>
               </label>
             ))}
+          </div>
+
+          {/* Company filter */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={sectionLabel}>Filter by Company</div>
+            <div className="fdd-full">
+              <Dropdown
+                variant="filter"
+                value={selectedCompany}
+                options={['all', ...companyList].map(c => ({ value: c, label: c === 'all' ? 'All Companies' : c }))}
+                onChange={v => setLocal(prev => ({ ...prev, company: v, bu: 'all' }))}
+              />
+            </div>
+          </div>
+
+          {/* BU filter — only active when a company is selected */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ ...sectionLabel, color: selectedCompany === 'all' ? 'var(--text-muted)' : 'var(--text-secondary)' }}>
+              Filter by Business Unit
+            </div>
+            <div className="fdd-full" style={{ opacity: selectedCompany === 'all' ? 0.45 : 1, pointerEvents: selectedCompany === 'all' ? 'none' : 'auto' }}>
+              <Dropdown
+                variant="filter"
+                value={selectedBU}
+                options={['all', ...buList].map(b => ({ value: b, label: b === 'all' ? 'All Business Units' : b }))}
+                onChange={v => setLocal(prev => ({ ...prev, bu: v }))}
+              />
+            </div>
+            {selectedCompany === 'all' && (
+              <p style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 5 }}>
+                Select a company first to filter by BU.
+              </p>
+            )}
           </div>
 
           {/* Min score filter */}

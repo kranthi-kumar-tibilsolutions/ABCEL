@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../context/AppContext';
+import { apiFetch } from '../utils/api';
 import { Bar, Radar } from 'react-chartjs-2';
 import Badge       from '../components/shared/Badge';
 import Breadcrumb  from '../components/shared/Breadcrumb';
@@ -36,7 +37,7 @@ export default function BusinessDetail() {
     if (!selectedBusiness) return;
     setInsight(null);
     setLoadInsight(true);
-    fetch('/api/business-insight', {
+    apiFetch('/api/business-insight', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ business: selectedBusiness, dimension }),

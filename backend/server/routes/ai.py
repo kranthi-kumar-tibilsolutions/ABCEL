@@ -190,9 +190,11 @@ class BusinessInsightRequest(BaseModel):
     business:     Optional[str] = None
 
 class ChatRequest(BaseModel):
-    message:   str
-    history:   List[dict] = []
-    dimension: str = "Business Unit"
+    message:       str
+    history:       List[dict] = []
+    dimension:     str = "Business Unit"
+    focusArea:     Optional[str] = None
+    companyFilter: Optional[str] = None
 
 class SkillAnalysisRequest(BaseModel):
     skill:     Optional[str]       = None
@@ -306,7 +308,10 @@ Respond ONLY with valid JSON:
 
 @router.post("/chat")
 async def chat(req: ChatRequest):
-    system_prompt = f"""You are an AI analyst assistant for ABG Vibes — Aditya Birla Group's employee engagement dashboard. You answer ONLY questions about the ABG Vibes survey, employee engagement, HR analytics, and the data below.
+    focus_line   = f"\nACTIVE FOCUS AREA: {req.focusArea} — prioritise answers about this theme." if req.focusArea else ""
+    company_line = f"\nACTIVE COMPANY FILTER: {req.companyFilter} — answer only about this company unless explicitly asked otherwise." if req.companyFilter else ""
+
+    system_prompt = f"""You are an AI analyst assistant for ABG Vibes — Aditya Birla Group's employee engagement dashboard. You answer ONLY questions about the ABG Vibes survey, employee engagement, HR analytics, and the data below.{focus_line}{company_line}
 
 STRICT SCOPE RULE: If the user asks something clearly unrelated to employee engagement, HR, workforce demographics, or this survey (e.g. coding, algorithms, general science, recipes, jokes), respond with exactly: "I can only help with questions about the ABG Vibes employee engagement survey. What would you like to know about the data?"
 Follow-up questions that refer to previous answers in this conversation (e.g. "what generation is that?", "tell me more", "why is that?", "compare with X") are ALWAYS valid — treat them as survey questions even if they are short or lack context.
