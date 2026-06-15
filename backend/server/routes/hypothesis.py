@@ -205,8 +205,8 @@ Return ONLY a JSON object — no explanation, no markdown:
 
         # Score access: flat field (already normalized), then overall fallback
         scores = [
-            v for u in test_group
-            if (v := (u.get(score_key) or u.get("overall") or 0)) > 0
+            u[score_key] for u in test_group
+            if u.get(score_key) and u[score_key] > 0
         ]
 
         sample_mean = mean(scores)
