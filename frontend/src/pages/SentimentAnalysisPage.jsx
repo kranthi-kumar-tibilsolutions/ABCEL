@@ -3,7 +3,6 @@ import { RotateCcw } from 'lucide-react';
 import Breadcrumb from '../components/shared/Breadcrumb';
 import { AppContext } from '../context/AppContext';
 import Dropdown   from '../components/shared/Dropdown';
-import { AppContext } from '../context/AppContext';
 
 /* ── Static data ──────────────────────────────────────────── */
 
