@@ -22,6 +22,19 @@ const NAV = [
     ),
   },
   {
+    id: 'persona-explorer', label: 'Persona Explorer', collapsible: true, divider: true,
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="6" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.4"/>
+        <path d="M1.5 13.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+        <path d="M11 3l3 3-3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    children: [
+      { id: 'dynamic-persona-builder', label: 'Dynamic Persona Builder' },
+    ],
+  },
+  {
     id: 'explore', label: 'Explore', collapsible: true, divider: true,
     icon: (
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -32,12 +45,15 @@ const NAV = [
       </svg>
     ),
     children: [
-      { id: 'bu-explorer',     label: 'BU Explorer' },
-      { id: 'insights-studio', label: 'Insights Studio' },
-      { id: 'ai-insights',     label: 'AI Insights' },
-      { id: 'trends',          label: 'Trends Over Time' },
-      { id: 'outliers',        label: 'Outliers & Alerts' },
-      { id: 'employee-voice',  label: 'Employee Voice' },
+      { id: 'bu-explorer',           label: 'BU Explorer' },
+      { id: 'insights-studio',      label: 'Insights Studio' },
+      { id: 'ai-insights',          label: 'AI Insights' },
+      { id: 'trends',               label: 'Trends Over Time' },
+      { id: 'outliers',             label: 'Outliers & Alerts' },
+      { id: 'employee-voice',       label: 'Employee Voice' },
+      { id: 'hypothesis-testing',   label: 'Hypothesis Testing' },
+      { id: 'statistical-analysis', label: 'Statistical Analysis' },
+      { id: 'sentiment-analysis',   label: 'Sentiment Analysis' },
     ],
   },
   {
@@ -90,11 +106,11 @@ function AbgLogo() {
 
 export default function Sidebar() {
   const { page, navigate } = useContext(AppContext);
-  const [collapsed,   setCollapsed]   = useState(false);
-  const [exploreOpen, setExploreOpen] = useState(true);
+  const [collapsed,    setCollapsed]    = useState(false);
+  const [openGroups,   setOpenGroups]   = useState({ 'persona-explorer': true, explore: true });
 
-  const exploreChildIds = NAV.find(n => n.id === 'explore')?.children?.map(c => c.id) || [];
-  const exploreActive   = exploreChildIds.includes(page);
+  const toggleGroup   = id => setOpenGroups(g => ({ ...g, [id]: !g[id] }));
+  const groupActiveId = id => (NAV.find(n => n.id === id)?.children || []).map(c => c.id).includes(page);
 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
@@ -114,18 +130,20 @@ export default function Sidebar() {
       <nav className="sidebar-nav">
         {NAV.map(item => {
           if (item.collapsible) {
+            const isOpen   = !!openGroups[item.id];
+            const isActive = groupActiveId(item.id);
             return (
               <div key={item.id}>
                 {item.divider && !collapsed && <div className="nav-divider" />}
                 <div
-                  className={`nav-item ${exploreActive ? 'active' : ''}`}
-                  onClick={() => setExploreOpen(o => !o)}
+                  className={`nav-item ${isActive ? 'active' : ''}`}
+                  onClick={() => toggleGroup(item.id)}
                 >
                   <span className="nav-icon">{item.icon}</span>
                   {!collapsed && (
                     <>
                       <span className="nav-label">{item.label}</span>
-                      <span className={`nav-chevron ${exploreOpen ? 'open' : ''}`}>
+                      <span className={`nav-chevron ${isOpen ? 'open' : ''}`}>
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                           <path d="M2.5 3.5L5 6l2.5-2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
@@ -133,7 +151,7 @@ export default function Sidebar() {
                     </>
                   )}
                 </div>
-                {exploreOpen && !collapsed && (
+                {isOpen && !collapsed && (
                   <div className="nav-sub-items">
                     {item.children.map(child => (
                       <div
@@ -166,7 +184,10 @@ export default function Sidebar() {
       {/* Bottom */}
       <div className="sidebar-bottom">
         {BOTTOM_NAV.map(item => (
-          <div key={item.id} className="nav-item">
+          <div key={item.id}
+            className={`nav-item ${page === item.id ? 'active' : ''}`}
+            onClick={() => navigate(item.id)}
+          >
             <span className="nav-icon">{item.icon}</span>
             {!collapsed && <span className="nav-label">{item.label}</span>}
           </div>

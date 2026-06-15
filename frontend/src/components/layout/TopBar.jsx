@@ -1,6 +1,7 @@
 import { useContext, useState, useRef, useEffect } from 'react';
 import { SlidersHorizontal, RotateCcw, Download, Upload, ChevronDown } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
+import Dropdown from '../shared/Dropdown';
 
 const PAGE_TITLES = {
   overview:              'Employee Engagement Intelligence',
@@ -14,49 +15,14 @@ const PAGE_TITLES = {
   'insights-studio':     'Insights Studio',
   trends:                'Trends',
   'employee-voice':      'Employee Voice',
-  reports:               'Reports',
-  benchmarks:            'Benchmarks',
+  reports:                    'Reports',
+  benchmarks:                 'Benchmarks',
+  'dynamic-persona-builder':  'Dynamic Persona Builder',
+  'statistical-analysis':     'Statistical Analysis',
+  'sentiment-analysis':       'Sentiment Analysis',
+  'hypothesis-testing':       'Hypothesis Testing',
 };
 
-function TopBarDropdown({ label, value, options, onChange }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    }
-    if (open) document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
-
-  const selected = options.find(o => o.value === value) || options[0];
-
-  return (
-    <div className="tb-dropdown" ref={ref}>
-      <button className="tb-dropdown-trigger" onClick={() => setOpen(o => !o)}>
-        <span className="tb-dropdown-label">{label}:</span>
-        <span className="tb-dropdown-value">{selected?.label}</span>
-        <ChevronDown size={11} style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }} />
-      </button>
-
-      {open && (
-        <div className="tb-dropdown-menu">
-          {options.map(opt => (
-            <button
-              key={opt.value}
-              className={`tb-dropdown-item${opt.disabled ? ' disabled' : ''}${opt.value === value ? ' active' : ''}`}
-              disabled={opt.disabled}
-              onClick={() => { if (!opt.disabled) { onChange(opt.value); setOpen(false); } }}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function TopBar() {
   const {
@@ -93,8 +59,12 @@ export default function TopBar() {
     'insights-studio':   `Agentic HR Analysis · ${wave}`,
     trends:              `Trend Analysis · ${wave}`,
     'employee-voice':    `Employee Feedback · ${wave}`,
-    reports:             `Reports & Exports · ${wave}`,
-    benchmarks:          `Peer Benchmarks · ${wave}`,
+    reports:                   `Reports & Exports · ${wave}`,
+    benchmarks:               `Peer Benchmarks · ${wave}`,
+    'dynamic-persona-builder':`Persona Builder · ${wave}`,
+    'statistical-analysis':   `Statistical Analysis · ${wave}`,
+    'sentiment-analysis':     `Sentiment Analysis · ${wave}`,
+    'hypothesis-testing':     `Hypothesis Testing · ${wave}`,
   };
   const pageSubtitle = subtitleMap[page] || wave;
 
@@ -173,7 +143,8 @@ export default function TopBar() {
       </button>
 
       {/* Survey Wave dropdown */}
-      <TopBarDropdown
+      <Dropdown
+        variant="topbar"
         label="Survey Wave"
         value={surveyWave}
         options={waveOptions}
@@ -181,7 +152,8 @@ export default function TopBar() {
       />
 
       {/* Compare to dropdown */}
-      <TopBarDropdown
+      <Dropdown
+        variant="topbar"
         label="Compare to"
         value={compareTo}
         options={compareOptions}
