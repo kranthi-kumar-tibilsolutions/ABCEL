@@ -45,14 +45,14 @@ const NAV = [
     ),
     children: [
       { id: 'bu-explorer',           label: 'BU Explorer' },
-      { id: 'insights-studio',      label: 'Insights Studio' },
-      { id: 'ai-insights',          label: 'AI Insights' },
-      { id: 'trends',               label: 'Trends Over Time' },
-      { id: 'outliers',             label: 'Outliers & Alerts' },
-      { id: 'employee-voice',       label: 'Employee Voice' },
-      { id: 'hypothesis-testing',   label: 'Hypothesis Testing' },
-      { id: 'statistical-analysis', label: 'Statistical Analysis' },
-      { id: 'sentiment-analysis',   label: 'Sentiment Analysis' },
+      { id: 'insights-studio',       label: 'Insights Studio' },
+      { id: 'ai-insights',           label: 'AI Insights' },
+      { id: 'trends',                label: 'Trends Over Time' },
+      { id: 'outliers',              label: 'Outliers & Alerts' },
+      { id: 'employee-voice',        label: 'Employee Voice' },
+      { id: 'hypothesis-testing',    label: 'Hypothesis Testing' },
+      { id: 'statistical-analysis',  label: 'Statistical Analysis' },
+      { id: 'sentiment-analysis',    label: 'Sentiment Analysis' },
     ],
   },
   {
@@ -90,7 +90,7 @@ const BOTTOM_NAV = [
 export default function Sidebar() {
   const { page, navigate } = useContext(AppContext);
   const [collapsed,  setCollapsed]  = useState(false);
-  const [openGroups, setOpenGroups] = useState({});
+  const [openGroups, setOpenGroups] = useState({ 'persona-explorer': true, explore: true });
 
   const toggleGroup   = id => setOpenGroups(g => ({ ...g, [id]: !g[id] }));
   const groupActiveId = id => (NAV.find(n => n.id === id)?.children || []).map(c => c.id).includes(page);
@@ -141,13 +141,15 @@ export default function Sidebar() {
           }
 
           return (
-            <div
-              key={item.id}
-              className={`nav-item ${page === item.id ? 'active' : ''}`}
-              onClick={() => navigate(item.id)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              {!collapsed && <span className="nav-label">{item.label}</span>}
+            <div key={item.id}>
+              {item.divider && !collapsed && <div className="nav-divider" />}
+              <div
+                className={`nav-item ${page === item.id ? 'active' : ''}`}
+                onClick={() => navigate(item.id)}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                {!collapsed && <span className="nav-label">{item.label}</span>}
+              </div>
             </div>
           );
         })}

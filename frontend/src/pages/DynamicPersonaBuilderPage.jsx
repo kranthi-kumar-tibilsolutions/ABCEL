@@ -111,27 +111,27 @@ function DimSelect({ value, opts, color, onChange }) {
 
   const isAll = value === 'All';
   return (
-    <div ref={ref} style={{ position:'relative' }}>
+    <div ref={ref} style={{ position:'relative', flex:1 }}>
       <button onClick={() => setOpen(o => !o)} style={{
-        display:'flex', alignItems:'center', gap:4,
-        padding: isAll ? '4px 8px' : '3px 10px',
-        borderRadius: isAll ? 6 : 12,
-        border: `1px solid ${isAll ? 'var(--border)' : color.border}`,
+        display:'flex', alignItems:'center', justifyContent:'space-between', gap:6,
+        width:'100%', padding:'5px 10px',
+        borderRadius:6,
+        border:`1px solid ${isAll ? 'var(--border)' : color.border}`,
         background: isAll ? 'var(--bg-card)' : color.bg,
-        color: isAll ? 'var(--text-primary)' : color.text,
-        fontSize:11, fontWeight: isAll ? 400 : 700,
-        cursor:'pointer', fontFamily:'inherit',
-        transition:'all 0.15s', whiteSpace:'nowrap',
+        color: isAll ? 'var(--text-secondary)' : color.text,
+        fontSize:11.5, fontWeight: isAll ? 400 : 600,
+        cursor:'pointer', fontFamily:'inherit', transition:'all 0.15s',
+        boxSizing:'border-box',
       }}>
-        {value}
+        <span>{value}</span>
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
-          style={{ flexShrink:0, transition:'transform 0.18s', transform:open?'rotate(180deg)':'', opacity:0.6 }}>
+          style={{ flexShrink:0, transition:'transform 0.18s', transform:open?'rotate(180deg)':'', opacity:0.5 }}>
           <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
       {open && (
         <div style={{
-          position:'absolute', top:'calc(100% + 4px)', right:0, minWidth:155,
+          position:'absolute', top:'calc(100% + 4px)', left:0, right:0, minWidth:140,
           background:'var(--bg-card)', border:'1px solid var(--border)',
           borderRadius:8, boxShadow:'0 8px 24px rgba(0,0,0,0.12)', zIndex:400, padding:4,
         }}>
@@ -323,8 +323,16 @@ export default function DynamicPersonaBuilderPage() {
               options={f.opts} onChange={v => setF(f.key, v)}/>
           </div>
         ))}
-        <button className="sa-reset-btn" onClick={resetAll}>
-          <RotateCcw size={12} />
+        <button
+          onClick={resetAll}
+          style={{
+            display:'flex', alignItems:'center', gap:5, alignSelf:'flex-end',
+            border:'none', background:'none', cursor:'pointer',
+            color:'#2563EB', fontSize:12, fontWeight:500,
+            fontFamily:'inherit', padding:'5px 2px', whiteSpace:'nowrap', flexShrink:0,
+          }}
+        >
+          <RotateCcw size={13} />
           Reset Filters
         </button>
       </div>
@@ -412,6 +420,7 @@ export default function DynamicPersonaBuilderPage() {
           </div>
 
           {/* Actions */}
+          <div style={{ flex:1 }} />
           <div style={{ display:'flex', gap:7, justifyContent:'flex-end', paddingTop:10, borderTop:'1px solid var(--border)' }}>
             <button onClick={() => setDims({ ...DIMS_DEFAULT })} style={{
               fontSize:11, fontWeight:600, background:'none', border:'none',
@@ -574,8 +583,8 @@ export default function DynamicPersonaBuilderPage() {
             </div>
           </div>
 
-          {/* ── Bottom row: radar + stats ── */}
-          <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.45fr) minmax(0,1fr)', gap:10, alignItems:'start' }}>
+          {/* ── Bottom row: radar + stats ── MOVED BELOW MAIN GRID */}
+          <div style={{ display:'none' }}>
 
             {/* Radar chart */}
             <div className="sa-card">
@@ -660,6 +669,89 @@ export default function DynamicPersonaBuilderPage() {
 
           </div>
         </div>
+      </div>
+
+      {/* ── Bottom row: radar + stats — full page width ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.45fr) minmax(0,1fr)', gap:10, alignItems:'start', marginTop:10 }}>
+
+        {/* Radar chart */}
+        <div className="sa-card">
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, flexWrap:'wrap', gap:6 }}>
+            <div className="sa-card-title" style={{ marginBottom:0 }}>
+              Visual Comparison Across Themes <InfoIcon />
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                <span style={{ fontSize:10.5, color:'var(--text-muted)' }}>View by:</span>
+                <Dropdown variant="filter" value={viewBy}
+                  options={['Themes','Categories']} onChange={setViewBy}/>
+              </div>
+              <button style={{ border:'none', background:'none', cursor:'pointer', color:'var(--text-muted)', padding:2, display:'flex' }}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M14 10v3a1 1 0 01-1 1H3a1 1 0 01-1-1v-3M8 2v8M5 9l3 3 3-3"
+                    stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <RadarChart
+            personaScores={personaRadarScores}
+            cohortScores={cohortRadarScores}
+          />
+
+          <div style={{
+            display:'grid', gridTemplateColumns:'1fr 1fr',
+            gap:'5px 10px', marginTop:10,
+            borderTop:'1px solid var(--border)', paddingTop:8,
+          }}>
+            {COHORTS.map(c => (
+              <div key={c.id} style={{ display:'flex', alignItems:'center', gap:5 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:c.color, flexShrink:0 }}/>
+                <span style={{ fontSize:9.5, color:'var(--text-secondary)', lineHeight:1.3, minWidth:0 }}>{c.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Statistical summary */}
+        <div className="sa-card">
+          <div className="sa-card-title">Statistical Difference Summary <InfoIcon /></div>
+          <p style={{ fontSize:10.5, color:'var(--text-muted)', margin:'0 0 10px', lineHeight:1.45 }}>
+            Number of themes where persona is significantly different vs:
+          </p>
+          <div style={{ display:'flex', flexDirection:'column', gap:7, marginBottom:16 }}>
+            {STAT_SUMMARY.map(s => (
+              <div key={s.vs} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:8 }}>
+                <span style={{ fontSize:11, color:'var(--text-primary)', flex:1, minWidth:0, lineHeight:1.35 }}>{s.vs}</span>
+                <span style={{
+                  fontSize:10, fontWeight:700, padding:'3px 8px',
+                  borderRadius:12, background:s.bg, color:s.color,
+                  border:`1px solid ${s.border}`, whiteSpace:'nowrap', flexShrink:0,
+                }}>{s.val}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ borderTop:'1px solid var(--border)', paddingTop:12 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:8 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink:0 }}>
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26A6.99 6.99 0 0019 9c0-3.87-3.13-7-7-7z" fill="#F59E0B"/>
+                <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1z" fill="#F59E0B"/>
+              </svg>
+              <span style={{ fontSize:11, fontWeight:700, color:'var(--text-primary)' }}>Key Takeaways</span>
+            </div>
+            <ul style={{ margin:0, paddingLeft:14, display:'flex', flexDirection:'column', gap:6 }}>
+              {[
+                'Your persona scores significantly higher than overall across all themes.',
+                'Largest positive gap vs overall: Career Growth (+0.48)',
+                'Recognition shows the smallest gap vs overall (+0.33)',
+              ].map((t,i) => (
+                <li key={i} style={{ fontSize:10.5, color:'var(--text-secondary)', lineHeight:1.5 }}>{t}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
       </div>
     </div>
   );
