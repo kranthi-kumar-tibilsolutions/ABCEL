@@ -682,13 +682,6 @@ export default function DynamicPersonaBuilderPage() {
             }}>
               Clear All
             </button>
-            <button style={{
-              fontSize:11, background:'none', border:'1px solid var(--border)',
-              borderRadius:6, cursor:'pointer', color:'var(--text-secondary)',
-              fontFamily:'inherit', padding:'5px 10px',
-            }}>
-              Cancel
-            </button>
             <button onClick={handleApply} disabled={applyLoading} style={{
               fontSize:11, fontWeight:700, background:'var(--blue-primary)',
               border:'none', borderRadius:6, cursor:'pointer', color:'white',
