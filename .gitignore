@@ -3,6 +3,7 @@ backend/uploads/
 backend/data/*
 !backend/data/sample/
 !backend/data/sample/**
+data/
 dist/
 .env
 *.xlsx
@@ -12,3 +13,4 @@ __pycache__/
 *.pyo
 .DS_Store
 *.log
+*.err
