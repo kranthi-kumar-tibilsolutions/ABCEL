@@ -84,6 +84,49 @@ function ResultBadge({ result }) {
   );
 }
 
+function parseColumnsUsed(h0 = '', ha = '') {
+  const text = `${h0} ${ha}`.toLowerCase();
+
+  const OUTCOMES = [
+    { re: /onboarding/,              label: 'Onboarding Score' },
+    { re: /engagement/,              label: 'Engagement Score' },
+    { re: /leadership/,              label: 'Leadership Score' },
+    { re: /career\s*(growth|dev)/,   label: 'Career Development Score' },
+    { re: /performance\s*culture/,   label: 'Performance Culture Score' },
+    { re: /performance/,             label: 'Performance Culture Score' },
+    { re: /manager\s*effectiveness/, label: 'Manager Effectiveness Score' },
+    { re: /wellbeing|well.being/,    label: 'Wellbeing Score' },
+    { re: /overall/,                 label: 'Overall Score' },
+  ];
+
+  const PREDICTORS = [
+    { re: /gen\s*z/,                  label: 'Generation',    value: 'Gen Z' },
+    { re: /gen\s*y|millennial/,       label: 'Generation',    value: 'Gen Y' },
+    { re: /gen\s*x/,                  label: 'Generation',    value: 'Gen X' },
+    { re: /baby\s*boomer/,            label: 'Generation',    value: 'Baby Boomer' },
+    { re: /\bfemale\b|\bwomen\b/,     label: 'Gender',        value: 'Female' },
+    { re: /\bmale\b|\bmen\b/,         label: 'Gender',        value: 'Male' },
+    { re: /new\s*join/,               label: 'Tenure',        value: 'New Joiner (<1 yr)' },
+    { re: /\bmanager\b/,              label: 'Manager Status', value: 'Yes' },
+    { re: /senior/,                   label: 'Job Level',     value: 'Senior' },
+    { re: /junior/,                   label: 'Job Level',     value: 'Junior' },
+    { re: /director/,                 label: 'Job Level',     value: 'Director' },
+    { re: /india/,                    label: 'Country',       value: 'India' },
+    { re: /uk|united\s*kingdom/,      label: 'Country',       value: 'United Kingdom' },
+    { re: /us|united\s*states/,       label: 'Country',       value: 'United States' },
+    { re: /apac/,                     label: 'Region',        value: 'APAC' },
+    { re: /emea/,                     label: 'Region',        value: 'EMEA' },
+  ];
+
+  const outcome   = OUTCOMES.find(o => o.re.test(text));
+  const predictor = PREDICTORS.find(p => p.re.test(text));
+
+  return {
+    outcome:   outcome   ? outcome.label                        : null,
+    predictor: predictor ? `${predictor.label} = ${predictor.value}` : null,
+  };
+}
+
 function formatFilters(filtersApplied) {
   if (!filtersApplied || !Object.keys(filtersApplied).length) return 'No filters applied';
   return Object.entries(filtersApplied)
@@ -373,6 +416,50 @@ export default function HypothesisTestingPage() {
                 </div>
 
               </div>
+
+              {/* Data Columns Used — full-width strip */}
+              {(() => {
+                const cu = parseColumnsUsed(r.h0, r.ha);
+                if (!cu.outcome && !cu.predictor) return null;
+                return (
+                  <div style={{
+                    marginTop: 14, paddingTop: 12,
+                    borderTop: '1px solid var(--border)',
+                    display: 'flex', alignItems: 'center', gap: 12,
+                  }}>
+                    <div style={{
+                      fontSize: 10, fontWeight: 700, color: 'var(--text-muted)',
+                      textTransform: 'uppercase', letterSpacing: '0.06em',
+                      whiteSpace: 'nowrap', flexShrink: 0,
+                    }}>Data Columns Used</div>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      {cu.outcome && (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 6,
+                          background: '#EFF6FF', border: '1px solid #BFDBFE',
+                          borderRadius: 6, padding: '4px 10px',
+                        }}>
+                          <span style={{ fontSize: 9.5, fontWeight: 700, color: '#1D4ED8' }}>OUTCOME</span>
+                          <span style={{ width: 1, height: 12, background: '#BFDBFE' }} />
+                          <span style={{ fontSize: 11, color: '#1E3A8A', fontWeight: 600 }}>{cu.outcome}</span>
+                        </div>
+                      )}
+                      {cu.predictor && (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 6,
+                          background: '#F5F3FF', border: '1px solid #DDD6FE',
+                          borderRadius: 6, padding: '4px 10px',
+                        }}>
+                          <span style={{ fontSize: 9.5, fontWeight: 700, color: '#6D28D9' }}>PREDICTOR</span>
+                          <span style={{ width: 1, height: 12, background: '#DDD6FE' }} />
+                          <span style={{ fontSize: 11, color: '#4C1D95', fontWeight: 600 }}>{cu.predictor}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
             </div>
           )}
         </>

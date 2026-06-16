@@ -227,7 +227,7 @@ const TILE_CONFIG = [
 
 /* ── page ─────────────────────────────────────────────────────── */
 export default function StatisticalAnalysisPage() {
-  const { setBreadcrumb, saFilters } = useContext(AppContext);
+  const { setBreadcrumb, saFilters, meta } = useContext(AppContext);
 
   useEffect(() => {
     setBreadcrumb([{ label: 'Explore' }, { label: 'Statistical Analysis' }]);
@@ -355,7 +355,7 @@ export default function StatisticalAnalysisPage() {
           <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
             {[
               { label:'Question Type', value:'Likert Scale (1–5)' },
-              { label:'Responses',     value: loading ? '…' : baseN > 0 ? baseN.toLocaleString() : '—' },
+              { label:'Responses',     value: loading ? '…' : (meta?.total_respondents ?? baseN) > 0 ? (meta?.total_respondents ?? baseN).toLocaleString() : '—' },
             ].map(({ label, value }) => (
               <div key={label} style={{
                 display:'flex', alignItems:'center', justifyContent:'space-between',
