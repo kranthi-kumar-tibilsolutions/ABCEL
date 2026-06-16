@@ -229,7 +229,7 @@ export default function SentimentAnalysisPage() {
     <div className="page-container">
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <button className="topbar-btn" style={{ fontSize: 11 }}>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="7" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="1" y="7" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="7" y="7" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/></svg>
             Save View
@@ -237,6 +237,12 @@ export default function SentimentAnalysisPage() {
           <button className="topbar-btn" style={{ fontSize: 11 }}>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3.5 6l3-3 3 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 10h9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
             Share
+          </button>
+          <button className="topbar-btn" style={{ fontSize: 11 }} onClick={() => window.print()}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Export
           </button>
         </div>
       </div>

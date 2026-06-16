@@ -8,7 +8,7 @@ export default function AiInsightsPage() {
 
   useEffect(() => {
     setBreadcrumb([
-      { label: 'Overview', page: 'overview' },
+      { label: 'Explore' },
       { label: 'AI Insights' },
     ]);
   }, []);

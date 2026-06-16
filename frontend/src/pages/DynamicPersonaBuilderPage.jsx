@@ -194,6 +194,7 @@ export default function DynamicPersonaBuilderPage() {
     dpbResetSignal, setDpbResetSignal,
     dpbFilters, setDpbFilters,
     setBreadcrumb, meta,
+    setDpbTopbarSlot,
   } = useContext(AppContext);
 
   const [personaName,   setPersonaName]   = useState('Custom Persona');
@@ -210,7 +211,7 @@ export default function DynamicPersonaBuilderPage() {
   const [viewBy,        setViewBy]        = useState('Themes');
 
   useEffect(() => {
-    setBreadcrumb([{ label:'Persona Explorer' }, { label:'Dynamic Persona Builder' }]);
+    setBreadcrumb([{ label: 'Explore' }, { label: 'Dynamic Persona Builder' }]);
   }, []);
 
   // Fetch dimensions + top5 suggestions on mount
@@ -346,6 +347,55 @@ export default function DynamicPersonaBuilderPage() {
     setSaveLoading(false);
   };
 
+  // Push filters + actions into topbar slot
+  useEffect(() => {
+    setDpbTopbarSlot(
+      <div style={{ display:'flex', alignItems:'center', gap:8, flex:1 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          {filterBarCfg.map(f => (
+            <Dropdown
+              key={f.key}
+              variant="topbar"
+              label={f.label}
+              value={dpbFilters[f.key] || f.opts[0]}
+              options={f.opts.map(o => ({ value:o, label:o }))}
+              onChange={v => setDpbFilters(prev => ({ ...prev, [f.key]:v }))}
+            />
+          ))}
+          <button className="topbar-btn" onClick={() => setDpbResetSignal(s => s+1)} title="Reset filters">
+            <RotateCcw size={13} />
+          </button>
+        </div>
+        <div style={{ flex:1 }} />
+        <div style={{ display:'flex', gap:8 }}>
+          <button className="topbar-btn" onClick={handleSave} disabled={!queryResult || saveLoading}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+              <path d="M17 21v-8H7v8M7 3v5h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+            {saveLoading ? 'Saving…' : 'Save'}
+          </button>
+          <button className="topbar-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="1.8"/>
+              <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="1.8"/>
+              <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="1.8"/>
+              <path d="M8.59 13.51l6.83 3.98M15.41 6.51L8.59 10.49" stroke="currentColor" strokeWidth="1.8"/>
+            </svg>
+            Share
+          </button>
+          <button className="topbar-btn topbar-btn-primary" onClick={handleApply} disabled={applyLoading}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            {applyLoading ? 'Analysing…' : 'New Persona'}
+          </button>
+        </div>
+      </div>
+    );
+    return () => setDpbTopbarSlot(null);
+  }, [filterBarCfg, dpbFilters, queryResult, saveLoading, applyLoading]);
+
   // Derived rendering data
   const themes      = queryResult ? queryResult.themes.map(t => t.theme) : [];
   const personaN    = queryResult?.persona_n ?? 0;
@@ -420,51 +470,6 @@ export default function DynamicPersonaBuilderPage() {
   return (
     <div className="page-container">
 
-      {/* ── Filters + actions ── */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap', marginBottom:12 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
-          {filterBarCfg.map(f => (
-            <Dropdown
-              key={f.key}
-              variant="topbar"
-              label={f.label}
-              value={dpbFilters[f.key] || f.opts[0]}
-              options={f.opts.map(o => ({ value:o, label:o }))}
-              onChange={v => setDpbFilters(prev => ({ ...prev, [f.key]:v }))}
-            />
-          ))}
-          <button className="topbar-btn" onClick={() => setDpbResetSignal(s => s+1)} title="Reset filters">
-            <RotateCcw size={13} />
-          </button>
-
-        </div>
-
-        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-          <button className="topbar-btn" onClick={handleSave} disabled={!queryResult || saveLoading}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-              <path d="M17 21v-8H7v8M7 3v5h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
-            {saveLoading ? 'Saving…' : 'Save'}
-          </button>
-          <button className="topbar-btn">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-              <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="1.8"/>
-              <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="1.8"/>
-              <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="1.8"/>
-              <path d="M8.59 13.51l6.83 3.98M15.41 6.51L8.59 10.49" stroke="currentColor" strokeWidth="1.8"/>
-            </svg>
-            Share
-          </button>
-          <button className="topbar-btn topbar-btn-primary" onClick={handleApply} disabled={applyLoading}>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-            {applyLoading ? 'Analysing…' : 'New Persona'}
-          </button>
-        </div>
-      </div>
-
       {/* ── Main grid ── */}
       <div className="dpb-main-grid">
 
@@ -507,7 +512,7 @@ export default function DynamicPersonaBuilderPage() {
                 Suggested Personas
                 <span style={{ fontSize:9, fontWeight:400, color:'var(--text-muted)', marginLeft:6 }}>click to apply instantly</span>
               </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:5 }}>
                 {suggestions.map(s => (
                   <button
                     key={s.id}
@@ -542,7 +547,7 @@ export default function DynamicPersonaBuilderPage() {
           {/* Select Dimensions */}
           <div style={{ marginBottom:12 }}>
             <div className="sa-filter-label" style={{ marginBottom:8 }}>Select Dimensions</div>
-            <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(220px, 1fr))', gap:7 }}>
               {dimsLoading
                 ? [...Array(6)].map((_, i) => (
                     <div key={i} className="dpb-dim-row">
@@ -771,8 +776,7 @@ export default function DynamicPersonaBuilderPage() {
                 {/* Suggestion cards grid */}
                 {suggestLoading ? (
                   <div style={{
-                    display:'grid',
-                    gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))',
+                    display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(240px, 1fr))',
                     gap:10, padding:'14px 16px',
                   }}>
                     {[...Array(5)].map((_, i) => (
@@ -792,8 +796,7 @@ export default function DynamicPersonaBuilderPage() {
                   </div>
                 ) : suggestions.length > 0 ? (
                   <div style={{
-                    display:'grid',
-                    gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))',
+                    display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(240px, 1fr))',
                     gap:10, padding:'14px 16px',
                   }}>
                     {suggestions.map((s, idx) => {

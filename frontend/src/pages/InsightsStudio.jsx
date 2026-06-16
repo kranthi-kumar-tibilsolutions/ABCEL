@@ -21,7 +21,7 @@ export default function InsightsStudio() {
 
   useEffect(() => {
     setBreadcrumb([
-      { label: 'Overview', page: 'overview' },
+      { label: 'Explore' },
       { label: 'Insights Studio' },
     ]);
   }, []);
@@ -94,81 +94,86 @@ export default function InsightsStudio() {
 
   return (
     <div className="page-container">
+      <div className="chart-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-      {/* Config panel */}
-      <div className="chart-card">
-        <div className="chart-title">Select Skills to Analyse</div>
-        <div className="skill-pills">
-          {SKILLS.map(s => (
-            <button
-              key={s.id}
-              className={`skill-pill ${selectedSkills.includes(s.id) ? 'active' : ''}`}
-              onClick={() => toggleSkill(s.id)}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: 12, marginTop: 16, alignItems: 'flex-end' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>
-              Analyse by Dimension
-            </label>
-            <select
-              className="bu-filter-select"
-              style={{ width: '100%' }}
-              value={dimension}
-              onChange={e => setDimension(e.target.value)}
-            >
-              {DIMENSIONS.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
+        {/* Config panel */}
+        <div>
+          <div className="chart-title">Select Skills to Analyse</div>
+          <div className="skill-pills">
+            {SKILLS.map(s => (
+              <button
+                key={s.id}
+                className={`skill-pill ${selectedSkills.includes(s.id) ? 'active' : ''}`}
+                onClick={() => toggleSkill(s.id)}
+              >
+                {s.label}
+              </button>
+            ))}
           </div>
-          <button
-            className="primary-btn"
-            style={{ minWidth: 160 }}
-            onClick={runAnalysis}
-            disabled={!selectedSkills.length || loading}
-          >
-            {loading ? 'Analysing…' : 'Run Analysis'}
-          </button>
-        </div>
-      </div>
 
-      {/* Step progress */}
-      {loading && (
-        <div className="chart-card" style={{ marginTop: 16 }}>
-          <div className="ai-summary-header" style={{ marginBottom: 16 }}>
-            <span className="ai-badge">AI</span>
-            <span style={{ fontSize: 13 }}>Agent is reasoning through the data…</span>
-          </div>
-          {steps.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {steps.map(s => (
-                <div key={s.step} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
-                  <span style={{ color: s.done ? '#16A34A' : 'var(--blue-primary)', fontWeight: 700 }}>
-                    {s.done ? '✓' : '…'}
-                  </span>
-                  <span style={{ color: s.done ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
-                    Step {s.step}: {s.label}
-                  </span>
-                </div>
-              ))}
+          <div style={{ display: 'flex', gap: 12, marginTop: 16, alignItems: 'flex-end' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>
+                Analyse by Dimension
+              </label>
+              <select
+                className="bu-filter-select"
+                style={{ width: '100%' }}
+                value={dimension}
+                onChange={e => setDimension(e.target.value)}
+              >
+                {DIMENSIONS.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
             </div>
-          ) : (
-            <Skeleton count={4} height={10} />
-          )}
+            <button
+              className="primary-btn"
+              style={{ minWidth: 160 }}
+              onClick={runAnalysis}
+              disabled={!selectedSkills.length || loading}
+            >
+              {loading ? 'Analysing…' : 'Run Analysis'}
+            </button>
+          </div>
         </div>
-      )}
 
-      {/* Error */}
-      {error && !loading && (
-        <div className="upload-error" style={{ marginTop: 16 }}>{error}</div>
-      )}
+        <div style={{ borderTop: '1px solid var(--border)' }} />
 
-      {/* Results */}
-      {result && !loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}>
+        <div style={{ minHeight: 200 }}>
+
+        {/* Step progress */}
+        {loading && (
+          <div>
+            <div className="ai-summary-header" style={{ marginBottom: 16 }}>
+              <span className="ai-badge">AI</span>
+              <span style={{ fontSize: 13 }}>Agent is reasoning through the data…</span>
+            </div>
+            {steps.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {steps.map(s => (
+                  <div key={s.step} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+                    <span style={{ color: s.done ? '#16A34A' : 'var(--blue-primary)', fontWeight: 700 }}>
+                      {s.done ? '✓' : '…'}
+                    </span>
+                    <span style={{ color: s.done ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
+                      Step {s.step}: {s.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Skeleton count={4} height={10} />
+            )}
+          </div>
+        )}
+
+        {/* Error */}
+        {error && !loading && (
+          <div className="upload-error">{error}</div>
+        )}
+
+        {/* Results */}
+        {result && !loading && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           {/* Headline */}
           <div style={{ background: 'var(--blue-primary)', color: 'white', borderRadius: 10, padding: '16px 20px' }}>
@@ -270,17 +275,22 @@ export default function InsightsStudio() {
         </div>
       )}
 
-      {/* Empty state */}
-      {!result && !loading && !error && (
-        <div style={{ marginTop: 24, padding: 48, textAlign: 'center', background: 'var(--bg-card)', border: '1px dashed var(--border)', borderRadius: 12 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>
-            Select one or more skills above and click Run Analysis
+        {/* Empty state */}
+        {!result && !loading && !error && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 180 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                Select one or more skills above and click Run Analysis
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                The AI agent will reason through your data and surface actionable intelligence
+              </div>
+            </div>
           </div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            The AI agent will reason through your data and surface actionable intelligence
-          </div>
-        </div>
-      )}
+        )}
+
+        </div>{/* end minHeight wrapper */}
+      </div>
     </div>
   );
 }

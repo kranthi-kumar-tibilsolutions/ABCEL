@@ -15,7 +15,7 @@ export default function OutliersPage() {
 
   useEffect(() => {
     setBreadcrumb([
-      { label: 'Overview', page: 'overview' },
+      { label: 'Explore' },
       { label: 'Outliers & Alerts' },
     ]);
   }, []);

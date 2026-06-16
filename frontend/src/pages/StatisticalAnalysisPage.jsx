@@ -327,7 +327,7 @@ export default function StatisticalAnalysisPage() {
   const netMaxR    = networkData?.max_r               || 1;
 
   return (
-    <div className="page-container">
+    <div className="page-container" style={{ display:'flex', flexDirection:'column', gap:12 }}>
 
       {/* top grid */}
       <div className="sta-top-grid">
@@ -562,7 +562,7 @@ export default function StatisticalAnalysisPage() {
       {/* footnote */}
       <div style={{
         display:'flex', alignItems:'center', gap:6,
-        marginTop:12, padding:'8px 12px',
+        padding:'8px 12px',
         background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:8,
       }}>
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink:0 }}>

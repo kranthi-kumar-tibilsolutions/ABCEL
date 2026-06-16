@@ -35,10 +35,7 @@ export default function BenchmarksPage() {
   const [activeTab, setActiveTab] = useState('peers');
 
   useEffect(() => {
-    setBreadcrumb([
-      { label: 'Overview', page: 'overview' },
-      { label: 'Benchmarks' },
-    ]);
+    setBreadcrumb([{ label: 'Benchmarks' }]);
   }, []);
 
   const groupAvg    = meta?.group_avg ?? 4.44;
@@ -81,24 +78,37 @@ export default function BenchmarksPage() {
   ];
 
   return (
-    <div className="page-container">
+    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* Position summary cards */}
       {(() => {
         const aboveAll  = allExternal.filter(e => groupAvg > e.score).length;
         const totalComp = allExternal.length;
         const indiaTop  = BENCHMARKS.regional.find(r => r.name === 'India Top Quartile')?.score ?? 4.45;
         const globalAvg = BENCHMARKS.regional.find(r => r.name === 'Global Average')?.score ?? 3.85;
+        const cards = [
+          { label: 'ABG Group Average',     value: groupAvg.toFixed(2),                                                                          border: '#F97316', bg: 'rgba(249,115,22,0.08)',  shadow: 'rgba(249,115,22,0.12)',  text: '#C2410C' },
+          { label: 'Benchmarks Exceeded',   value: `${aboveAll} / ${totalComp}`,                                                                  border: '#16A34A', bg: 'rgba(22,163,74,0.08)',   shadow: 'rgba(22,163,74,0.12)',   text: '#15803D' },
+          { label: 'vs India Top Quartile', value: groupAvg >= indiaTop ? 'Top Quartile' : `${(groupAvg - indiaTop).toFixed(2)} gap`,             border: groupAvg >= indiaTop ? '#15803D' : '#D97706', bg: groupAvg >= indiaTop ? 'rgba(22,163,74,0.08)' : 'rgba(217,119,6,0.08)', shadow: groupAvg >= indiaTop ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', text: groupAvg >= indiaTop ? '#15803D' : '#B45309' },
+          { label: 'vs Global Average',     value: `+${(groupAvg - globalAvg).toFixed(2)}`,                                                       border: '#2563EB', bg: 'rgba(37,99,235,0.08)',   shadow: 'rgba(37,99,235,0.12)',   text: '#1D4ED8' },
+        ];
         return (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-            {[
-              { label: 'ABG Group Average', value: groupAvg.toFixed(2), color: '#F97316', bg: '#FFF7ED' },
-              { label: 'Benchmarks Exceeded', value: `${aboveAll} / ${totalComp}`, color: '#16A34A', bg: '#F0FDF4' },
-              { label: 'vs India Top Quartile', value: groupAvg >= indiaTop ? 'Top Quartile' : `${(groupAvg - indiaTop).toFixed(2)} gap`, color: groupAvg >= indiaTop ? '#15803D' : '#D97706', bg: groupAvg >= indiaTop ? '#F0FDF4' : '#FFFBEB' },
-              { label: 'vs Global Average', value: `+${(groupAvg - globalAvg).toFixed(2)}`, color: '#2563EB', bg: '#EFF6FF' },
-            ].map(c => (
-              <div key={c.label} style={{ padding: '16px 20px', background: c.bg, borderRadius: 10, border: `1px solid ${c.color}22` }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{c.label}</div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: c.color }}>{c.value}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+            {cards.map(c => (
+              <div key={c.label} className="biz-overview-card" style={{
+                borderLeft: `4px solid ${c.border}`,
+                background: `linear-gradient(135deg, ${c.bg} 0%, var(--bg-card) 60%)`,
+                boxShadow: `0 4px 16px ${c.shadow}, 0 1px 4px rgba(0,0,0,0.06)`,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>{c.label}</span>
+                <div style={{
+                  width: 48, height: 48, borderRadius: '50%',
+                  border: `2.5px solid ${c.border}`,
+                  background: c.bg,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: c.text, lineHeight: 1.2, textAlign: 'center' }}>{c.value}</span>
+                </div>
               </div>
             ))}
           </div>

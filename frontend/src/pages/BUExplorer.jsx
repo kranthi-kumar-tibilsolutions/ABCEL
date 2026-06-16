@@ -15,7 +15,7 @@ export default function BUExplorer() {
 
   useEffect(() => {
     setBreadcrumb([
-      { label: 'Overview', page: 'overview' },
+      { label: 'Explore' },
       { label: 'BU Explorer' },
     ]);
   }, []);
