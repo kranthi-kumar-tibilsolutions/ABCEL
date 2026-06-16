@@ -1,88 +1,7 @@
-import { useState, useContext, useMemo, useRef, useEffect } from 'react';
+import { useState, useContext, useMemo, useRef, useEffect, useCallback } from 'react';
 import { AppContext } from '../context/AppContext';
-import { RotateCcw } from 'lucide-react';
 import Dropdown from '../components/shared/Dropdown';
-
-/* ── static data ──────────────────────────────────────────────── */
-const CORR_QS = ['Q12','Q24','Q18','Q16','Q34','Q45','Q57','Q61','Q66','Q22'];
-
-const CORR_MATRIX = [
-  [ 1.00, 0.71, 0.63, 0.58, 0.52, 0.47,-0.46,-0.38,-0.31, 0.22],
-  [ 0.71, 1.00, 0.66, 0.60, 0.55, 0.44,-0.41,-0.35,-0.28, 0.25],
-  [ 0.63, 0.66, 1.00, 0.56, 0.56, 0.42,-0.38,-0.30,-0.25, 0.18],
-  [ 0.58, 0.60, 0.56, 1.00, 0.56, 0.49,-0.30,-0.27,-0.20, 0.21],
-  [ 0.52, 0.55, 0.56, 0.56, 1.00, 0.48,-0.27,-0.20,-0.18, 0.20],
-  [ 0.47, 0.44, 0.42, 0.49, 0.48, 1.00,-0.23,-0.19,-0.12, 0.16],
-  [-0.46,-0.41,-0.38,-0.30,-0.27,-0.23, 1.00, 0.62, 0.55,-0.21],
-  [-0.38,-0.35,-0.30,-0.27,-0.20,-0.19, 0.62, 1.00, 0.58,-0.18],
-  [-0.31,-0.28,-0.25,-0.20,-0.18,-0.12, 0.55, 0.58, 1.00,-0.15],
-  [ 0.22, 0.25, 0.18, 0.21, 0.20, 0.16,-0.21,-0.18,-0.15, 1.00],
-];
-
-const ALL_CORR = [
-  { id:'Q24', text:'I believe my manager supports me.',     r: 0.71, sig:'< 0.001' },
-  { id:'Q18', text:'I feel valued at work.',                r: 0.63, sig:'< 0.001' },
-  { id:'Q15', text:'I have opportunities to grow.',         r: 0.58, sig:'< 0.001' },
-  { id:'Q34', text:'My achievements are celebrated.',       r: 0.52, sig:'< 0.001' },
-  { id:'Q45', text:'I receive constructive feedback.',      r: 0.47, sig:'< 0.001' },
-  { id:'Q57', text:'I feel overloaded with work.',          r:-0.48, sig:'< 0.001' },
-  { id:'Q01', text:'I often feel stressed.',                r:-0.38, sig:'< 0.001' },
-  { id:'Q66', text:'Work-life balance is poor.',            r:-0.31, sig:'< 0.001' },
-  { id:'Q05', text:'I understand company policies.',        r: 0.03, sig:'0.245'   },
-  { id:'Q09', text:'The office environment is good.',       r: 0.02, sig:'0.512'   },
-];
-
-const NET_NODES = [
-  { id:'Q12', x:300, y:215, r: 1.0,  main:true  },
-  { id:'Q24', x:183, y:108, r: 0.71 },
-  { id:'Q18', x:418, y: 86, r: 0.63 },
-  { id:'Q16', x:136, y:215, r: 0.58 },
-  { id:'Q15', x:305, y: 78, r: 0.58 },
-  { id:'Q34', x:448, y:296, r: 0.52 },
-  { id:'Q45', x:470, y:170, r: 0.47 },
-  { id:'Q22', x:442, y:382, r: 0.22 },
-  { id:'Q57', x:150, y:335, r:-0.48 },
-  { id:'Q01', x:288, y:396, r:-0.38 },
-  { id:'Q66', x:422, y:418, r:-0.31 },
-  { id:'Q61', x:173, y:392, r:-0.28 },
-  { id:'Q23', x: 78, y: 86, r: 0.18 },
-  { id:'Q05', x: 60, y:200, r: 0.03 },
-  { id:'Q63', x: 76, y:340, r: 0.12 },
-  { id:'Q68', x:128, y:438, r:-0.09 },
-  { id:'Q84', x:230, y:456, r:-0.05 },
-  { id:'Q27', x:530, y:116, r: 0.15 },
-  { id:'Q37', x:556, y:225, r: 0.08 },
-  { id:'Q31', x:530, y:330, r: 0.10 },
-  { id:'Q42', x:490, y:432, r: 0.06 },
-  { id:'Q33', x:350, y:452, r:-0.12 },
-  { id:'Q14', x:500, y:402, r: 0.11 },
-];
-
-const QUESTIONS_LIST = [
-  'Q12. I feel recognized for my contributions.',
-  'Q24. I believe my manager supports me.',
-  'Q18. I feel valued at work.',
-  'Q15. I have opportunities to grow.',
-  'Q34. My achievements are celebrated.',
-  'Q45. I receive constructive feedback.',
-  'Q01. I often feel stressed.',
-  'Q57. I feel overloaded with work.',
-  'Q66. Work-life balance is poor.',
-];
-
-const SUMMARY_TILES = [
-  { label:'Strong Positive',       count:18, sub:'Questions', r:'r ≥ 0.50',         bg:'#DCFCE7', border:'#86EFAC', tc:'#15803D', nc:'#15803D' },
-  { label:'Moderate Positive',     count:21, sub:'Questions', r:'0.20 ≤ r < 0.50',  bg:'#F0FDF4', border:'#BBF7D0', tc:'#166534', nc:'#16A34A' },
-  { label:'Weak / No Correlation', count:23, sub:'Questions', r:'-0.20 < r < 0.20', bg:'#F8FAFC', border:'#E2E8F0', tc:'#64748B', nc:'#94A3B8' },
-  { label:'Negative Correlation',  count:10, sub:'Questions', r:'r ≤ −0.20',        bg:'#FEF2F2', border:'#FECACA', tc:'#B91C1C', nc:'#DC2626' },
-];
-
-const TABS = [
-  { key:'all',  label:'All (71)'            },
-  { key:'pos',  label:'Positive (38)'       },
-  { key:'neg',  label:'Negative (10)'       },
-  { key:'none', label:'No Correlation (22)' },
-];
+import { apiFetch } from '../utils/api';
 
 /* ── helpers ──────────────────────────────────────────────────── */
 function InfoIcon() {
@@ -127,6 +46,12 @@ function edgeStroke(r) {
   return 1;
 }
 
+function fmtP(p) {
+  if (p === null || p === undefined) return '—';
+  if (p < 0.001) return '< 0.001';
+  return p.toFixed(3);
+}
+
 /* ── sub-components ───────────────────────────────────────────── */
 function StrengthBadge({ r }) {
   const str = strengthOf(r);
@@ -138,7 +63,8 @@ function StrengthBadge({ r }) {
   );
 }
 
-function Correlogram() {
+/* ── Correlogram ── */
+function Correlogram({ labels = [], matrix = [] }) {
   const containerRef = useRef(null);
   const [cw, setCw] = useState(0);
 
@@ -149,15 +75,17 @@ function Correlogram() {
     return () => ro.disconnect();
   }, []);
 
-  const N   = CORR_QS.length;
-  const LW  = 34;                                               // left label column width
-  const TH  = 20;                                               // top label row height
-  const CW  = cw > 0 ? Math.floor((cw - LW) / N) : 32;        // cell width — fills container
-  const CH  = 30;                                               // fixed cell height — keeps grid compact
+  const N   = labels.length;
+  if (!N) return <div style={{ color:'var(--text-muted)', fontSize:11, padding:12 }}>Loading correlogram…</div>;
+
+  const LW  = 34;
+  const TH  = 20;
+  const CW  = cw > 0 ? Math.floor((cw - LW) / N) : 32;
+  const CH  = 30;
   const W   = LW + N * CW;
   const H   = TH + N * CH + 26;
-  const vfs = Math.min(10, Math.max(7, CW * 0.15));            // value font scales with width
-  const lfs = 8;                                                // fixed label font size
+  const vfs = Math.min(10, Math.max(7, CW * 0.15));
+  const lfs = 8;
 
   return (
     <div ref={containerRef}>
@@ -170,19 +98,17 @@ function Correlogram() {
           </linearGradient>
         </defs>
 
-        {/* column labels */}
-        {CORR_QS.map((q, j) => (
+        {labels.map((q, j) => (
           <text key={q} x={LW + j*CW + CW/2} y={TH - 5}
             textAnchor="middle" fontSize={lfs} fontWeight={600} fill="#64748B">{q}</text>
         ))}
 
-        {/* rows */}
-        {CORR_QS.map((q, i) => (
+        {labels.map((q, i) => (
           <g key={q}>
             <text x={LW - 4} y={TH + i*CH + CH/2 + lfs*0.38}
               textAnchor="end" fontSize={lfs} fontWeight={600} fill="#64748B">{q}</text>
-            {CORR_QS.map((_, j) => {
-              const v = CORR_MATRIX[i][j];
+            {labels.map((_, j) => {
+              const v = (matrix[i] || [])[j] ?? 0;
               return (
                 <g key={j}>
                   <rect x={LW + j*CW} y={TH + i*CH} width={CW-2} height={CH-2}
@@ -197,7 +123,6 @@ function Correlogram() {
           </g>
         ))}
 
-        {/* colour scale bar */}
         <rect x={LW} y={TH + N*CH + 6} width={N*CW} height={7} fill="url(#cgGrad)" rx={2}/>
         <text x={LW}           y={TH + N*CH + 22} fontSize={7.5} fill="#94A3B8">-1.0</text>
         <text x={LW + N*CW/2}  y={TH + N*CH + 22} textAnchor="middle" fontSize={7.5} fill="#94A3B8">0</text>
@@ -210,70 +135,196 @@ function Correlogram() {
   );
 }
 
-function NetworkGraph() {
-  const CX = 300, CY = 215;
+/* ── Network Graph ── radial layout from API nodes+edges */
+function computePositions(nodes, edges) {
+  const cx = 300, cy = 215;
+  const center = nodes.find(n => n.is_center);
+  const others = nodes.filter(n => !n.is_center);
+
+  const edgeRMap = {};
+  edges.forEach(e => { edgeRMap[e.target] = Math.abs(e.r); });
+  const sorted = [...others].sort((a, b) => (edgeRMap[b.id] || 0) - (edgeRMap[a.id] || 0));
+
+  const positions = {};
+  if (center) positions[center.id] = { x: cx, y: cy };
+  sorted.forEach((n, i) => {
+    const angle  = (2 * Math.PI * i / sorted.length) - Math.PI / 2;
+    const radius = 165;
+    positions[n.id] = {
+      x: Math.round(cx + radius * Math.cos(angle)),
+      y: Math.round(cy + radius * Math.sin(angle)),
+    };
+  });
+  return positions;
+}
+
+function NetworkGraph({ nodes = [], edges = [], maxR = 1 }) {
+  if (!nodes.length) return <div style={{ color:'var(--text-muted)', fontSize:11, padding:12 }}>Loading network…</div>;
+
+  const positions = computePositions(nodes, edges);
+  const center    = nodes.find(n => n.is_center);
+
   return (
     <div style={{ background:'var(--bg-page)', borderRadius:8, overflow:'hidden' }}>
       <svg viewBox="0 0 600 475" style={{ width:'100%', height:'auto', display:'block' }}>
         {/* edges */}
-        {NET_NODES.filter(n => !n.main).map(n => (
-          <line key={n.id}
-            x1={CX} y1={CY} x2={n.x} y2={n.y}
-            stroke={edgeColor(n.r)}
-            strokeWidth={edgeStroke(n.r)}
-            strokeOpacity={Math.abs(n.r) < 0.15 ? 0.35 : 0.70}
-          />
-        ))}
+        {edges.map((e, idx) => {
+          const sp = positions[e.source];
+          const tp = positions[e.target];
+          if (!sp || !tp) return null;
+          return (
+            <line key={idx}
+              x1={sp.x} y1={sp.y} x2={tp.x} y2={tp.y}
+              stroke={edgeColor(e.r)}
+              strokeWidth={edgeStroke(e.r)}
+              strokeOpacity={Math.abs(e.r) < 0.15 ? 0.35 : 0.70}
+            />
+          );
+        })}
+
         {/* peripheral nodes */}
-        {NET_NODES.filter(n => !n.main).map(n => {
-          const a   = Math.abs(n.r);
+        {nodes.filter(n => !n.is_center).map(n => {
+          const pos = positions[n.id];
+          if (!pos) return null;
+          const edgeR = edges.find(e => e.target === n.id)?.r ?? 0;
+          const a   = Math.abs(edgeR);
           const nr  = a >= 0.45 ? 14 : a >= 0.25 ? 12 : 10;
-          const fill   = n.r > 0.15 ? '#DCFCE7' : n.r < -0.15 ? '#FEE2E2' : '#F1F5F9';
-          const stroke = n.r > 0.15 ? '#22C55E' : n.r < -0.15 ? '#EF4444' : '#CBD5E1';
+          const fill   = edgeR > 0.15 ? '#DCFCE7' : edgeR < -0.15 ? '#FEE2E2' : '#F1F5F9';
+          const stroke = edgeR > 0.15 ? '#22C55E' : edgeR < -0.15 ? '#EF4444' : '#CBD5E1';
           return (
             <g key={n.id}>
-              <circle cx={n.x} cy={n.y} r={nr} fill={fill} stroke={stroke} strokeWidth={1.5}/>
-              <text x={n.x} y={n.y+3.5} textAnchor="middle"
-                fontSize={8} fontWeight={700} fill="#475569">{n.id}</text>
+              <circle cx={pos.x} cy={pos.y} r={nr} fill={fill} stroke={stroke} strokeWidth={1.5}/>
+              <text x={pos.x} y={pos.y+3.5} textAnchor="middle"
+                fontSize={8} fontWeight={700} fill="#475569">{n.label || n.id}</text>
             </g>
           );
         })}
-        {/* centre Q12 */}
-        <circle cx={CX} cy={CY} r={24} fill="#3B82F6" stroke="#2563EB" strokeWidth={2}/>
-        <text x={CX} y={CY+3.5} textAnchor="middle"
-          fontSize={9.5} fontWeight={800} fill="white">Q12</text>
-        {/* tooltip bubble */}
-        <rect x={CX-82} y={CY+30} width={164} height={22} rx={4}
-          fill="white" stroke="#E2E8F0" strokeWidth={1}/>
-        <text x={CX} y={CY+45} textAnchor="middle" fontSize={7.5} fill="#64748B">
-          Q12: I feel recognized for my contributions.
-        </text>
+
+        {/* centre node */}
+        {center && positions[center.id] && (
+          <>
+            <circle cx={positions[center.id].x} cy={positions[center.id].y} r={24} fill="#3B82F6" stroke="#2563EB" strokeWidth={2}/>
+            <text x={positions[center.id].x} y={positions[center.id].y+3.5} textAnchor="middle"
+              fontSize={9.5} fontWeight={800} fill="white">{center.label || center.id}</text>
+            <rect x={positions[center.id].x-82} y={positions[center.id].y+30} width={164} height={22} rx={4}
+              fill="white" stroke="#E2E8F0" strokeWidth={1}/>
+            <text x={positions[center.id].x} y={positions[center.id].y+45} textAnchor="middle" fontSize={7.5} fill="#64748B">
+              {center.label || center.id}
+            </text>
+          </>
+        )}
       </svg>
     </div>
   );
 }
 
+const TILE_CONFIG = [
+  { key:'strong_positive',   label:'Strong Positive',       r:'r ≥ 0.50',         bg:'#DCFCE7', border:'#86EFAC', tc:'#15803D', nc:'#15803D' },
+  { key:'moderate_positive', label:'Moderate Positive',     r:'0.20 ≤ r < 0.50',  bg:'#F0FDF4', border:'#BBF7D0', tc:'#166534', nc:'#16A34A' },
+  { key:'weak_none',         label:'Weak / No Correlation', r:'-0.20 < r < 0.20', bg:'#F8FAFC', border:'#E2E8F0', tc:'#64748B', nc:'#94A3B8' },
+  { key:'negative',          label:'Negative Correlation',  r:'r ≤ −0.20',        bg:'#FEF2F2', border:'#FECACA', tc:'#B91C1C', nc:'#DC2626' },
+];
+
 /* ── page ─────────────────────────────────────────────────────── */
 export default function StatisticalAnalysisPage() {
-  const { setBreadcrumb } = useContext(AppContext);
+  const { setBreadcrumb, saFilters } = useContext(AppContext);
 
   useEffect(() => {
     setBreadcrumb([{ label: 'Explore' }, { label: 'Statistical Analysis' }]);
   }, []);
 
-  const [activeTab, setActiveTab] = useState('all');
-  const [expanded,  setExpanded]  = useState(false);
-  const [topCorr,   setTopCorr]   = useState('Top 20');
-  const [topNet,    setTopNet]    = useState('Top 25');
+  const [questions,       setQuestions]       = useState([]);
+  const [selectedQId,     setSelectedQId]     = useState(null);
+  const [correlations,    setCorrelations]    = useState([]);
+  const [tabCounts,       setTabCounts]       = useState({});
+  const [baseN,           setBaseN]           = useState(0);
+  const [correlogramData, setCorrelogramData] = useState(null);
+  const [networkData,     setNetworkData]     = useState(null);
+  const [insight,         setInsight]         = useState('');
+  const [activeTab,       setActiveTab]       = useState('all');
+  const [expanded,        setExpanded]        = useState(false);
+  const [topCorr,         setTopCorr]         = useState('Top 20');
+  const [topNet,          setTopNet]          = useState('Top 25');
+  const [loading,         setLoading]         = useState(false);
 
+  // Fetch questions on mount
+  useEffect(() => {
+    apiFetch('/api/statistical/questions')
+      .then(r => r.json())
+      .then(d => {
+        const qs = d.questions || [];
+        setQuestions(qs);
+        if (qs.length) setSelectedQId(qs[0].id);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch all data when selected question changes
+  const topCorrN = parseInt(topCorr.replace('Top ', ''), 10) || 20;
+  const topNetN  = parseInt(topNet.replace('Top ', ''), 10) || 25;
+
+  const fetchQuestionData = useCallback(async (qId, corrN, netN, filters) => {
+    if (!qId) return;
+    setLoading(true);
+    try {
+      // Build query string from active filters
+      const qs = new URLSearchParams();
+      if (filters?.business && filters.business !== 'All') qs.set('business', filters.business);
+      if (filters?.inactive === 'Yes') qs.set('include_inactive', 'Yes');
+      const qStr = qs.toString() ? `&${qs}` : '';
+
+      const [corrRes, cgramRes, netRes, insightRes] = await Promise.all([
+        apiFetch(`/api/statistical/correlations/${qId}?${qStr.slice(1)}`),
+        apiFetch(`/api/statistical/correlogram/${qId}?top=${corrN}${qStr}`),
+        apiFetch(`/api/statistical/network/${qId}?top=${netN}${qStr}`),
+        apiFetch(`/api/statistical/insights/${qId}?${qStr.slice(1)}`),
+      ]);
+      const [corrData, cgramData, netData, insData] = await Promise.all([
+        corrRes.json(), cgramRes.json(), netRes.json(), insightRes.json(),
+      ]);
+
+      setTabCounts(corrData.tab_counts || {});
+      setBaseN(corrData.n || 0);
+      setCorrelations(corrData.correlations || []);
+      setCorrelogramData(cgramData);
+      setNetworkData(netData);
+      setInsight(insData.insight || '');
+    } catch {}
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchQuestionData(selectedQId, topCorrN, topNetN, saFilters);
+  }, [selectedQId, fetchQuestionData, topCorrN, topNetN, saFilters]);
+
+  // Client-side tab filter on already-fetched correlations
   const tabRows = useMemo(() => {
     switch (activeTab) {
-      case 'pos':  return ALL_CORR.filter(c => c.r >  0.20);
-      case 'neg':  return ALL_CORR.filter(c => c.r < -0.20);
-      case 'none': return ALL_CORR.filter(c => Math.abs(c.r) <= 0.20);
-      default:     return ALL_CORR;
+      case 'pos':  return correlations.filter(c => c.category_bucket === 'strong_positive' || c.category_bucket === 'moderate_positive');
+      case 'neg':  return correlations.filter(c => c.category_bucket === 'moderate_negative' || c.category_bucket === 'strong_negative');
+      case 'none': return correlations.filter(c => c.category_bucket === 'weak_none');
+      default:     return correlations;
     }
-  }, [activeTab]);
+  }, [activeTab, correlations]);
+
+  const selectedQ  = questions.find(q => q.id === selectedQId);
+  const posCount   = (tabCounts.strong_positive || 0) + (tabCounts.moderate_positive || 0);
+  const negCount   = tabCounts.negative || 0;
+  const noneCount  = tabCounts.weak_none || 0;
+  const totalCount = tabCounts.all || correlations.length;
+
+  const TABS = [
+    { key:'all',  label:`All (${totalCount})`              },
+    { key:'pos',  label:`Positive (${posCount})`           },
+    { key:'neg',  label:`Negative (${negCount})`           },
+    { key:'none', label:`No Correlation (${noneCount})`    },
+  ];
+
+  const corrLabels = correlogramData?.question_labels || [];
+  const corrMatrix = correlogramData?.matrix          || [];
+  const netNodes   = networkData?.nodes               || [];
+  const netEdges   = networkData?.edges               || [];
+  const netMaxR    = networkData?.max_r               || 1;
 
   return (
     <div className="page-container">
@@ -284,20 +335,27 @@ export default function StatisticalAnalysisPage() {
         {/* 1. Select a Question */}
         <div className="sa-card" style={{ display:'flex', flexDirection:'column' }}>
           <div className="sa-card-title">1. Select a Question <InfoIcon /></div>
-          <select style={{
-            width:'100%', padding:'7px 8px', border:'1px solid var(--border)',
-            borderRadius:6, background:'var(--bg-card)', fontSize:11,
-            color:'var(--text-primary)', fontFamily:'inherit',
-            cursor:'pointer', outline:'none', marginBottom:12,
-          }}>
-            {QUESTIONS_LIST.map(q => <option key={q}>{q}</option>)}
+          <select
+            value={selectedQId || ''}
+            onChange={e => setSelectedQId(e.target.value)}
+            style={{
+              width:'100%', padding:'7px 8px', border:'1px solid var(--border)',
+              borderRadius:6, background:'var(--bg-card)', fontSize:11,
+              color:'var(--text-primary)', fontFamily:'inherit',
+              cursor:'pointer', outline:'none', marginBottom:12,
+            }}
+          >
+            {questions.map(q => (
+              <option key={q.id} value={q.id}>
+                {q.id}. {q.short_label || q.text || q.id}
+              </option>
+            ))}
           </select>
 
-          {/* Metadata pills */}
           <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
             {[
               { label:'Question Type', value:'Likert Scale (1–5)' },
-              { label:'Responses',     value:'4,892'              },
+              { label:'Responses',     value: loading ? '…' : baseN > 0 ? baseN.toLocaleString() : '—' },
             ].map(({ label, value }) => (
               <div key={label} style={{
                 display:'flex', alignItems:'center', justifyContent:'space-between',
@@ -312,7 +370,6 @@ export default function StatisticalAnalysisPage() {
 
           <div style={{ flex:1 }} />
 
-          {/* Tip at bottom */}
           <div style={{
             marginTop:12, padding:'7px 10px', borderRadius:7,
             background:'#EFF6FF', border:'1px solid #BFDBFE',
@@ -325,15 +382,14 @@ export default function StatisticalAnalysisPage() {
         {/* Correlation Summary + Overall Insights */}
         <div className="sa-card" style={{ display:'flex', flexDirection:'column' }}>
 
-          {/* title above the flex row so both tiles and Overall Insights start at the same Y */}
           <div className="sa-card-title" style={{ marginBottom:8 }}>
             Correlation Summary with Other Questions <InfoIcon />
           </div>
 
           {/* 4 summary tiles */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))', gap:8, alignItems:'stretch', marginBottom:8 }}>
-            {SUMMARY_TILES.map(t => (
-              <div key={t.label} style={{
+            {TILE_CONFIG.map(t => (
+              <div key={t.key} style={{
                 background:t.bg, border:`1px solid ${t.border}`,
                 borderRadius:8, padding:'7px 9px',
                 display:'flex', flexDirection:'column', gap:2,
@@ -342,9 +398,9 @@ export default function StatisticalAnalysisPage() {
                   {t.label}
                 </div>
                 <div style={{ fontSize:20, fontWeight:800, color:t.nc, lineHeight:1 }}>
-                  {t.count}
+                  {loading ? '…' : (tabCounts[t.key] ?? 0)}
                 </div>
-                <div style={{ fontSize:9, color:t.tc, opacity:0.85 }}>{t.sub}</div>
+                <div style={{ fontSize:9, color:t.tc, opacity:0.85 }}>Questions</div>
                 <div style={{
                   marginTop:4, paddingTop:4, borderTop:`1px solid ${t.border}`,
                   fontSize:8.5, color:t.tc, fontStyle:'italic', opacity:0.8,
@@ -353,7 +409,7 @@ export default function StatisticalAnalysisPage() {
             ))}
           </div>
 
-          {/* Overall Insights — full width below tiles */}
+          {/* Overall Insights */}
           <div style={{
             background:'#FFFBEB', border:'1px solid #FDE68A',
             borderRadius:8, padding:'8px 12px',
@@ -367,8 +423,7 @@ export default function StatisticalAnalysisPage() {
             <div>
               <span style={{ fontSize:10.5, fontWeight:700, color:'#92400E' }}>Overall Insights&nbsp;—&nbsp;</span>
               <span style={{ fontSize:10, color:'#78350F', lineHeight:1.55 }}>
-                Q12 has the strongest positive correlation with Q24 (r&nbsp;=&nbsp;0.71) and
-                strongest negative correlation with Q57 (r&nbsp;=&nbsp;−0.46).
+                {loading ? 'Loading insights…' : insight || 'Select a question to view correlation insights.'}
               </span>
             </div>
           </div>
@@ -424,20 +479,20 @@ export default function StatisticalAnalysisPage() {
               </tr>
             </thead>
             <tbody>
-              {(expanded ? tabRows : tabRows.slice(0,10)).map(c => (
-                <tr key={c.id}>
+              {(expanded ? tabRows : tabRows.slice(0, 10)).map(c => (
+                <tr key={c.question_id}>
                   <td style={{ fontSize:10.5, color:'var(--text-primary)' }}>
-                    <span style={{ fontWeight:600, color:'var(--blue-primary)', marginRight:3 }}>{c.id}.</span>
-                    <span style={{ wordBreak:'break-word' }}>{c.text}</span>
+                    <span style={{ fontWeight:600, color:'var(--blue-primary)', marginRight:3 }}>{c.question_id}.</span>
+                    <span style={{ wordBreak:'break-word' }}>{c.question_text}</span>
                   </td>
                   <td style={{
                     fontSize:11, fontWeight:700, textAlign:'right',
-                    color: c.r > 0 ? '#16A34A' : c.r < 0 ? '#DC2626' : '#94A3B8',
+                    color: c.pearson_r > 0 ? '#16A34A' : c.pearson_r < 0 ? '#DC2626' : '#94A3B8',
                   }}>
-                    {c.r > 0 ? '+' : ''}{c.r.toFixed(2)}
+                    {c.pearson_r > 0 ? '+' : ''}{c.pearson_r.toFixed(2)}
                   </td>
-                  <td><StrengthBadge r={c.r}/></td>
-                  <td style={{ fontSize:10.5, color:'var(--text-muted)', textAlign:'right' }}>{c.sig}</td>
+                  <td><StrengthBadge r={c.pearson_r}/></td>
+                  <td style={{ fontSize:10.5, color:'var(--text-muted)', textAlign:'right' }}>{fmtP(c.p_value)}</td>
                 </tr>
               ))}
             </tbody>
@@ -446,7 +501,7 @@ export default function StatisticalAnalysisPage() {
           {/* footer */}
           <div style={{ marginTop:8, paddingTop:8, borderTop:'1px solid var(--border)' }}>
             <p style={{ fontSize:9.5, color:'var(--text-muted)', margin:'0 0 6px' }}>
-              Showing 1 to {Math.min(tabRows.length, expanded ? tabRows.length : 10)} of 71 questions
+              Showing 1 to {Math.min(tabRows.length, expanded ? tabRows.length : 10)} of {tabRows.length} questions
             </p>
             <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
               {[
@@ -472,7 +527,7 @@ export default function StatisticalAnalysisPage() {
             <Dropdown variant="filter" value={topNet}
               options={['Top 15','Top 25','Top 50']} onChange={setTopNet}/>
           </div>
-          <NetworkGraph />
+          <NetworkGraph nodes={netNodes} edges={netEdges} maxR={netMaxR} />
           <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginTop:8 }}>
             {[
               { color:'#22C55E', label:'Positive Correlation'    },
@@ -494,12 +549,12 @@ export default function StatisticalAnalysisPage() {
         <div className="sa-card" style={{ gridColumn:'1 / -1' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, flexWrap:'wrap', gap:6 }}>
             <div className="sa-card-title" style={{ marginBottom:0 }}>
-              3. Correlogram (Top 20 Related Questions) <InfoIcon />
+              3. Correlogram (Top {topCorrN} Related Questions) <InfoIcon />
             </div>
             <Dropdown variant="filter" value={topCorr}
               options={['Top 10','Top 20','Top 30']} onChange={setTopCorr}/>
           </div>
-          <Correlogram />
+          <Correlogram labels={corrLabels} matrix={corrMatrix} />
         </div>
 
       </div>

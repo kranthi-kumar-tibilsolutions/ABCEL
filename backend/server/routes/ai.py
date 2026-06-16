@@ -6,11 +6,12 @@ from pathlib import Path
 from typing import Optional, List
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from lib.llm import call_llm
+from routes.auth import data_company, get_current_user
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -92,11 +93,34 @@ def _parse_json(raw: str) -> dict:
 
 # ── Build shared LLM data context ─────────────────────────────────────────────
 
-def _build_context(dimension: str = "Business Unit") -> str:
+def _build_context(dimension: str = "Business Unit", user: Optional[dict] = None) -> str:
     meta       = _read("meta.json")       or {}
     businesses = _read("businesses.json") or []
     clusters   = _read("clusters.json")   or {}
     cohorts    = _read("cohorts.json")    or {}
+
+    # Scope data to company if company-role user
+    if user and user.get("role") == "company":
+        co = data_company(user)
+        if co:
+            businesses = [b for b in businesses if b["name"] == co]
+            clusters   = {k: [bu for bu in v if bu.get("business") == co]
+                          for k, v in clusters.items()}
+            units = _read("units.json") or []
+            company_units = [u for u in units if u.get("business") == co]
+            biz = businesses[0] if businesses else None
+            meta = dict(meta)
+            meta["total_businesses"]  = 1
+            meta["total_units"]       = len(company_units)
+            meta["total_respondents"] = biz.get("respondent_count", 0) if biz else 0
+            meta["group_avg"]         = biz.get("overall", 0) if biz else 0
+            if company_units:
+                top_bu = max(company_units, key=lambda u: u.get("overall") or 0)
+                low_bu = min(company_units, key=lambda u: u.get("overall") or 0)
+                meta["top_business"]    = top_bu["name"]
+                meta["top_score"]       = top_bu.get("overall")
+                meta["lowest_business"] = low_bu["name"]
+                meta["lowest_score"]    = low_bu.get("overall")
 
     sorted_biz = sorted(businesses, key=lambda b: b.get("overall") or 0, reverse=True)
     biz_sample = sorted_biz[:5] + sorted_biz[-3:]
@@ -205,12 +229,12 @@ class SkillAnalysisRequest(BaseModel):
 # ── CALL 1: AI Executive Summary ──────────────────────────────────────────────
 
 @router.post("/summary")
-async def get_summary(req: SummaryRequest):
+async def get_summary(req: SummaryRequest, user: dict = Depends(get_current_user)):
     prompt = f"""You are an expert HR analytics AI for Aditya Birla Group.
 Generate an executive summary of engagement data analysed by {req.dimension} dimension.
 
 DATA:
-{_build_context(req.dimension)}
+{_build_context(req.dimension, user)}
 
 Respond ONLY with valid JSON (no markdown, no backticks):
 {{
@@ -234,11 +258,11 @@ Respond ONLY with valid JSON (no markdown, no backticks):
 # ── CALL 2: Right Panel AI Insights ──────────────────────────────────────────
 
 @router.post("/insights")
-async def get_insights():
+async def get_insights(user: dict = Depends(get_current_user)):
     prompt = f"""You are an HR analytics AI for ABG. Analyse this data.
 
 DATA:
-{_build_context()}
+{_build_context(user=user)}
 
 Respond ONLY with valid JSON:
 {{
@@ -264,9 +288,13 @@ Respond ONLY with valid JSON:
 # ── CALL 3: Business Drill-Down AI Insight ────────────────────────────────────
 
 @router.post("/business-insight")
-async def get_business_insight(req: BusinessInsightRequest):
+async def get_business_insight(req: BusinessInsightRequest, user: dict = Depends(get_current_user)):
     name       = req.businessName or req.business
     businesses = _read("businesses.json") or []
+    # Company-role: verify the requested business belongs to them
+    if user.get("role") == "company":
+        co = data_company(user)
+        businesses = [b for b in businesses if b["name"] == co]
     meta       = _read("meta.json")       or {}
     biz        = next((b for b in businesses if b.get("name") == name), None)
     if not biz:
@@ -307,7 +335,7 @@ Respond ONLY with valid JSON:
 # ── CALL 4: Chat with Data — SSE Streaming ────────────────────────────────────
 
 @router.post("/chat")
-async def chat(req: ChatRequest):
+async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
     focus_line   = f"\nACTIVE FOCUS AREA: {req.focusArea} — prioritise answers about this theme." if req.focusArea else ""
     company_line = f"\nACTIVE COMPANY FILTER: {req.companyFilter} — answer only about this company unless explicitly asked otherwise." if req.companyFilter else ""
 
@@ -325,7 +353,7 @@ Follow-up questions that refer to previous answers in this conversation (e.g. "w
 - Never say age group data is missing — it is always in the AGE BAND BREAKDOWN section above.
 
 SURVEY DATA (use only when the user asks a data question):
-{_build_context(req.dimension)}"""
+{_build_context(req.dimension, user)}"""
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -510,10 +538,16 @@ async def _extract_card(r) -> Optional[dict]:
 
 
 @router.post("/focus-areas")
-async def focus_areas():
+async def focus_areas(user: dict = Depends(get_current_user)):
     units = _read("units.json") or []
     meta  = _read("meta.json")  or {}
-    avg   = meta.get("group_avg", 4.46)
+
+    if user.get("role") == "company":
+        co = data_company(user)
+        if co:
+            units = [u for u in units if u.get("business") == co]
+
+    avg = meta.get("group_avg", 4.46)
 
     by_cluster  = lambda c: [u for u in units if u.get("cluster") == c]
     sort_asc    = lambda lst: sorted(lst, key=lambda u: u.get("overall") or 0)
@@ -598,7 +632,7 @@ SKILLS = {
 
 
 @router.post("/skill-analysis")
-async def skill_analysis(req: SkillAnalysisRequest):
+async def skill_analysis(req: SkillAnalysisRequest, user: dict = Depends(get_current_user)):
     skill_ids = (req.skills or []) if (req.skills and len(req.skills)) else ([req.skill] if req.skill else [])
     if not skill_ids:
         raise HTTPException(status_code=400, detail="No skill selected")
@@ -616,6 +650,12 @@ async def skill_analysis(req: SkillAnalysisRequest):
     businesses = _read("businesses.json") or []
     units      = _read("units.json")      or []
     cohorts    = _read("cohorts.json")    or {}
+
+    if user.get("role") == "company":
+        co = data_company(user)
+        if co:
+            businesses = [b for b in businesses if b["name"] == co]
+            units      = [u for u in units      if u.get("business") == co]
 
     # Map UI dimension label → cohorts.json key
     _DIM_KEY = {

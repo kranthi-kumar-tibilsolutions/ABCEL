@@ -3,14 +3,6 @@ import { SlidersHorizontal, RotateCcw, Download, Upload, ChevronDown } from 'luc
 import { AppContext } from '../../context/AppContext';
 import Dropdown from '../shared/Dropdown';
 
-const SA_FILTERS_CFG = [
-  { key: 'business', opts: ['All', 'Finance', 'Operations', 'HR', 'Technology'] },
-  { key: 'year',     opts: ['2024', '2023', '2022'] },
-  { key: 'country',  opts: ['All', 'United Kingdom', 'United States', 'India', 'Australia'] },
-  { key: 'survey',   opts: ['Q4 2024 Employee Survey', 'Q3 2024 Employee Survey', 'Q2 2024 Employee Survey'] },
-  { key: 'dept',     opts: ['All', 'Engineering', 'Sales', 'Marketing', 'Finance'] },
-  { key: 'inactive', opts: ['No', 'Yes'] },
-];
 
 const PAGE_TITLES = {
   overview:              'Employee Engagement Intelligence',
@@ -191,6 +183,13 @@ export default function TopBar() {
   }
 
   if (page === 'statistical-analysis') {
+    const saBusinessOpts = businesses?.length
+      ? ['All', ...businesses.map(b => b.name)]
+      : ['All'];
+    const saFiltersCfg = [
+      { key: 'business', opts: saBusinessOpts },
+      { key: 'inactive', opts: ['No', 'Yes'] },
+    ];
     return (
       <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8, gap: 8 }}>
         {breadcrumb?.length > 0 && (
@@ -199,7 +198,7 @@ export default function TopBar() {
             <div className="topbar-spacer" />
           </>
         )}
-        {SA_FILTERS_CFG.map(f => (
+        {saFiltersCfg.map(f => (
           <Dropdown
             key={f.key}
             variant="filter"
@@ -208,13 +207,9 @@ export default function TopBar() {
             onChange={v => setSaFilters(prev => ({ ...prev, [f.key]: v }))}
           />
         ))}
-
         <button
           className="topbar-btn"
-          onClick={() => setSaFilters({
-            survey: 'Q4 2024 Employee Survey', business: 'All',
-            year: '2024', country: 'All', dept: 'All', inactive: 'No',
-          })}
+          onClick={() => setSaFilters({ business: 'All', inactive: 'No' })}
           title="Reset filters"
         >
           <RotateCcw size={13} />

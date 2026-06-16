@@ -77,15 +77,9 @@ export default function App() {
   const [selectedBU,     setSelectedBU]     = useState(null);
   const [selectedCluster,setSelectedCluster]= useState(null);
   const [isFiltersOpen,  setIsFiltersOpen]  = useState(false);
-  const [dpbFilters,     setDpbFilters]     = useState({
-    survey: 'Q4 2024 Employee Survey', business: 'All',
-    year: '2024', country: 'All', inactive: 'No',
-  });
+  const [dpbFilters,     setDpbFilters]     = useState({ business: 'All', country: 'All', inactive: 'No' });
   const [dpbResetSignal, setDpbResetSignal] = useState(0);
-  const [saFilters,     setSaFilters]     = useState({
-    survey: 'Q4 2024 Employee Survey', business: 'All',
-    year: '2024', country: 'All', dept: 'All', inactive: 'No',
-  });
+  const [saFilters,     setSaFilters]     = useState({ business: 'All', inactive: 'No' });
   const [breadcrumb,     setBreadcrumb]     = useState([]);
   const [outliersTopN, setOutliersTopN] = useState(5);
   const [evFilters, setEvFilters] = useState({ cohort: 'All Cohorts', company: 'All', bu: 'All' });
