@@ -347,7 +347,7 @@ export default function StatisticalAnalysisPage() {
           >
             {questions.map(q => (
               <option key={q.id} value={q.id}>
-                {q.id}. {q.short_label || q.text || q.id}
+                [{q.id}] {q.text || q.id}
               </option>
             ))}
           </select>

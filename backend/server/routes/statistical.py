@@ -22,6 +22,28 @@ def _read(f: str) -> list:
     return []
 
 
+def _read_dict(f: str) -> dict:
+    for base in (_DATA, _SAMPLE):
+        try:
+            return json.loads((base / f).read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def _bu_corr_vectors(q_bu: dict, q_id_a: str, q_id_b: str, business: str | None = None):
+    """Return aligned (xs, ys) lists using business-unit level question means."""
+    a_scores = q_bu.get(q_id_a, {})
+    b_scores = q_bu.get(q_id_b, {})
+    # If a business filter is set, keep only BUs belonging to that business;
+    # the BU keys in question_bu_scores are business names (CQ9 = Org Level 1).
+    if business and business != "All":
+        a_scores = {k: v for k, v in a_scores.items() if k == business}
+        b_scores = {k: v for k, v in b_scores.items() if k == business}
+    common = sorted(set(a_scores) & set(b_scores))
+    return [a_scores[k] for k in common], [b_scores[k] for k in common]
+
+
 def _filter(responses: list, business, year, country, department,
             include_inactive: str = "No") -> list:
     out = responses
@@ -69,35 +91,43 @@ async def get_correlations(
     offset:           int           = Query(0),
 ):
     try:
-        filtered    = _filter(_read("responses.json"), business, year, country, department, include_inactive)
-        questions   = _read("questions.json")
-        base_scores = _scores(filtered, question_id)
-        n_sample    = len(base_scores)
+        questions  = _read("questions.json")
+        q_bu       = _read_dict("question_bu_scores.json")
 
-        # n_total = real respondent count from businesses.json (not the sample)
+        # n_total = real respondent count from businesses.json
         businesses = _read("businesses.json")
         if business and business != "All":
             biz_entry = next((b for b in businesses if b["name"] == business), None)
-            n_total = biz_entry["respondent_count"] if biz_entry else n_sample
+            n_total   = biz_entry["respondent_count"] if biz_entry else 0
         else:
-            n_total = sum(b.get("respondent_count", 0) for b in businesses) or n_sample
+            n_total = sum(b.get("respondent_count", 0) for b in businesses)
 
-        correlations = sorted(
-            [
-                {
-                    "question_id":      q["id"],
-                    "question_text":    q.get("text", ""),
-                    "category":         q.get("category", ""),
-                    "pearson_r":        (r_val := pearson_r(base_scores[:(_len := min(n_sample, len(_scores(filtered, q["id"]))))], _scores(filtered, q["id"])[:_len])),
-                    "p_value":          (p_val := pearson_p_value(r_val, _len)),
-                    "strength":         correlation_strength(r_val),
-                    "category_bucket":  correlation_category(r_val),
-                    "significant":      p_val < 0.05,
-                }
-                for q in questions if q["id"] != question_id
-            ],
-            key=lambda x: -abs(x["pearson_r"]),
-        )
+        # n_bu = number of business units (data points) used for Pearson
+        base_bu = q_bu.get(question_id, {})
+        if business and business != "All":
+            base_bu = {k: v for k, v in base_bu.items() if k == business}
+        n_bu = len(base_bu)
+
+        correlations = []
+        for q in questions:
+            if q["id"] == question_id:
+                continue
+            xs, ys = _bu_corr_vectors(q_bu, question_id, q["id"], business)
+            if len(xs) < 2:
+                continue
+            r_val = pearson_r(xs, ys)
+            p_val = pearson_p_value(r_val, len(xs))
+            correlations.append({
+                "question_id":     q["id"],
+                "question_text":   q.get("text", ""),
+                "category":        q.get("category", ""),
+                "pearson_r":       r_val,
+                "p_value":         p_val,
+                "strength":        correlation_strength(r_val),
+                "category_bucket": correlation_category(r_val),
+                "significant":     p_val < 0.05,
+            })
+        correlations.sort(key=lambda x: -abs(x["pearson_r"]))
 
         tab_counts = {
             "all":               len(correlations),
@@ -107,8 +137,8 @@ async def get_correlations(
             "negative":          sum(1 for c in correlations if c["category_bucket"] in ("moderate_negative", "strong_negative")),
         }
 
-        total = len(correlations)
-        paged = correlations[offset: offset + limit] if limit is not None else correlations
+        total   = len(correlations)
+        paged   = correlations[offset: offset + limit] if limit is not None else correlations
         showing = (
             f"Showing {offset + 1}–{min(offset + limit, total)} of {total} questions"
             if limit is not None
@@ -120,8 +150,9 @@ async def get_correlations(
             "question_id":   question_id,
             "question_text": q_text,
             "n":             n_total,
-            "n_sample":      n_sample,
+            "n_sample":      n_bu,
             "n_total":       n_total,
+            "n_bu":          n_bu,
             "tab_counts":    tab_counts,
             "total":         total,
             "showing":       showing,
@@ -144,36 +175,23 @@ async def get_correlogram(
     include_inactive: str           = Query("No"),
 ):
     try:
-        filtered    = _filter(_read("responses.json"), business, year, country, department, include_inactive)
-        questions   = _read("questions.json")
-        base_scores = _scores(filtered, question_id)
-        n_base      = len(base_scores)
+        questions = _read("questions.json")
+        q_bu      = _read_dict("question_bu_scores.json")
+
+        def _bu_r(id_a: str, id_b: str) -> float:
+            if id_a == id_b:
+                return 1.0
+            xs, ys = _bu_corr_vectors(q_bu, id_a, id_b, business)
+            return pearson_r(xs, ys) if len(xs) >= 2 else 0.0
 
         ranked = sorted(
-            [
-                {
-                    "id": q["id"],
-                    "r":  abs(pearson_r(
-                        base_scores[:(_len := min(n_base, len(_scores(filtered, q["id"]))))],
-                        _scores(filtered, q["id"])[:_len],
-                    )),
-                }
-                for q in questions if q["id"] != question_id
-            ],
+            [{"id": q["id"], "r": abs(_bu_r(question_id, q["id"]))}
+             for q in questions if q["id"] != question_id],
             key=lambda x: -x["r"],
         )[:top]
 
         top_ids = [question_id] + [r["id"] for r in ranked]
-
-        def _pearson_pair(id_a: str, id_b: str) -> float:
-            if id_a == id_b:
-                return 1.0
-            sa  = _scores(filtered, id_a)
-            sb  = _scores(filtered, id_b)
-            n   = min(len(sa), len(sb))
-            return pearson_r(sa[:n], sb[:n])
-
-        matrix = [[_pearson_pair(id_a, id_b) for id_b in top_ids] for id_a in top_ids]
+        matrix  = [[_bu_r(id_a, id_b) for id_b in top_ids] for id_a in top_ids]
 
         def _short_label(q_id: str) -> str:
             q = next((q for q in questions if q["id"] == q_id), None)
@@ -184,8 +202,7 @@ async def get_correlogram(
             "question_labels": [_short_label(i) for i in top_ids],
             "matrix":          matrix,
             "color_scale": {
-                "min": -1.0,
-                "max":  1.0,
+                "min": -1.0, "max": 1.0,
                 "labels":  {"negative": "red", "neutral": "white", "positive": "blue"},
                 "legend":  "Darker color indicates stronger correlation",
             },
@@ -207,31 +224,27 @@ async def get_network(
     include_inactive: str           = Query("No"),
 ):
     try:
-        filtered    = _filter(_read("responses.json"), business, year, country, department, include_inactive)
-        questions   = _read("questions.json")
-        base_scores = _scores(filtered, question_id)
-        n_base      = len(base_scores)
+        questions = _read("questions.json")
+        q_bu      = _read_dict("question_bu_scores.json")
 
-        all_edges = sorted(
-            [
-                {
-                    "source":    question_id,
-                    "target":    q["id"],
-                    "r":         (r_val := pearson_r(
-                        base_scores[:(_len := min(n_base, len(_scores(filtered, q["id"]))))],
-                        _scores(filtered, q["id"])[:_len],
-                    )),
-                    "strength":  correlation_strength(r_val),
-                    "direction": "positive" if r_val > 0 else "negative",
-                    "thickness": abs(r_val),
-                }
-                for q in questions if q["id"] != question_id
-            ],
-            key=lambda x: -abs(x["r"]),
-        )
-        # Take top N by absolute r — no hard threshold so the graph always renders
+        all_edges = []
+        for q in questions:
+            if q["id"] == question_id:
+                continue
+            xs, ys = _bu_corr_vectors(q_bu, question_id, q["id"], business)
+            if len(xs) < 2:
+                continue
+            r_val = pearson_r(xs, ys)
+            all_edges.append({
+                "source":    question_id,
+                "target":    q["id"],
+                "r":         r_val,
+                "strength":  correlation_strength(r_val),
+                "direction": "positive" if r_val > 0 else "negative",
+                "thickness": abs(r_val),
+            })
+        all_edges.sort(key=lambda x: -abs(x["r"]))
         edges = all_edges[:top]
-        # Attach max_r so frontend can scale edge thickness/opacity relatively
         max_r = abs(edges[0]["r"]) if edges else 1
 
         node_ids = set([question_id] + [e["target"] for e in edges])

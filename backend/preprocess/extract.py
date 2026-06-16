@@ -727,10 +727,13 @@ def extract_phase2_data(raw_df, decoded_df, xl, output_dir):
             if col:
                 full_text = str(col).strip()
                 text = ' '.join(full_text.split(' ')[1:]).strip() or full_text
+                # short_label: first 6 words of question text (fits axis labels)
+                words = text.split()
+                short = ' '.join(words[:6]) + ('…' if len(words) > 6 else '')
                 questions.append({
                     'id':          op_id,
                     'text':        text,
-                    'short_label': op_id,
+                    'short_label': short,
                     'category':    cat,
                     'type':        'likert_1_5',
                 })
@@ -742,6 +745,39 @@ def extract_phase2_data(raw_df, decoded_df, xl, output_dir):
     with open(f"{output_dir}/questions.json", 'w', encoding='utf-8') as f:
         json.dump(questions, f, indent=2)
     print(f"  [Phase 2] questions.json — {len(questions)} questions")
+
+    # ── BU-level question means (full dataset, not sample) ────────────────────
+    # Pearson on individual rows gives near-zero r (low within-person variance
+    # when most respondents answer identically). Computing means per business
+    # unit first (415 BUs) then correlating across BUs gives statistically
+    # meaningful results that HR directors can actually interpret.
+    from collections import defaultdict as _dd
+    bu_q_sums  = _dd(lambda: _dd(list))   # bu → qid → [scores]
+    col_bu_raw = find_col('CQ9') or find_col('CQ9 Org')   # business / BU column
+
+    for i in range(len(decoded_df)):
+        dec_row = decoded_df.iloc[i]
+        raw_row = raw_df.iloc[i]
+        bu_name  = str(dec_row.get(col_bu_raw, 'Unknown')).strip() if col_bu_raw else 'Unknown'
+        if not bu_name or bu_name in ('nan', ''):
+            bu_name = 'Unknown'
+        for op_col in all_op_cols:
+            op_id = str(op_col).strip().split(' ')[0]
+            val   = pd.to_numeric(raw_row.get(op_col), errors='coerce')
+            if pd.notna(val) and 1 <= val <= 5:
+                bu_q_sums[bu_name][op_id].append(float(6 - val))
+
+    # {question_id → {bu_name → mean_score}}
+    q_bu_scores = {}
+    for bu, q_map in bu_q_sums.items():
+        for qid, vals in q_map.items():
+            if qid not in q_bu_scores:
+                q_bu_scores[qid] = {}
+            q_bu_scores[qid][bu] = round(sum(vals) / len(vals), 4)
+
+    with open(f"{output_dir}/question_bu_scores.json", 'w', encoding='utf-8') as f:
+        json.dump(q_bu_scores, f, indent=2)
+    print(f"  [Phase 2] question_bu_scores.json — {len(q_bu_scores)} questions × {len(bu_q_sums)} BUs")
 
     # Create empty Phase 2 files if they don't exist
     for fname, default in [
