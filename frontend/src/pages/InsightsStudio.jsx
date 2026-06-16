@@ -150,7 +150,7 @@ export default function InsightsStudio() {
                     {s.done ? '✓' : '…'}
                   </span>
                   <span style={{ color: s.done ? 'var(--text-secondary)' : 'var(--text-primary)' }}>
-                    Step {s.step}: {s.label}
+                    {s.label}
                   </span>
                 </div>
               ))}

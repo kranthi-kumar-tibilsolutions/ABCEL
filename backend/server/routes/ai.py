@@ -733,6 +733,7 @@ async def skill_analysis(req: SkillAnalysisRequest, user: dict = Depends(get_cur
 SKILL FOCUS: {skill_def["goal"]}
 ANALYSE BY DIMENSION: {dim_label}
 {"— The riskBUs and brightSpotBUs fields MUST contain exact " + dim_label + " group names from the data below, NOT business unit names." if dim_key else "— The riskBUs and brightSpotBUs fields should be exact Business Unit names."}
+— IMPORTANT: Use ONLY the exact group names that appear in the data. Do NOT invent labels like "non-management", "lower-band", "early-career" etc. Copy the names verbatim.
 
 DATA:
 {step1_data}
@@ -755,7 +756,7 @@ Respond ONLY with valid JSON:
 
             # ── Step 2: Root Cause Investigation ─────────────────────────────
             risk_label = (step1.get("riskBUs") or [dim_label])[0]
-            yield sse({"step": 2, "label": f"Investigating {risk_label} patterns…", "done": False})
+            yield sse({"step": 2, "label": "Investigating root causes…", "done": False})
             print("[AGENT] Step 2 — Root Cause Investigation")
 
             patterns_str = "\n".join(f"{i+1}. {p}" for i, p in enumerate(step1.get("patterns") or []))
@@ -782,7 +783,7 @@ Respond ONLY with valid JSON. All values must be plain strings — no nested obj
             await asyncio.sleep(0.8)
 
             # ── Step 3: Action Generation ─────────────────────────────────────
-            yield sse({"step": 3, "label": "Generating priority actions…", "done": False})
+            yield sse({"step": 3, "label": "Synthesising recommendations…", "done": False})
             print("[AGENT] Step 3 — Action Synthesis")
 
             step3 = await _agent_step([{"role": "user", "content":
