@@ -1,33 +1,6 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useCallback } from 'react';
 import { AppContext } from '../context/AppContext';
-
-/* ── Static data ─────────────────────────────────────────── */
-
-const TEMPLATES = [
-  'Employees with higher recognition feel more engaged.',
-  'Managers have higher trust in leadership than individual contributors.',
-  'Employees in APAC have higher wellbeing scores than the company average.',
-  'There is no difference in engagement scores between new joiners and employees with 3+ years tenure.',
-];
-
-const HISTORY = [
-  { id: 'H-1023', text: 'Employees who rate recognition high have higher engagement than those who rate it low.', result: 'Validated', filters: 'Company: ABG Corp | Department: All | Tenure: All', pz: '0.0081', alpha: '0.05', date: 'May 12, 2024' },
-  { id: 'H-1022', text: 'Managers have higher trust in leadership than individual contributors.', result: 'Validated', filters: 'Company: ABG Corp | Department: All | Tenure: All', pz: '0.0215', alpha: '0.05', date: 'May 10, 2024' },
-  { id: 'H-1021', text: 'There is no difference in wellbeing scores between remote and in-office employees.', result: 'Rejected', filters: 'Company: ABG Corp | Department: All | Tenure: All', pz: '0.2431', alpha: '0.05', date: 'May 8, 2024' },
-  { id: 'H-1020', text: 'Employees in APAC have higher engagement scores than the company average.', result: 'Validated', filters: 'Company: ABG Corp | Region: APAC | Tenure: All', pz: '0.0032', alpha: '0.05', date: 'May 5, 2024' },
-];
-
-const DUMMY_RESULT = {
-  status: 'Validated',
-  description: 'There is sufficient evidence to support your hypothesis.',
-  z: 2.45, pz: 0.0143, alpha: 0.05,
-  h0: 'μ₁ ≤ 3.5', ha: 'μ₁ > 3.5',
-  testType: 'One-tailed Z-Test (Greater than)',
-  confidenceLevel: '0.05',
-  criticalZ: 1.645,
-  decision: 'Reject H₀',
-  sampleMean: 4.12, popMean: 3.5, stdDev: 0.45, sampleSize: 220,
-};
+import { apiFetch } from '../utils/api';
 
 /* ── Bell Curve SVG ──────────────────────────────────────── */
 function BellCurve({ critZ = 1.645, testZ = 2.45 }) {
@@ -49,7 +22,6 @@ function BellCurve({ critZ = 1.645, testZ = 2.45 }) {
   const testXpx = toX(testZ);
   const axisY   = 106;
 
-  // Rejection region: polygon from critZ along curve to xMax, back along axis
   const rejPts = pts.filter(([x]) => x >= critXpx - 1);
   const rejPath = rejPts.length
     ? `M${critXpx.toFixed(1)},${toY(pdf(critZ)).toFixed(1)} `
@@ -64,36 +36,20 @@ function BellCurve({ critZ = 1.645, testZ = 2.45 }) {
           <line x1="0" y1="0" x2="0" y2="5" stroke="#16A34A" strokeWidth="1.8" strokeOpacity="0.35"/>
         </pattern>
       </defs>
-
-      {/* Hatched rejection region */}
       <path d={rejPath} fill="url(#hatch)" />
       <path d={rejPath} fill="none" stroke="#86EFAC" strokeWidth="0.8" />
-
-      {/* Curve */}
       <path d={curvePath} fill="none" stroke="#475569" strokeWidth="1.8" />
-
-      {/* X-axis */}
       <line x1="20" y1={axisY} x2={W - 20} y2={axisY} stroke="#CBD5E1" strokeWidth="1" />
-
-      {/* Critical Z — dashed */}
       <line x1={critXpx} y1={toY(pdf(critZ))} x2={critXpx} y2={axisY}
         stroke="#94A3B8" strokeWidth="1.3" strokeDasharray="4,3" />
-
-      {/* Test Z — solid green */}
       <line x1={testXpx} y1={toY(pdf(testZ))} x2={testXpx} y2={axisY}
         stroke="#16A34A" strokeWidth="2" />
-
-      {/* Z = label above test line */}
       <text x={testXpx + 5} y={toY(pdf(testZ)) - 4} fontSize="8.5" fill="#16A34A" fontWeight="700" fontFamily="inherit">
         Z = {testZ}
       </text>
-
-      {/* Axis labels */}
       <text x={toX(0)}  y={axisY + 12} textAnchor="middle" fontSize="9" fill="#94A3B8" fontFamily="inherit">0</text>
       <text x={critXpx} y={axisY + 12} textAnchor="middle" fontSize="9" fill="#94A3B8" fontFamily="inherit">{critZ}</text>
       <text x={testXpx} y={axisY + 12} textAnchor="middle" fontSize="9" fill="#16A34A" fontFamily="inherit">{testZ}</text>
-
-      {/* Legend */}
       <line x1="20" y1={H - 8} x2="38" y2={H - 8} stroke="#94A3B8" strokeWidth="1.3" strokeDasharray="4,2" />
       <text x="42" y={H - 4} fontSize="8" fill="#94A3B8" fontFamily="inherit">Critical Z (α = 0.05)</text>
       <rect x="145" y={H - 14} width="10" height="9" fill="url(#hatch)" stroke="#86EFAC" strokeWidth="0.5" />
@@ -115,16 +71,25 @@ function Frac({ num, den }) {
 
 /* ── Result badge (table) ────────────────────────────────── */
 function ResultBadge({ result }) {
-  const ok = result === 'Validated';
+  const ok = result === 'Validated' || result === 'validated';
+  const label = result ? (result.charAt(0).toUpperCase() + result.slice(1).toLowerCase()) : result;
   return (
     <span className={`ht-badge ${ok ? 'ht-badge-ok' : 'ht-badge-fail'}`}>
       {ok
         ? <svg width="13" height="13" viewBox="0 0 13 13"><circle cx="6.5" cy="6.5" r="6.5" fill="#16A34A"/><path d="M3.5 6.5l2 2 3.5-3.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
         : <svg width="13" height="13" viewBox="0 0 13 13"><circle cx="6.5" cy="6.5" r="6.5" fill="#DC2626"/><path d="M4 4l5 5M9 4l-5 5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
       }
-      {result}
+      {label}
     </span>
   );
+}
+
+function formatFilters(filtersApplied) {
+  if (!filtersApplied || !Object.keys(filtersApplied).length) return 'No filters applied';
+  return Object.entries(filtersApplied)
+    .filter(([, v]) => v && v !== 'All')
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(' | ') || 'No filters applied';
 }
 
 /* ── Page ────────────────────────────────────────────────── */
@@ -136,15 +101,78 @@ export default function HypothesisTestingPage() {
   }, []);
 
   const [input,       setInput]       = useState('');
-  const [result,      setResult]      = useState(DUMMY_RESULT);
-  const [showDetails, setShowDetails] = useState(true);
+  const [result,      setResult]      = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
   const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState(null);
+  const [templates,   setTemplates]   = useState([]);
+  const [history,     setHistory]     = useState([]);
 
-  const handleTest = () => {
+  const loadHistory = useCallback(async () => {
+    try {
+      const res  = await apiFetch('/api/hypothesis/history?limit=20');
+      const data = await res.json();
+      setHistory(data.items || []);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    apiFetch('/api/hypothesis/templates')
+      .then(r => r.json())
+      .then(d => setTemplates(d.templates || []))
+      .catch(() => {});
+    loadHistory();
+  }, [loadHistory]);
+
+  const handleTest = async () => {
     if (!input.trim() || loading) return;
     setLoading(true);
     setResult(null);
-    setTimeout(() => { setResult(DUMMY_RESULT); setShowDetails(true); setLoading(false); }, 1200);
+    setError(null);
+    try {
+      const res  = await apiFetch('/api/hypothesis/test', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ hypothesis_text: input, filters: {}, alpha: 0.05 }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.error || 'Test failed. Please try rephrasing your hypothesis.');
+      } else {
+        const r = data.result;
+        const verdict = r.verdict || 'inconclusive';
+        setResult({
+          status:          verdict === 'validated' ? 'Validated' : verdict === 'rejected' ? 'Rejected' : 'Inconclusive',
+          description:     r.interpretation || '',
+          z:               r.z,
+          pz:              r.p_value,
+          alpha:           r.alpha,
+          h0:              r.h0,
+          ha:              r.h1,
+          testType:        r.test_type,
+          confidenceLevel: String(r.alpha),
+          criticalZ:       r.critical_z,
+          decision:        r.decision,
+          sampleMean:      r.sample_mean,
+          popMean:         r.pop_mean,
+          stdDev:          r.std_dev,
+          sampleSize:      r.n,
+          working:         r.working || {},
+        });
+        setShowDetails(true);
+        loadHistory();
+      }
+    } catch {
+      setError('Connection error. Make sure the server is running.');
+    }
+    setLoading(false);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await apiFetch(`/api/hypothesis/history/${id}`, { method: 'DELETE' });
+      loadHistory();
+    } catch {}
   };
 
   const r = result || {};
@@ -168,6 +196,15 @@ export default function HypothesisTestingPage() {
             />
             <div className="ht-char-count">{input.length} / 500</div>
           </div>
+          {error && (
+            <div style={{
+              fontSize: 11, color: '#DC2626',
+              background: '#FEF2F2', border: '1px solid #FECACA',
+              borderRadius: 6, padding: '7px 10px', marginBottom: 8, lineHeight: 1.5,
+            }}>
+              {error}
+            </div>
+          )}
           <div>
             <button className="ht-test-btn" onClick={handleTest} disabled={!input.trim() || loading}>
               {loading ? 'Analysing…' : 'Test Hypothesis'}
@@ -179,13 +216,13 @@ export default function HypothesisTestingPage() {
         <div className="ht-card">
           <div className="ht-section-label">Try a Template</div>
           <div className="ht-templates-list">
-            {TEMPLATES.map((t, i) => (
-              <button key={i} className="ht-template-row" onClick={() => { setInput(t); setResult(null); }}>
+            {templates.map(t => (
+              <button key={t.id} className="ht-template-row" onClick={() => { setInput(t.text); setResult(null); setError(null); }}>
                 <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
                   <rect x="2" y="1" width="10" height="13" rx="1.5" stroke="#94A3B8" strokeWidth="1.2"/>
                   <path d="M4.5 5h6M4.5 7.5h6M4.5 10h4" stroke="#94A3B8" strokeWidth="1.1" strokeLinecap="round"/>
                 </svg>
-                <span className="ht-template-text">{t}</span>
+                <span className="ht-template-text">{t.text}</span>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginLeft: 'auto' }}>
                   <path d="M5 3.5l3.5 3.5L5 10.5" stroke="#CBD5E1" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -248,11 +285,11 @@ export default function HypothesisTestingPage() {
                   <div className="ht-bc-head">Hypothesis</div>
                   <div className="ht-hyp-row">
                     <span className="ht-hyp-label">H₀ (Null):</span>
-                    <span className="ht-hyp-val">μ₁ ≤ 3.5</span>
+                    <span className="ht-hyp-val">{r.h0}</span>
                   </div>
                   <div className="ht-hyp-row">
                     <span className="ht-hyp-label">Hₐ (Alternative):</span>
-                    <span className="ht-hyp-val">μ₁ &gt; 3.5</span>
+                    <span className="ht-hyp-val">{r.ha}</span>
                   </div>
                   <div className="ht-hyp-stack">
                     <span className="ht-hyp-label">Test Type</span>
@@ -274,7 +311,11 @@ export default function HypothesisTestingPage() {
                         { l: 'p(z) (one-tailed)',     v: r.pz },
                         { l: `Critical Z (α = ${r.alpha})`, v: r.criticalZ },
                         { l: 'Decision',              v: r.decision },
-                        { l: 'Conclusion',            v: <span className="ht-green" style={{ fontWeight: 700 }}>Hypothesis Validated</span> },
+                        { l: 'Conclusion',            v: (
+                          <span className={r.status === 'Validated' ? 'ht-green' : 'ht-red'} style={{ fontWeight: 700 }}>
+                            Hypothesis {r.status}
+                          </span>
+                        )},
                       ].map(({ l, v }) => (
                         <tr key={l}>
                           <td className="ht-res-label">{l}</td>
@@ -295,7 +336,6 @@ export default function HypothesisTestingPage() {
                 <div className="ht-bc">
                   <div className="ht-bc-head">Underlying Working</div>
 
-                  {/* Formula */}
                   <div className="ht-formula-wrap">
                     <div className="ht-formula-line">
                       <span className="ht-f-var">Z</span>
@@ -304,13 +344,10 @@ export default function HypothesisTestingPage() {
                       <span className="ht-f-eq">=</span>
                       <Frac num={`${r.sampleMean} − ${r.popMean}`} den={`${r.stdDev} / √${r.sampleSize}`} />
                       <span className="ht-f-eq">=</span>
-                      <Frac num="0.62" den="0.091" />
-                      <span className="ht-f-eq">=</span>
                       <span className="ht-f-result">{r.z}</span>
                     </div>
                   </div>
 
-                  {/* Legend */}
                   <div className="ht-legend">
                     {[
                       ['X̄',  `Sample mean (${r.sampleMean})`],
@@ -326,12 +363,11 @@ export default function HypothesisTestingPage() {
                     ))}
                   </div>
 
-                  {/* p(z) interpretation */}
                   <div className="ht-pz-block">
                     <div className="ht-pz-head">p(z) Interpretation</div>
                     <div className="ht-pz-text">
-                      p(z) = {r.pz} is less than α = {r.alpha},<br />
-                      so the result is statistically significant.
+                      p(z) = {r.pz} {r.pz < r.alpha ? 'is less than' : 'is greater than'} α = {r.alpha},<br />
+                      so the result is {r.pz < r.alpha ? 'statistically significant.' : 'not statistically significant.'}
                     </div>
                   </div>
                 </div>
@@ -367,15 +403,21 @@ export default function HypothesisTestingPage() {
               </tr>
             </thead>
             <tbody>
-              {HISTORY.map(h => (
+              {history.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 11, padding: '16px 0' }}>
+                    No hypotheses tested yet. Run a test above to see results here.
+                  </td>
+                </tr>
+              ) : history.map(h => (
                 <tr key={h.id}>
                   <td className="ht-id">{h.id}</td>
-                  <td className="ht-hyp-text">{h.text}</td>
+                  <td className="ht-hyp-text">{h.hypothesis}</td>
                   <td><ResultBadge result={h.result} /></td>
-                  <td className="ht-filters">{h.filters}</td>
-                  <td>{h.pz}</td>
+                  <td className="ht-filters">{formatFilters(h.filters_applied)}</td>
+                  <td>{typeof h.p_value === 'number' ? h.p_value.toFixed(4) : h.p_value}</td>
                   <td>{h.alpha}</td>
-                  <td className="ht-date">{h.date}</td>
+                  <td className="ht-date">{h.date_tested}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button className="ht-act-btn" title="View">
@@ -384,7 +426,7 @@ export default function HypothesisTestingPage() {
                           <circle cx="7" cy="7" r="1.6" stroke="currentColor" strokeWidth="1.3"/>
                         </svg>
                       </button>
-                      <button className="ht-act-btn ht-act-del" title="Delete">
+                      <button className="ht-act-btn ht-act-del" title="Delete" onClick={() => handleDelete(h.id)}>
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                           <path d="M2.5 4h9M5.5 4V2.5h3V4M3.5 4l.5 7.5h6L10.5 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                           <path d="M6 6.5v3.5M8 6.5v3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>

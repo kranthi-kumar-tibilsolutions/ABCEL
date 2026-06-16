@@ -8,10 +8,13 @@ app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '10mb' }));
 
 // Routes
-app.use('/api/auth',   require('./routes/auth'));
-app.use('/api/upload', require('./routes/upload'));
-app.use('/api',        require('./routes/data'));
-app.use('/api',        require('./routes/ai'));
+app.use('/api/upload',      require('./routes/upload'));
+app.use('/api',             require('./routes/data'));
+app.use('/api',             require('./routes/ai'));
+app.use('/api/sentiment',   require('./routes/sentiment'));
+app.use('/api/statistical', require('./routes/statistical'));
+app.use('/api/persona',     require('./routes/persona'));
+app.use('/api/hypothesis',  require('./routes/hypothesis'));
 
 // Serve React build in production
 const distPath = path.join(__dirname, '../../frontend/dist');

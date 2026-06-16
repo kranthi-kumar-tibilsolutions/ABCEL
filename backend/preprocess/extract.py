@@ -608,6 +608,155 @@ def read_from_summary(summary_sheets, metadata_sheets):
     return businesses, units, cohorts
 
 
+# ─── Phase 2: responses.json + questions.json extraction ─────────────────────
+
+def extract_phase2_data(raw_df, decoded_df, xl, output_dir):
+    """
+    Generate responses.json (per-employee scores) and questions.json (OP question metadata).
+    Uses DATA_REALITY_UPDATE column names and favourability conversion (score = 6 - raw).
+    Theme key fix: .replace(' & ', '_and_').replace(' ', '_')
+    """
+    import re as _re
+
+    def find_col(cq_code, df=raw_df):
+        for col in df.columns:
+            if _re.search(rf'\b{cq_code}\b', str(col), _re.IGNORECASE):
+                return col
+        return None
+
+    def find_op_col(op_id):
+        for col in raw_df.columns:
+            cs = str(col).strip()
+            if cs.startswith(op_id + ' ') or cs == op_id:
+                return col
+        return None
+
+    # Category → OP mapping (DATA_REALITY_UPDATE §4)
+    CATEGORIES = {
+        'Engagement':            ['OP1', 'OP2', 'OP4', 'OP48'],
+        'Development & Career':  ['OP29', 'OP30', 'OP31', 'OP32', 'OP33', 'OP34'],
+        'Leadership':            ['OP5', 'OP6', 'OP7', 'OP8', 'OP9', 'OP10', 'OP11', 'OP12', 'OP13'],
+        'Performance Culture':   ['OP14', 'OP15', 'OP16', 'OP17', 'OP18', 'OP19', 'OP20', 'OP21',
+                                  'OP22', 'OP23', 'OP24', 'OP25', 'OP26', 'OP27', 'OP28'],
+        'Manager Effectiveness': ['OP36', 'OP37', 'OP38', 'OP39', 'OP40', 'OP41',
+                                  'OP42', 'OP43', 'OP44', 'OP45', 'OP46', 'OP47'],
+        'Onboarding':            ['OP49', 'OP50', 'OP52'],
+    }
+
+    EXCLUDE_OPS = ['OP88', 'OP89', 'OP90', 'OP91', 'OP51']
+    all_op_cols = [c for c in raw_df.columns if str(c).strip().startswith('OP')
+                   and not any(ex in str(c) for ex in EXCLUDE_OPS)]
+
+    CAT_COLS = {
+        cat: [find_op_col(op) for op in ops if find_op_col(op)]
+        for cat, ops in CATEGORIES.items()
+    }
+
+    # Demographic column references
+    col_biz    = find_col('CQ9')   or find_col('CQ9 Org')
+    col_age    = find_col('CQ23')
+    col_gen    = find_col('CQ24')
+    col_gender = find_col('CQ25')
+    col_job    = find_col('CQ27')
+    col_tenure = find_col('CQ29')
+    col_country= find_col('CQ43')
+    col_mgr    = find_col('CQ52')
+    col_abglp  = find_col('CQ35')
+
+    # Sample up to 2000 rows for performance
+    sample_n  = min(2000, len(decoded_df))
+    sample_df = decoded_df.sample(sample_n, random_state=42).reset_index(drop=True)
+    raw_sample = raw_df.loc[decoded_df.sample(sample_n, random_state=42).index].reset_index(drop=True)
+
+    responses = []
+    for idx in range(len(sample_df)):
+        dec_row = sample_df.iloc[idx]
+        raw_row = raw_sample.iloc[idx]
+
+        # Build nested OP scores (favourability = 6 - raw)
+        scores_dict = {}
+        for col in all_op_cols:
+            op_id = str(col).strip().split(' ')[0]
+            val = pd.to_numeric(raw_row.get(col), errors='coerce')
+            if pd.notna(val) and 1 <= val <= 5:
+                scores_dict[op_id] = round(float(6 - val), 2)
+
+        # Compute flat theme averages (theme key fix: ' & ' → '_and_')
+        theme_scores = {}
+        for cat, cols in CAT_COLS.items():
+            cat_vals = []
+            for col in cols:
+                val = pd.to_numeric(raw_row.get(col), errors='coerce')
+                if pd.notna(val) and 1 <= val <= 5:
+                    cat_vals.append(float(6 - val))
+            key = cat.lower().replace(' & ', '_and_').replace(' ', '_')
+            theme_scores[key] = round(float(np.mean(cat_vals)), 2) if cat_vals else None
+
+        all_theme_vals = [v for v in theme_scores.values() if v is not None]
+        overall_val    = round(float(np.mean(all_theme_vals)), 2) if all_theme_vals else None
+
+        def str_val(col, fallback='Unknown'):
+            if not col: return fallback
+            v = dec_row.get(col)
+            return str(v).strip() if pd.notna(v) and str(v).strip() not in ['nan', ''] else fallback
+
+        responses.append({
+            'employee_id':            f'E{idx+1:05d}',
+            'business':               str_val(col_biz),
+            'age_group':              str_val(col_age),
+            'generation':             str_val(col_gen),
+            'gender':                 str_val(col_gender),
+            'job_level':              str_val(col_job),
+            'tenure':                 str_val(col_tenure),
+            'country':                str_val(col_country),
+            'is_manager':             str_val(col_mgr,   'No'),
+            'abglp':                  str_val(col_abglp, 'No'),
+            'is_active':              True,
+            'year':                   '2026',
+            'month':                  "Jan '26",
+            **theme_scores,
+            'overall':                overall_val,
+            'scores':                 scores_dict,
+        })
+
+    # Build questions.json from OP column names
+    questions = []
+    for cat, ops in CATEGORIES.items():
+        for op_id in ops:
+            col = find_op_col(op_id)
+            if col:
+                full_text = str(col).strip()
+                text = ' '.join(full_text.split(' ')[1:]).strip() or full_text
+                questions.append({
+                    'id':          op_id,
+                    'text':        text,
+                    'short_label': op_id,
+                    'category':    cat,
+                    'type':        'likert_1_5',
+                })
+
+    with open(f"{output_dir}/responses.json", 'w', encoding='utf-8') as f:
+        json.dump(responses, f, indent=2)
+    print(f"  [Phase 2] responses.json — {len(responses)} employee records")
+
+    with open(f"{output_dir}/questions.json", 'w', encoding='utf-8') as f:
+        json.dump(questions, f, indent=2)
+    print(f"  [Phase 2] questions.json — {len(questions)} questions")
+
+    # Create empty Phase 2 files if they don't exist
+    for fname, default in [
+        ('hypotheses.json',     []),
+        ('saved_personas.json', []),
+        ('open_text_raw.json',  []),
+        ('sentiments.json',     {'responses': []}),
+    ]:
+        fpath = f"{output_dir}/{fname}"
+        if not os.path.exists(fpath):
+            with open(fpath, 'w') as f:
+                json.dump(default, f)
+            print(f"  [Phase 2] {fname} — created empty")
+
+
 # ─── Main Entry Point ─────────────────────────────────────────────────────────
 
 def parse_excel(excel_path, output_dir):
@@ -722,6 +871,13 @@ def parse_excel(excel_path, output_dir):
     with open(f"{output_dir}/clusters.json",   'w') as f: json.dump(clusters,   f, indent=2)
     with open(f"{output_dir}/cohorts.json",    'w') as f: json.dump(cohorts,    f, indent=2)
     with open(f"{output_dir}/meta.json",       'w') as f: json.dump(meta,       f, indent=2)
+
+    # ── Phase 2: generate responses.json and questions.json ──────────────────
+    if raw_dfs:
+        try:
+            extract_phase2_data(raw_df, decoded_df, xl, output_dir)
+        except Exception as e:
+            print(f"  [Phase 2] Warning: could not generate responses/questions: {e}")
 
     print(f"\nDONE")
     print(f"  {len(businesses)} businesses | {len(units)} BUs | {total_respondents} respondents")

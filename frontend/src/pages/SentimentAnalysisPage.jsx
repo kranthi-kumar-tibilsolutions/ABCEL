@@ -1,6 +1,4 @@
-import { useState, useContext , useEffect} from 'react';
-import { RotateCcw } from 'lucide-react';
-import Breadcrumb from '../components/shared/Breadcrumb';
+import { useState, useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Dropdown   from '../components/shared/Dropdown';
 
@@ -206,25 +204,26 @@ function TrendIcon({ t }) {
 
 /* ── Page ────────────────────────────────────────────────────── */
 export default function SentimentAnalysisPage() {
-  const { rightPanelCollapsed } = useContext(AppContext);
+  const { rightPanelCollapsed, setBreadcrumb } = useContext(AppContext);
   const compact = !rightPanelCollapsed; // right panel is open → use compact sizes
+
+  useEffect(() => {
+    setBreadcrumb([
+      { label: 'Explore' },
+      { label: 'Sentiment Analysis' },
+    ]);
+  }, []);
 
   const [period,           setPeriod]           = useState('Monthly');
   const [activeSentiment,  setActiveSentiment]  = useState(null);
-  const [filters, setFilters] = useState({
-    survey:   'Q4 2024 Employee Survey',
-    bu:       'All',
-    dept:     'All',
-    location: 'All',
-    tenure:   'All',
-    level:    'All',
-    inactive: 'No',
-  });
-  const setF = (key, val) => setFilters(f => ({ ...f, [key]: val }));
-  const resetFilters = () => setFilters({
-    survey: 'Q4 2024 Employee Survey', bu: 'All', dept: 'All',
-    location: 'All', tenure: 'All', level: 'All', inactive: 'No',
-  });
+
+  const filteredTopics = activeSentiment
+    ? TOPIC_BREAKDOWN.filter(row =>
+        activeSentiment === 'positive' ? row.score >  0.10 :
+        activeSentiment === 'negative' ? row.score < -0.10 :
+        Math.abs(row.score) <= 0.10
+      )
+    : TOPIC_BREAKDOWN;
 
   const filteredTopics = activeSentiment
     ? TOPIC_BREAKDOWN.filter(row =>

@@ -92,7 +92,7 @@ export default function ChatWithData() {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
           message:      msg,
-          history:      messages.slice(-6).map(m => ({ role: m.role, content: m.content })),
+          history:      messages.filter(m => m.content && m.content.trim()).slice(-10).map(m => ({ role: m.role, content: m.content })),
           dimension:    ctxDimension,
           focusArea:    focusArea || null,
           companyFilter: companyFilter || null,
@@ -145,6 +145,30 @@ export default function ChatWithData() {
         <span className="chat-title">CHAT WITH DATA</span>
         <span className="chat-beta">Beta</span>
         <span className="chat-sub">Your AI analyst</span>
+      </div>
+
+      <div className="chat-filters">
+        <select
+          className="chat-filter-select"
+          value={focusArea}
+          onChange={e => setFocusArea(e.target.value)}
+          title="Focus area"
+        >
+          <option value="">All focus areas</option>
+          {FOCUS_AREAS.map(f => <option key={f} value={f}>{f}</option>)}
+        </select>
+
+        {showCompanyFilter && (
+          <select
+            className="chat-filter-select"
+            value={companyFilter}
+            onChange={e => setCompanyFilter(e.target.value)}
+            title="Company"
+          >
+            <option value="">All companies</option>
+            {businesses.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
+          </select>
+        )}
       </div>
 
       <div className="chat-messages">
