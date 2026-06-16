@@ -2,10 +2,11 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from lib.stats import pearson_r, pearson_p_value, correlation_strength, correlation_category
 from lib.llm   import call_llm_json
+from routes.auth import data_company, get_current_user
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -29,6 +30,13 @@ def _read_dict(f: str) -> dict:
         except Exception:
             pass
     return {}
+
+
+def _resolve_business(user: dict, requested: str | None) -> str | None:
+    """Return the effective business filter, enforcing company_hr scope."""
+    if user.get("role") == "company_hr":
+        return data_company(user)   # locked — ignore whatever frontend sent
+    return requested if requested and requested != "All" else None
 
 
 def _bu_corr_vectors(q_bu: dict, q_id_a: str, q_id_b: str, business: str | None = None):
@@ -89,34 +97,47 @@ async def get_correlations(
     include_inactive: str           = Query("No"),
     limit:            Optional[int] = Query(None),
     offset:           int           = Query(0),
+    user:             dict          = Depends(get_current_user),
 ):
     try:
-        questions  = _read("questions.json")
-        q_bu       = _read_dict("question_bu_scores.json")
+        biz       = _resolve_business(user, business)
+        questions = _read("questions.json")
+        biz_list  = _read("businesses.json")
 
-        # n_total = real respondent count from businesses.json
-        businesses = _read("businesses.json")
-        if business and business != "All":
-            biz_entry = next((b for b in businesses if b["name"] == business), None)
-            n_total   = biz_entry["respondent_count"] if biz_entry else 0
+        # n_total = real respondent count
+        if biz:
+            entry   = next((b for b in biz_list if b["name"] == biz), None)
+            n_total = entry["respondent_count"] if entry else 0
         else:
-            n_total = sum(b.get("respondent_count", 0) for b in businesses)
+            n_total = sum(b.get("respondent_count", 0) for b in biz_list)
 
-        # n_bu = number of business units (data points) used for Pearson
-        base_bu = q_bu.get(question_id, {})
-        if business and business != "All":
-            base_bu = {k: v for k, v in base_bu.items() if k == business}
-        n_bu = len(base_bu)
+        # Strategy: group view → BU-level means (22 data points, meaningful r)
+        #           company view → individual rows filtered to that company
+        use_bu_level = not biz
+        if use_bu_level:
+            q_bu = _read_dict("question_bu_scores.json")
+            n_sample = len(q_bu.get(question_id, {}))
+        else:
+            filtered    = _filter(_read("responses.json"), biz, year, country, department, include_inactive)
+            base_scores = _scores(filtered, question_id)
+            n_sample    = len(base_scores)
 
         correlations = []
         for q in questions:
             if q["id"] == question_id:
                 continue
-            xs, ys = _bu_corr_vectors(q_bu, question_id, q["id"], business)
-            if len(xs) < 2:
+            if use_bu_level:
+                xs, ys = _bu_corr_vectors(q_bu, question_id, q["id"])
+                n_pair = len(xs)
+            else:
+                other = _scores(filtered, q["id"])
+                n_pair = min(n_sample, len(other))
+                xs, ys = base_scores[:n_pair], other[:n_pair]
+
+            if n_pair < 2:
                 continue
             r_val = pearson_r(xs, ys)
-            p_val = pearson_p_value(r_val, len(xs))
+            p_val = pearson_p_value(r_val, n_pair)
             correlations.append({
                 "question_id":     q["id"],
                 "question_text":   q.get("text", ""),
@@ -141,8 +162,7 @@ async def get_correlations(
         paged   = correlations[offset: offset + limit] if limit is not None else correlations
         showing = (
             f"Showing {offset + 1}–{min(offset + limit, total)} of {total} questions"
-            if limit is not None
-            else f"Showing all {total} questions"
+            if limit is not None else f"Showing all {total} questions"
         )
         q_text = next((q.get("text", "") for q in questions if q["id"] == question_id), "")
 
@@ -150,9 +170,8 @@ async def get_correlations(
             "question_id":   question_id,
             "question_text": q_text,
             "n":             n_total,
-            "n_sample":      n_bu,
+            "n_sample":      n_sample,
             "n_total":       n_total,
-            "n_bu":          n_bu,
             "tab_counts":    tab_counts,
             "total":         total,
             "showing":       showing,
@@ -173,25 +192,34 @@ async def get_correlogram(
     country:          Optional[str] = Query(None),
     department:       Optional[str] = Query(None),
     include_inactive: str           = Query("No"),
+    user:             dict          = Depends(get_current_user),
 ):
     try:
+        biz       = _resolve_business(user, business)
         questions = _read("questions.json")
-        q_bu      = _read_dict("question_bu_scores.json")
+        use_bu    = not biz
 
-        def _bu_r(id_a: str, id_b: str) -> float:
-            if id_a == id_b:
-                return 1.0
-            xs, ys = _bu_corr_vectors(q_bu, id_a, id_b, business)
-            return pearson_r(xs, ys) if len(xs) >= 2 else 0.0
+        if use_bu:
+            q_bu = _read_dict("question_bu_scores.json")
+            def _pair_r(a: str, b: str) -> float:
+                if a == b: return 1.0
+                xs, ys = _bu_corr_vectors(q_bu, a, b)
+                return pearson_r(xs, ys) if len(xs) >= 2 else 0.0
+        else:
+            filtered = _filter(_read("responses.json"), biz, year, country, department, include_inactive)
+            def _pair_r(a: str, b: str) -> float:
+                if a == b: return 1.0
+                sa = _scores(filtered, a); sb = _scores(filtered, b)
+                n  = min(len(sa), len(sb))
+                return pearson_r(sa[:n], sb[:n]) if n >= 2 else 0.0
 
-        ranked = sorted(
-            [{"id": q["id"], "r": abs(_bu_r(question_id, q["id"]))}
+        ranked  = sorted(
+            [{"id": q["id"], "r": abs(_pair_r(question_id, q["id"]))}
              for q in questions if q["id"] != question_id],
             key=lambda x: -x["r"],
         )[:top]
-
         top_ids = [question_id] + [r["id"] for r in ranked]
-        matrix  = [[_bu_r(id_a, id_b) for id_b in top_ids] for id_a in top_ids]
+        matrix  = [[_pair_r(a, b) for b in top_ids] for a in top_ids]
 
         def _short_label(q_id: str) -> str:
             q = next((q for q in questions if q["id"] == q_id), None)
@@ -203,8 +231,8 @@ async def get_correlogram(
             "matrix":          matrix,
             "color_scale": {
                 "min": -1.0, "max": 1.0,
-                "labels":  {"negative": "red", "neutral": "white", "positive": "blue"},
-                "legend":  "Darker color indicates stronger correlation",
+                "labels": {"negative": "red", "neutral": "white", "positive": "blue"},
+                "legend": "Darker color indicates stronger correlation",
             },
         }
     except Exception as err:
@@ -222,16 +250,29 @@ async def get_network(
     country:          Optional[str] = Query(None),
     department:       Optional[str] = Query(None),
     include_inactive: str           = Query("No"),
+    user:             dict          = Depends(get_current_user),
 ):
     try:
+        biz       = _resolve_business(user, business)
         questions = _read("questions.json")
-        q_bu      = _read_dict("question_bu_scores.json")
+        use_bu    = not biz
+
+        if use_bu:
+            q_bu = _read_dict("question_bu_scores.json")
+        else:
+            filtered = _filter(_read("responses.json"), biz, year, country, department, include_inactive)
 
         all_edges = []
         for q in questions:
             if q["id"] == question_id:
                 continue
-            xs, ys = _bu_corr_vectors(q_bu, question_id, q["id"], business)
+            if use_bu:
+                xs, ys = _bu_corr_vectors(q_bu, question_id, q["id"])
+            else:
+                sa = _scores(filtered, question_id)
+                sb = _scores(filtered, q["id"])
+                n  = min(len(sa), len(sb))
+                xs, ys = sa[:n], sb[:n]
             if len(xs) < 2:
                 continue
             r_val = pearson_r(xs, ys)
@@ -248,10 +289,8 @@ async def get_network(
         max_r = abs(edges[0]["r"]) if edges else 1
 
         node_ids = set([question_id] + [e["target"] for e in edges])
-
         def _q(q_id: str):
             return next((q for q in questions if q["id"] == q_id), None)
-
         nodes = [
             {
                 "id":        q_id,
@@ -261,7 +300,6 @@ async def get_network(
             }
             for q_id in node_ids
         ]
-
         return {"nodes": nodes, "edges": edges, "max_r": round(max_r, 4)}
     except Exception as err:
         raise HTTPException(status_code=500, detail=str(err))
@@ -276,10 +314,12 @@ async def get_insights(
     year:        Optional[str] = Query(None),
     country:     Optional[str] = Query(None),
     department:  Optional[str] = Query(None),
+    user:        dict          = Depends(get_current_user),
 ):
     try:
+        biz         = _resolve_business(user, business)
         questions   = _read("questions.json")
-        filtered    = _filter(_read("responses.json"), business, year, country, department)
+        filtered    = _filter(_read("responses.json"), biz, year, country, department)
         q_text      = next((q.get("text", "") for q in questions if q["id"] == question_id), question_id)
         base_scores = _scores(filtered, question_id)
         n_base      = len(base_scores)
