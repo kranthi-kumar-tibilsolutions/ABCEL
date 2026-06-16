@@ -121,13 +121,14 @@ def parse_cq_lookup_sheet(df_raw):
 
 
 def build_cq_decode_map(raw_df, cq_lookup_maps):
-    """Match Data columns to CQ lookups by extracting 'CQN' from column names."""
+    """Match Data columns to CQ lookups by extracting 'CQN' from column names.
+    Normalises spaces so 'CQ9', 'CQ 9', 'C Q9' all resolve to the same lookup key."""
     decode_map = {}
     for col in raw_df.columns:
-        m = re.search(r'\bCQ(\d+)\b', str(col), re.IGNORECASE)
+        col_norm = re.sub(r'\s+', '', str(col)).upper()
+        m = re.search(r'CQ(\d+)', col_norm)
         if m:
             key = f'CQ{m.group(1)}'
-            # Only include non-empty mappings; applying {} would null-out the column
             if cq_lookup_maps.get(key):
                 decode_map[col] = cq_lookup_maps[key]
     return decode_map
@@ -619,15 +620,20 @@ def extract_phase2_data(raw_df, decoded_df, xl, output_dir):
     import re as _re
 
     def find_col(cq_code, df=raw_df):
+        # Normalise spaces so "CQ9", "CQ 9", "C Q9", "C 9" all match the same column.
+        cq_norm = _re.sub(r'\s+', '', cq_code).upper()
         for col in df.columns:
-            if _re.search(rf'\b{cq_code}\b', str(col), _re.IGNORECASE):
+            col_norm = _re.sub(r'\s+', '', str(col)).upper()
+            if _re.search(rf'(?<![A-Z0-9]){cq_norm}(?![A-Z0-9])', col_norm):
                 return col
         return None
 
     def find_op_col(op_id):
+        # Normalise spaces so "OP1", "OP 1", "O P1" all match.
+        op_norm = _re.sub(r'\s+', '', op_id).upper()
         for col in raw_df.columns:
-            cs = str(col).strip()
-            if cs.startswith(op_id + ' ') or cs == op_id:
+            col_norm = _re.sub(r'\s+', '', str(col)).upper()
+            if col_norm == op_norm or col_norm.startswith(op_norm):
                 return col
         return None
 
@@ -805,19 +811,22 @@ def parse_excel(excel_path, output_dir):
     raw_dfs, lookup_sheets, summary_sheets, metadata_sheets = {}, {}, {}, {}
 
     # ── Pass 1: Parse all CQ lookup sheets by name pattern (WTW Vibes format) ──
+    # Normalise sheet names so "CQ9", "CQ 9", "C Q9" are all treated as CQ lookup sheets.
     cq_lookup_maps = {}
     for sheet_name in xl.sheet_names:
-        if re.match(r'^CQ\d+$', str(sheet_name), re.IGNORECASE):
+        normalised = re.sub(r'\s+', '', str(sheet_name)).upper()
+        if re.match(r'^CQ\d+$', normalised):
             df_raw  = xl.parse(sheet_name, header=None)
             mapping = parse_cq_lookup_sheet(df_raw)
             if mapping:
-                cq_lookup_maps[sheet_name] = mapping
+                cq_lookup_maps[normalised] = mapping   # store under normalised key
             sheet_types[sheet_name] = 'cq_lookup'
             print(f"  Sheet '{sheet_name}': cq_lookup ({len(mapping)} codes)")
 
     # ── Pass 2: Classify remaining sheets ─────────────────────────────────────
     for sheet_name in xl.sheet_names:
-        if re.match(r'^CQ\d+$', str(sheet_name), re.IGNORECASE):
+        normalised = re.sub(r'\s+', '', str(sheet_name)).upper()
+        if re.match(r'^CQ\d+$', normalised):
             continue
         df = xl.parse(sheet_name)
         if df.empty:
