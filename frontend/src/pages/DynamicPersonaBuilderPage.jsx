@@ -565,8 +565,8 @@ export default function DynamicPersonaBuilderPage() {
             </div>
           </div>
 
-          {/* Compare Against */}
-          <div style={{ marginBottom:12 }}>
+          {/* Compare Against — only shown after persona is applied */}
+          {queryResult && <div style={{ marginBottom:12 }}>
             <div className="sa-filter-label" style={{ marginBottom:6 }}>Compare Against</div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
               {COMPARISON_COHORT_IDS.map(cid => {
@@ -608,7 +608,7 @@ export default function DynamicPersonaBuilderPage() {
                 );
               })}
             </div>
-          </div>
+          </div>}
 
           {/* Active filter chips */}
           {(() => {
@@ -681,13 +681,6 @@ export default function DynamicPersonaBuilderPage() {
               cursor:'pointer', color:'var(--text-muted)', fontFamily:'inherit', padding:'5px 6px',
             }}>
               Clear All
-            </button>
-            <button style={{
-              fontSize:11, background:'none', border:'1px solid var(--border)',
-              borderRadius:6, cursor:'pointer', color:'var(--text-secondary)',
-              fontFamily:'inherit', padding:'5px 10px',
-            }}>
-              Cancel
             </button>
             <button onClick={handleApply} disabled={applyLoading} style={{
               fontSize:11, fontWeight:700, background:'var(--blue-primary)',
