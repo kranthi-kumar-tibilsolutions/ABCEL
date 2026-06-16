@@ -216,7 +216,6 @@ export default function SentimentAnalysisPage() {
 
   const [period,           setPeriod]           = useState('Monthly');
   const [activeSentiment,  setActiveSentiment]  = useState(null);
-  const [selectedYear,     setSelectedYear]     = useState('2026');
 
   const filteredTopics = activeSentiment
     ? TOPIC_BREAKDOWN.filter(row =>
@@ -302,94 +301,38 @@ export default function SentimentAnalysisPage() {
           <p style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 10 }}>Total Responses: 4,892</p>
         </div>
 
-        {/* Sentiment Over Time — wave timeline */}
+        {/* Sentiment Over Time — placeholder until multi-wave data is available */}
         <div className="sa-card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div className="sa-card-title" style={{ marginBottom: 12 }}>
+          <div className="sa-card-title" style={{ marginBottom: 10, color: 'var(--text-muted)' }}>
             Sentiment Over Time <InfoIcon />
           </div>
-
-          <div style={{ flex:1, display:'flex', flexDirection:'column', gap:10 }}>
-
-            {/* Year timeline */}
-            <div style={{ display:'flex', alignItems:'center', gap:0, marginBottom:4, padding:'0 4px' }}>
-              {['2024','2025','2026'].map((yr, i, arr) => {
-                const active = selectedYear === yr;
-                const hasData = yr === '2026';
-                return (
-                  <div key={yr} style={{ display:'flex', alignItems:'center', flex: i < arr.length-1 ? 1 : 0 }}>
-                    <button onClick={() => setSelectedYear(yr)} style={{
-                      display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-                      background:'none', border:'none', cursor:'pointer', padding:'2px 0', fontFamily:'inherit',
-                    }}>
-                      <div style={{
-                        width: active ? 12 : 7, height: active ? 12 : 7,
-                        borderRadius:'50%',
-                        background: active ? 'var(--blue-primary)' : hasData ? '#94A3B8' : '#CBD5E1',
-                        boxShadow: active ? '0 0 0 3px #BFDBFE' : 'none',
-                        transition:'all 0.18s', flexShrink:0,
-                      }}/>
-                      <span style={{ fontSize:8.5, fontWeight: active ? 700 : 400, color: active ? 'var(--blue-primary)' : 'var(--text-muted)', whiteSpace:'nowrap', transition:'all 0.18s' }}>{yr}</span>
-                    </button>
-                    {i < arr.length-1 && (
-                      <div style={{ flex:1, height:1.5, background: selectedYear === yr ? 'var(--blue-primary)' : '#E2E8F0', margin:'0 4px', marginBottom:14, transition:'background 0.18s' }}/>
-                    )}
-                  </div>
-                );
-              })}
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: 10, padding: '18px 12px',
+            background: 'var(--bg-page)', borderRadius: 8,
+            border: '1.5px dashed var(--border)',
+          }}>
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" opacity="0.4">
+              <rect x="2" y="2" width="32" height="32" rx="6" stroke="#94A3B8" strokeWidth="1.8"/>
+              <path d="M8 24l5-6 5 4 5-8 5 4" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="28" cy="10" r="3" fill="#CBD5E1"/>
+              <path d="M26.5 10h3M28 8.5v3" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>
+                Trend data not yet available
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.55, maxWidth: 180 }}>
+                Sentiment trends will appear here once multiple survey waves are loaded.
+              </div>
             </div>
-
-            {/* Content */}
-            <div style={{ flex:1 }}>
-              {selectedYear === '2026' ? (
-                <div style={{
-                  borderRadius:10, border:'1.5px solid #BFDBFE',
-                  background:'#EFF6FF', padding:'12px 12px 10px',
-                  display:'flex', flexDirection:'column', gap:8,
-                }}>
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                    <div>
-                      <div style={{ fontSize:10, fontWeight:800, color:'#1D4ED8' }}>WAVE 1</div>
-                      <div style={{ fontSize:9, color:'#3B82F6', fontWeight:500 }}>ABG Vibes 2026</div>
-                    </div>
-                    <span style={{ fontSize:9, fontWeight:700, background:'#16A34A', color:'#fff', borderRadius:20, padding:'2px 7px' }}>✓ Complete</span>
-                  </div>
-                  <div style={{ borderRadius:6, overflow:'hidden', height:10, display:'flex' }}>
-                    <div style={{ width:'41%', background:'#16A34A' }}/>
-                    <div style={{ width:'33%', background:'#94A3B8' }}/>
-                    <div style={{ width:'26%', background:'#DC2626' }}/>
-                  </div>
-                  <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                    {[
-                      { label:'Positive', pct:'41%', score:'+0.38', color:'#16A34A', bg:'#F0FDF4', border:'#BBF7D0' },
-                      { label:'Neutral',  pct:'33%', score:'+0.05', color:'#64748B', bg:'#F8FAFC', border:'#E2E8F0' },
-                      { label:'Negative', pct:'26%', score:'−0.22', color:'#DC2626', bg:'#FFF5F5', border:'#FECACA' },
-                    ].map(s => (
-                      <div key={s.label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                          <div style={{ width:6, height:6, borderRadius:'50%', background:s.color, flexShrink:0 }}/>
-                          <span style={{ fontSize:9, color:'var(--text-secondary)' }}>{s.label}</span>
-                          <span style={{ fontSize:9, color:'var(--text-muted)' }}>{s.pct}</span>
-                        </div>
-                        <span style={{ fontSize:9, fontWeight:700, color:s.color, background:s.bg, border:`1px solid ${s.border}`, borderRadius:8, padding:'1px 5px' }}>{s.score}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div style={{
-                  borderRadius:10, border:'1.5px dashed var(--border)',
-                  background:'var(--bg-page)', padding:'20px 12px',
-                  display:'flex', flexDirection:'column', alignItems:'center',
-                  justifyContent:'center', gap:6, textAlign:'center',
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" opacity="0.4">
-                    <circle cx="12" cy="12" r="10" stroke="#94A3B8" strokeWidth="1.5"/>
-                    <path d="M12 7v5l3 3" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  <span style={{ fontSize:10, fontWeight:600, color:'var(--text-muted)' }}>No data for {selectedYear}</span>
-                  <span style={{ fontSize:9, color:'var(--text-muted)' }}>Survey data starts from Wave 1 (2026)</span>
-                </div>
-              )}
+            <div style={{
+              fontSize: 10, fontWeight: 600, color: '#92400E',
+              background: '#FFFBEB', border: '1px solid #FDE68A',
+              borderRadius: 20, padding: '3px 10px',
+            }}>
+              Available from Wave 2 onwards
             </div>
           </div>
         </div>

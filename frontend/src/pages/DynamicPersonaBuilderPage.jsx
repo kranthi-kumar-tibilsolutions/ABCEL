@@ -565,8 +565,8 @@ export default function DynamicPersonaBuilderPage() {
             </div>
           </div>
 
-          {/* Compare Against — only shown after persona is applied */}
-          {queryResult && <div style={{ marginBottom:12 }}>
+          {/* Compare Against */}
+          <div style={{ marginBottom:12 }}>
             <div className="sa-filter-label" style={{ marginBottom:6 }}>Compare Against</div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
               {COMPARISON_COHORT_IDS.map(cid => {
@@ -608,7 +608,7 @@ export default function DynamicPersonaBuilderPage() {
                 );
               })}
             </div>
-          </div>}
+          </div>
 
           {/* Active filter chips */}
           {(() => {

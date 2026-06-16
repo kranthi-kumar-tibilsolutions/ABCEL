@@ -22,6 +22,35 @@ def _read(f: str) -> list:
     return []
 
 
+def _read_dict(f: str) -> dict:
+    for base in (_DATA, _SAMPLE):
+        try:
+            return json.loads((base / f).read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def _resolve_business(user: dict, requested: str | None) -> str | None:
+    """Return the effective business filter, enforcing company-role scope."""
+    if user.get("role") == "company":
+        return data_company(user)   # locked — ignore whatever frontend sent
+    return requested if requested and requested != "All" else None
+
+
+def _bu_corr_vectors(q_bu: dict, q_id_a: str, q_id_b: str, business: str | None = None):
+    """Return aligned (xs, ys) lists using business-unit level question means."""
+    a_scores = q_bu.get(q_id_a, {})
+    b_scores = q_bu.get(q_id_b, {})
+    # If a business filter is set, keep only BUs belonging to that business;
+    # the BU keys in question_bu_scores are business names (CQ9 = Org Level 1).
+    if business and business != "All":
+        a_scores = {k: v for k, v in a_scores.items() if k == business}
+        b_scores = {k: v for k, v in b_scores.items() if k == business}
+    common = sorted(set(a_scores) & set(b_scores))
+    return [a_scores[k] for k in common], [b_scores[k] for k in common]
+
+
 def _filter(responses: list, business, year, country, department,
             include_inactive: str = "No") -> list:
     out = responses
