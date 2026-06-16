@@ -88,8 +88,8 @@ function Correlogram({ labels = [], matrix = [] }) {
   const lfs = 8;
 
   return (
-    <div ref={containerRef}>
-      <svg width={W} height={H} style={{ display:'block' }}>
+    <div ref={containerRef} style={{ width:'100%', overflowX:'auto' }}>
+      <svg width={Math.max(W, cw || 0)} height={H} style={{ display:'block', minWidth:'100%' }}>
         <defs>
           <linearGradient id="cgGrad" x1="0" x2="1">
             <stop offset="0%"   stopColor="rgb(37,99,235)"/>
