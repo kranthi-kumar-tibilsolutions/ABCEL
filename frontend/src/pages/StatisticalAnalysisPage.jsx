@@ -33,8 +33,8 @@ function strengthOf(r) {
 }
 
 function edgeColor(r) {
-  if (r > 0.15) return '#22C55E';
-  if (r < -0.15) return '#EF4444';
+  if (r >= 0.20) return '#22C55E';
+  if (r <= -0.20) return '#EF4444';
   return '#CBD5E1';
 }
 
@@ -88,8 +88,8 @@ function Correlogram({ labels = [], matrix = [] }) {
   const lfs = 8;
 
   return (
-    <div ref={containerRef}>
-      <svg width={W} height={H} style={{ display:'block' }}>
+    <div ref={containerRef} style={{ width:'100%', overflowX:'auto' }}>
+      <svg width={Math.max(W, cw || 0)} height={H} style={{ display:'block', minWidth:'100%' }}>
         <defs>
           <linearGradient id="cgGrad" x1="0" x2="1">
             <stop offset="0%"   stopColor="rgb(37,99,235)"/>
@@ -177,7 +177,7 @@ function NetworkGraph({ nodes = [], edges = [], maxR = 1 }) {
               x1={sp.x} y1={sp.y} x2={tp.x} y2={tp.y}
               stroke={edgeColor(e.r)}
               strokeWidth={edgeStroke(e.r)}
-              strokeOpacity={Math.abs(e.r) < 0.15 ? 0.35 : 0.70}
+              strokeOpacity={Math.abs(e.r) < 0.20 ? 0.35 : 0.70}
             />
           );
         })}
@@ -189,8 +189,8 @@ function NetworkGraph({ nodes = [], edges = [], maxR = 1 }) {
           const edgeR = edges.find(e => e.target === n.id)?.r ?? 0;
           const a   = Math.abs(edgeR);
           const nr  = a >= 0.45 ? 14 : a >= 0.25 ? 12 : 10;
-          const fill   = edgeR > 0.15 ? '#DCFCE7' : edgeR < -0.15 ? '#FEE2E2' : '#F1F5F9';
-          const stroke = edgeR > 0.15 ? '#22C55E' : edgeR < -0.15 ? '#EF4444' : '#CBD5E1';
+          const fill   = edgeR >= 0.20 ? '#DCFCE7' : edgeR <= -0.20 ? '#FEE2E2' : '#F1F5F9';
+          const stroke = edgeR >= 0.20 ? '#22C55E' : edgeR <= -0.20 ? '#EF4444' : '#CBD5E1';
           return (
             <g key={n.id}>
               <circle cx={pos.x} cy={pos.y} r={nr} fill={fill} stroke={stroke} strokeWidth={1.5}/>
@@ -227,44 +227,53 @@ const TILE_CONFIG = [
 
 /* ── page ─────────────────────────────────────────────────────── */
 export default function StatisticalAnalysisPage() {
-  const { setBreadcrumb, saFilters } = useContext(AppContext);
+  const { setBreadcrumb, saFilters, saCache, setSaCache, meta, user } = useContext(AppContext);
+
+  // Ref keeps the cache readable inside fetchQuestionData without adding it to deps
+  const saCacheRef = useRef(saCache);
+  saCacheRef.current = saCache;
 
   useEffect(() => {
     setBreadcrumb([{ label: 'Explore' }, { label: 'Statistical Analysis' }]);
   }, []);
 
+  // Initialise from cache so data is visible immediately when navigating back
   const [questions,       setQuestions]       = useState([]);
-  const [selectedQId,     setSelectedQId]     = useState(null);
-  const [correlations,    setCorrelations]    = useState([]);
-  const [tabCounts,       setTabCounts]       = useState({});
-  const [baseN,           setBaseN]           = useState(0);
-  const [correlogramData, setCorrelogramData] = useState(null);
-  const [networkData,     setNetworkData]     = useState(null);
-  const [insight,         setInsight]         = useState('');
+  const [selectedQId,     setSelectedQId]     = useState(() => saCache?.selectedQId ?? null);
+  const [correlations,    setCorrelations]    = useState(() => saCache?.correlations ?? []);
+  const [tabCounts,       setTabCounts]       = useState(() => saCache?.tabCounts ?? {});
+  const [baseN,           setBaseN]           = useState(() => saCache?.baseN ?? 0);
+  const [correlogramData, setCorrelogramData] = useState(() => saCache?.correlogramData ?? null);
+  const [networkData,     setNetworkData]     = useState(() => saCache?.networkData ?? null);
+  const [insight,         setInsight]         = useState(() => saCache?.insight ?? '');
   const [activeTab,       setActiveTab]       = useState('all');
   const [expanded,        setExpanded]        = useState(false);
   const [topCorr,         setTopCorr]         = useState('Top 20');
   const [topNet,          setTopNet]          = useState('Top 25');
   const [loading,         setLoading]         = useState(false);
 
-  // Fetch questions on mount
+  // Fetch questions on mount; don't override selectedQId if already set from cache
   useEffect(() => {
     apiFetch('/api/statistical/questions')
       .then(r => r.json())
       .then(d => {
         const qs = d.questions || [];
         setQuestions(qs);
-        if (qs.length) setSelectedQId(qs[0].id);
+        setSelectedQId(prev => prev || (qs.length ? qs[0].id : null));
       })
       .catch(() => {});
   }, []);
 
-  // Fetch all data when selected question changes
+  // Fetch all data when selected question / filters change
   const topCorrN = parseInt(topCorr.replace('Top ', ''), 10) || 20;
   const topNetN  = parseInt(topNet.replace('Top ', ''), 10) || 25;
 
   const fetchQuestionData = useCallback(async (qId, corrN, netN, filters) => {
     if (!qId) return;
+    const cacheKey = `${qId}|${corrN}|${netN}|${JSON.stringify(filters)}`;
+    // Cache hit — data already in state from useState initialisers; skip all API calls
+    if (saCacheRef.current?.key === cacheKey) return;
+
     setLoading(true);
     try {
       // Build query string from active filters
@@ -283,15 +292,32 @@ export default function StatisticalAnalysisPage() {
         corrRes.json(), cgramRes.json(), netRes.json(), insightRes.json(),
       ]);
 
-      setTabCounts(corrData.tab_counts || {});
-      setBaseN(corrData.n || 0);
-      setCorrelations(corrData.correlations || []);
+      const tabCts = corrData.tab_counts || {};
+      const bn     = corrData.n || 0;
+      const corrs  = corrData.correlations || [];
+      const ins    = insData.insight || '';
+
+      setTabCounts(tabCts);
+      setBaseN(bn);
+      setCorrelations(corrs);
       setCorrelogramData(cgramData);
       setNetworkData(netData);
-      setInsight(insData.insight || '');
+      setInsight(ins);
+
+      // Persist to context so navigating back restores data without re-fetching
+      setSaCache({
+        key:             cacheKey,
+        selectedQId:     qId,
+        tabCounts:       tabCts,
+        baseN:           bn,
+        correlations:    corrs,
+        correlogramData: cgramData,
+        networkData:     netData,
+        insight:         ins,
+      });
     } catch {}
     setLoading(false);
-  }, []);
+  }, [setSaCache]);
 
   useEffect(() => {
     fetchQuestionData(selectedQId, topCorrN, topNetN, saFilters);
@@ -347,14 +373,14 @@ export default function StatisticalAnalysisPage() {
           >
             {questions.map(q => (
               <option key={q.id} value={q.id}>
-                [{q.id}] {q.text || q.id}
+                {q.id}. {q.text || q.id}
               </option>
             ))}
           </select>
 
           <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
             {[
-              { label:'Question Type', value:'Likert Scale (1–5)' },
+              { label:'Question Type', value:'Likert Scale (5 = Agree)' },
               { label:'Responses',     value: loading ? '…' : baseN > 0 ? baseN.toLocaleString() : '—' },
             ].map(({ label, value }) => (
               <div key={label} style={{
@@ -370,13 +396,38 @@ export default function StatisticalAnalysisPage() {
 
           <div style={{ flex:1 }} />
 
-          <div style={{
-            marginTop:12, padding:'7px 10px', borderRadius:7,
-            background:'#EFF6FF', border:'1px solid #BFDBFE',
-            fontSize:10, color:'#3B82F6', lineHeight:1.5,
-          }}>
-            Select a different question above to explore its correlation profile.
-          </div>
+          {/* Analysis scope indicator */}
+          {user?.role === 'company' ? (
+            <div style={{
+              marginTop:12, padding:'7px 10px', borderRadius:7,
+              background:'#FFF7ED', border:'1px solid #FED7AA',
+              fontSize:10, color:'#C2410C', lineHeight:1.5,
+              display:'flex', alignItems:'flex-start', gap:6,
+            }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink:0, marginTop:1 }}>
+                <circle cx="6" cy="6" r="5.5" stroke="#C2410C" strokeWidth="1.2"/>
+                <path d="M6 3.5v3M6 8v.5" stroke="#C2410C" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+              <span>
+                <strong>Scoped to {user?.company || 'your company'}</strong> — correlations use respondents from this company only.
+              </span>
+            </div>
+          ) : (
+            <div style={{
+              marginTop:12, padding:'7px 10px', borderRadius:7,
+              background:'#EFF6FF', border:'1px solid #BFDBFE',
+              fontSize:10, color:'#1D4ED8', lineHeight:1.5,
+              display:'flex', alignItems:'flex-start', gap:6,
+            }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink:0, marginTop:1 }}>
+                <circle cx="6" cy="6" r="5.5" stroke="#1D4ED8" strokeWidth="1.2"/>
+                <path d="M6 3.5v3M6 8v.5" stroke="#1D4ED8" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+              <span>
+                <strong>Full ABG view</strong> — correlations computed across all 22 business unit averages.
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Correlation Summary + Overall Insights */}

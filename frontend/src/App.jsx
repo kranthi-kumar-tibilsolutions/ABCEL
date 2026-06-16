@@ -97,6 +97,7 @@ export default function App() {
   const [summaryData,    setSummaryData]    = useState(null);
   const [insightsData,   setInsightsData]   = useState(null);
   const [focusAreasData, setFocusAreasData] = useState(null);
+  const [saCache,        setSaCache]        = useState(null);
   const [dataLoaded,     setDataLoaded]     = useState(false);
 
   const navigate = useCallback((nextPage, params = {}) => {
@@ -189,6 +190,7 @@ export default function App() {
       setSummaryData(null);
       setInsightsData(null);
       setFocusAreasData(null);
+      setSaCache(null);
       setPage('upload');
       setLoggingOut(false);
     }, 3000);
@@ -235,6 +237,7 @@ export default function App() {
     user: auth?.user ?? null,
     logout: handleLogout,
     rightPanelCollapsed, setRightPanelCollapsed,
+    saCache, setSaCache,
   };
 
   const PageComponent = PAGE_MAP[page] ?? Overview;

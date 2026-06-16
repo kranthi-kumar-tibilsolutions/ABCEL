@@ -842,3 +842,34 @@ input, select { font-family: inherit; }
 .sta-corr-tbl th { font-size: 11px; font-weight: 700; color: var(--text-muted); text-align: left; padding: 4px 5px; border-bottom: 1px solid var(--border); letter-spacing: 0.02em; white-space: nowrap; }
 .sta-corr-tbl td { padding: 5px 5px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .sta-corr-tbl tr:last-child td { border-bottom: none; }
+
+
+/* ── Spinner ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.dpb-spinner {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top-color: var(--blue-primary);
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+.dpb-spinner-sm {
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--blue-primary);
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* ── Skeleton shimmer ── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.skeleton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--border) 25%, #e8edf2 50%, var(--border) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}

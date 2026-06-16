@@ -301,18 +301,40 @@ export default function SentimentAnalysisPage() {
           <p style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 10 }}>Total Responses: 4,892</p>
         </div>
 
-        {/* Sentiment Over Time */}
-        <div className="sa-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <div className="sa-card-title" style={{ marginBottom: 0 }}>Sentiment Over Time <InfoIcon /></div>
-            <Dropdown
-              variant="filter"
-              value={period}
-              options={['Monthly', 'Weekly', 'Quarterly']}
-              onChange={setPeriod}
-            />
+        {/* Sentiment Over Time — placeholder until multi-wave data is available */}
+        <div className="sa-card" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="sa-card-title" style={{ marginBottom: 10, color: 'var(--text-muted)' }}>
+            Sentiment Over Time <InfoIcon />
           </div>
-          <TimeChart />
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: 10, padding: '18px 12px',
+            background: 'var(--bg-page)', borderRadius: 8,
+            border: '1.5px dashed var(--border)',
+          }}>
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" opacity="0.4">
+              <rect x="2" y="2" width="32" height="32" rx="6" stroke="#94A3B8" strokeWidth="1.8"/>
+              <path d="M8 24l5-6 5 4 5-8 5 4" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="28" cy="10" r="3" fill="#CBD5E1"/>
+              <path d="M26.5 10h3M28 8.5v3" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>
+                Trend data not yet available
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.55, maxWidth: 180 }}>
+                Sentiment trends will appear here once multiple survey waves are loaded.
+              </div>
+            </div>
+            <div style={{
+              fontSize: 10, fontWeight: 600, color: '#92400E',
+              background: '#FFFBEB', border: '1px solid #FDE68A',
+              borderRadius: 20, padding: '3px 10px',
+            }}>
+              Available from Wave 2 onwards
+            </div>
+          </div>
         </div>
 
       </div>

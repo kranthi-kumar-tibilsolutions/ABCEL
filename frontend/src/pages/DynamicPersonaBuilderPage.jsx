@@ -72,7 +72,7 @@ function SigBadge({ sig }) {
           : <path d="M5 5l4 4M9 5L5 9" stroke="#94A3B8" strokeWidth="1.3" strokeLinecap="round"/>
         }
       </svg>
-      <span style={{ fontSize:10, color: significant ? '#15803D' : '#94A3B8', fontWeight:600 }}>{sig || 'n.s.'}</span>
+      <span style={{ fontSize:10, color: significant ? '#15803D' : '#94A3B8', fontWeight:600 }}>{significant ? sig : 'Not Significant'}</span>
     </div>
   );
 }
@@ -204,6 +204,8 @@ export default function DynamicPersonaBuilderPage() {
   const [takeaways,     setTakeaways]     = useState([]);
   const [applyLoading,  setApplyLoading]  = useState(false);
   const [saveLoading,   setSaveLoading]   = useState(false);
+  const [suggestLoading,setSuggestLoading]= useState(true);
+  const [dimsLoading,   setDimsLoading]   = useState(true);
   const [error,         setError]         = useState(null);
   const [viewBy,        setViewBy]        = useState('Themes');
 
@@ -222,12 +224,14 @@ export default function DynamicPersonaBuilderPage() {
         dims_list.forEach(dim => { defaults[dim.id] = 'All'; });
         setDims(defaults);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setDimsLoading(false));
 
     apiFetch('/api/persona/top5')
       .then(r => r.json())
       .then(d => setSuggestions(d.personas || []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setSuggestLoading(false));
   }, []);
 
   // Reset dims when reset signal fires
@@ -364,14 +368,23 @@ export default function DynamicPersonaBuilderPage() {
   const diffSummary  = queryResult?.diff_summary;
   const totalN       = meta?.total_respondents ?? 0;
 
+  // Which comparison cohort columns are visible (toggleable)
+  const [activeComps, setActiveComps] = useState(() => new Set(COMPARISON_COHORT_IDS));
+  const toggleComp = (cid) => setActiveComps(prev => {
+    const next = new Set(prev);
+    if (next.has(cid)) next.delete(cid); else next.add(cid);
+    return next;
+  });
+
   const cohortChips = [
-    { id:'persona',  label:'Persona (You)',          n: personaN,  color:'#3B82F6' },
-    { id:'overall',  label:'Overall (All Employees)', n: totalN,    color:'#94A3B8' },
+    { id:'persona',  label:'Persona (You)',          n: personaN,  color:'#3B82F6', fixed:true },
+    { id:'overall',  label:'Overall (All Employees)', n: totalN,    color:'#94A3B8', fixed:true },
     ...COMPARISON_COHORT_IDS.map(cid => ({
       id: cid,
       label: COMPARISON_LABELS[cid]?.label || cid,
       n: comparisons.find(c => c.id === cid)?.n ?? null,
       color: COMPARISON_LABELS[cid]?.color || '#94A3B8',
+      fixed: false,
     })),
   ];
 
@@ -423,6 +436,7 @@ export default function DynamicPersonaBuilderPage() {
           <button className="topbar-btn" onClick={() => setDpbResetSignal(s => s+1)} title="Reset filters">
             <RotateCcw size={13} />
           </button>
+
         </div>
 
         <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
@@ -529,19 +543,116 @@ export default function DynamicPersonaBuilderPage() {
           <div style={{ marginBottom:12 }}>
             <div className="sa-filter-label" style={{ marginBottom:8 }}>Select Dimensions</div>
             <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-              {dimensions.map((d, i) => (
-                <div key={d.id} className="dpb-dim-row">
-                  <span className="dpb-dim-label">{d.label}</span>
-                  <DimSelect
-                    value={dims[d.id] || 'All'}
-                    opts={['All', ...d.values]}
-                    color={DIM_COLORS[i % DIM_COLORS.length]}
-                    onChange={v => setDim(d.id, v)}
-                  />
-                </div>
-              ))}
+              {dimsLoading
+                ? [...Array(6)].map((_, i) => (
+                    <div key={i} className="dpb-dim-row">
+                      <div className="skeleton" style={{ height:12, width:80, borderRadius:5 }}/>
+                      <div className="skeleton" style={{ height:30, flex:1, borderRadius:6 }}/>
+                    </div>
+                  ))
+                : dimensions.map((d, i) => (
+                    <div key={d.id} className="dpb-dim-row">
+                      <span className="dpb-dim-label">{d.label}</span>
+                      <DimSelect
+                        value={dims[d.id] || 'All'}
+                        opts={['All', ...d.values]}
+                        color={DIM_COLORS[i % DIM_COLORS.length]}
+                        onChange={v => setDim(d.id, v)}
+                      />
+                    </div>
+                  ))
+              }
             </div>
           </div>
+
+          {/* Compare Against */}
+          <div style={{ marginBottom:12 }}>
+            <div className="sa-filter-label" style={{ marginBottom:6 }}>Compare Against</div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+              {COMPARISON_COHORT_IDS.map(cid => {
+                const on = activeComps.has(cid);
+                const color = COMPARISON_LABELS[cid]?.color || '#94A3B8';
+                const label = COMPARISON_LABELS[cid]?.label || cid;
+                return on ? (
+                  <div key={cid} style={{
+                    display:'inline-flex', alignItems:'center', gap:4,
+                    padding:'2px 5px 2px 7px', borderRadius:20,
+                    border:`1.5px solid ${color}70`, background:`${color}12`,
+                  }}>
+                    <div style={{ width:6, height:6, borderRadius:'50%', background:color, flexShrink:0 }}/>
+                    <span style={{ fontSize:10, fontWeight:600, color }}>{label}</span>
+                    <button onClick={() => toggleComp(cid)} title={`Remove ${label}`} style={{
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      width:12, height:12, borderRadius:'50%', border:'none',
+                      background:`${color}25`, cursor:'pointer', padding:0, flexShrink:0, color, transition:'background 0.15s',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.background = `${color}50`; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = `${color}25`; }}
+                    >
+                      <svg width="7" height="7" viewBox="0 0 7 7" fill="none">
+                        <path d="M1 1l5 5M6 1L1 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <button key={cid} onClick={() => toggleComp(cid)} title={`Add ${label}`}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = '0.85'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; }}
+                    style={{ opacity:0.5, display:'inline-flex', alignItems:'center', gap:4, padding:'2px 7px', borderRadius:20, border:'1.5px dashed var(--border)', background:'transparent', cursor:'pointer', fontFamily:'inherit', transition:'opacity 0.15s' }}
+                  >
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                      <path d="M4 1v6M1 4h6" stroke="#94A3B8" strokeWidth="1.3" strokeLinecap="round"/>
+                    </svg>
+                    <span style={{ fontSize:10, color:'var(--text-muted)' }}>{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Active filter chips */}
+          {(() => {
+            const active = dimensions.filter(d => dims[d.id] && dims[d.id] !== 'All');
+            if (!active.length) return null;
+            return (
+              <div style={{ marginBottom:12 }}>
+                <div className="sa-filter-label" style={{ marginBottom:6 }}>Active Filters</div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                  {active.map((d, i) => {
+                    const color = DIM_COLORS[dimensions.indexOf(d) % DIM_COLORS.length];
+                    return (
+                      <div key={d.id} style={{
+                        display:'inline-flex', alignItems:'center', gap:5,
+                        padding:'3px 6px 3px 8px', borderRadius:20,
+                        border:`1.5px solid ${color.border}`,
+                        background: color.bg,
+                      }}>
+                        <span style={{ fontSize:10, fontWeight:600, color: color.text }}>
+                          {d.label}: {dims[d.id]}
+                        </span>
+                        <button
+                          onClick={() => setDim(d.id, 'All')}
+                          title={`Remove ${d.label}`}
+                          style={{
+                            display:'flex', alignItems:'center', justifyContent:'center',
+                            width:14, height:14, borderRadius:'50%', border:'none',
+                            background:`${color.text}20`, cursor:'pointer', padding:0, flexShrink:0,
+                            color: color.text, transition:'background 0.15s',
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = `${color.text}40`; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = `${color.text}20`; }}
+                        >
+                          <svg width="7" height="7" viewBox="0 0 7 7" fill="none">
+                            <path d="M1 1l5 5M6 1L1 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Error message */}
           {error && (
@@ -561,6 +672,10 @@ export default function DynamicPersonaBuilderPage() {
               const defaults = {};
               dimensions.forEach(dim => { defaults[dim.id] = 'All'; });
               setDims(defaults);
+              setPersonaName('');
+              setQueryResult(null);
+              setTakeaways([]);
+              setError(null);
             }} style={{
               fontSize:11, fontWeight:600, background:'none', border:'none',
               cursor:'pointer', color:'var(--text-muted)', fontFamily:'inherit', padding:'5px 6px',
@@ -589,7 +704,20 @@ export default function DynamicPersonaBuilderPage() {
         <div style={{ display:'flex', flexDirection:'column', gap:10, minWidth:0 }}>
 
           {/* Comparison card */}
-          <div className="sa-card">
+          <div className="sa-card" style={{ position:'relative' }}>
+
+            {/* Loading overlay */}
+            {applyLoading && (
+              <div style={{
+                position:'absolute', inset:0, borderRadius:'inherit',
+                background:'var(--bg-card)', opacity:0.85,
+                display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                gap:10, zIndex:10,
+              }}>
+                <div className="dpb-spinner"/>
+                <span style={{ fontSize:11, fontWeight:600, color:'var(--text-muted)' }}>Analysing persona…</span>
+              </div>
+            )}
 
             {/* Card header */}
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, gap:8, flexWrap:'wrap' }}>
@@ -608,14 +736,14 @@ export default function DynamicPersonaBuilderPage() {
             </div>
 
             {/* Cohort chips */}
-            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12, flexWrap:'wrap' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:12, flexWrap:'wrap' }}>
               <span style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600, whiteSpace:'nowrap' }}>
                 {queryResult ? `Sample Size: ${personaN.toLocaleString()}` : 'Apply persona to see results'}
               </span>
               {queryResult && (
                 <>
-                  <div style={{ width:1, height:14, background:'var(--border)' }}/>
-                  {cohortChips.map(c => (
+                  <div style={{ width:1, height:14, background:'var(--border)', flexShrink:0 }}/>
+                  {cohortChips.filter(c => c.fixed).map(c => (
                     <div key={c.id} className="dpb-chip" style={{ borderColor:`${c.color}60` }}>
                       <div style={{ width:7, height:7, borderRadius:'50%', background:c.color, flexShrink:0 }}/>
                       <span style={{ fontSize:10.5, fontWeight:500 }}>
@@ -641,7 +769,28 @@ export default function DynamicPersonaBuilderPage() {
                 </div>
 
                 {/* Suggestion cards grid */}
-                {suggestions.length > 0 ? (
+                {suggestLoading ? (
+                  <div style={{
+                    display:'grid',
+                    gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))',
+                    gap:10, padding:'14px 16px',
+                  }}>
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} style={{
+                        display:'flex', flexDirection:'column', gap:10,
+                        padding:'14px 16px', borderRadius:10,
+                        border:'1.5px solid var(--border)', background:'var(--bg-page)',
+                      }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                          <div className="skeleton" style={{ width:9, height:9, borderRadius:'50%', flexShrink:0 }}/>
+                          <div className="skeleton" style={{ height:13, flex:1, borderRadius:5 }}/>
+                        </div>
+                        <div className="skeleton" style={{ height:22, width:'80%', borderRadius:5 }}/>
+                        <div className="skeleton" style={{ height:11, width:'50%', borderRadius:5 }}/>
+                      </div>
+                    ))}
+                  </div>
+                ) : suggestions.length > 0 ? (
                   <div style={{
                     display:'grid',
                     gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))',
@@ -717,8 +866,8 @@ export default function DynamicPersonaBuilderPage() {
                     <col style={{ width:'15%' }}/>
                     <col style={{ width:'19%' }}/>
                     <col style={{ width:'13%' }}/>
-                    <col style={{ width:'16%' }}/>
-                    <col style={{ width:'16%' }}/>
+                    {activeComps.has(comp1) && <col style={{ width:'16%' }}/>}
+                    {activeComps.has(comp2) && <col style={{ width:'16%' }}/>}
                     <col style={{ width:'21%' }}/>
                   </colgroup>
                   <thead>
@@ -741,20 +890,24 @@ export default function DynamicPersonaBuilderPage() {
                         </div>
                         {totalN > 0 && <div style={{ fontWeight:400, fontSize:9, color:'var(--text-muted)', paddingLeft:10 }}>(n = {totalN.toLocaleString()})</div>}
                       </th>
-                      <th style={{ color: comp1Color }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:4, marginBottom:2 }}>
-                          <div style={{ width:6, height:6, borderRadius:'50%', background:comp1Color, flexShrink:0 }}/>
-                          {comp1Label}
-                        </div>
-                        {comp1N != null && <div style={{ fontWeight:400, fontSize:9, color:'var(--text-muted)', paddingLeft:10 }}>(n = {comp1N.toLocaleString()})</div>}
-                      </th>
-                      <th style={{ color: comp2Color }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:4, marginBottom:2 }}>
-                          <div style={{ width:6, height:6, borderRadius:'50%', background:comp2Color, flexShrink:0 }}/>
-                          {comp2Label}
-                        </div>
-                        {comp2N != null && <div style={{ fontWeight:400, fontSize:9, color:'var(--text-muted)', paddingLeft:10 }}>(n = {comp2N.toLocaleString()})</div>}
-                      </th>
+                      {activeComps.has(comp1) && (
+                        <th style={{ color: comp1Color }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:4, marginBottom:2 }}>
+                            <div style={{ width:6, height:6, borderRadius:'50%', background:comp1Color, flexShrink:0 }}/>
+                            {comp1Label}
+                          </div>
+                          {comp1N != null && <div style={{ fontWeight:400, fontSize:9, color:'var(--text-muted)', paddingLeft:10 }}>(n = {comp1N.toLocaleString()})</div>}
+                        </th>
+                      )}
+                      {activeComps.has(comp2) && (
+                        <th style={{ color: comp2Color }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:4, marginBottom:2 }}>
+                            <div style={{ width:6, height:6, borderRadius:'50%', background:comp2Color, flexShrink:0 }}/>
+                            {comp2Label}
+                          </div>
+                          {comp2N != null && <div style={{ fontWeight:400, fontSize:9, color:'var(--text-muted)', paddingLeft:10 }}>(n = {comp2N.toLocaleString()})</div>}
+                        </th>
+                      )}
                       <th>vs Overall Significance</th>
                     </tr>
                   </thead>
@@ -769,26 +922,30 @@ export default function DynamicPersonaBuilderPage() {
                         <td>
                           <span style={{ fontSize:13, fontWeight:700, color:'var(--text-secondary)' }}>{row.overall_score.toFixed(2)}</span>
                         </td>
-                        <td>
-                          {row.comparisons?.[comp1] != null ? (
-                            <>
-                              <span style={{ fontSize:13, fontWeight:700, color:'var(--text-primary)' }}>
-                                {row.comparisons[comp1].score.toFixed(2)}
-                              </span>
-                              <Delta score={row.comparisons[comp1].score} baseline={row.overall_score}/>
-                            </>
-                          ) : <span style={{ color:'var(--text-muted)', fontSize:11 }}>—</span>}
-                        </td>
-                        <td>
-                          {row.comparisons?.[comp2] != null ? (
-                            <>
-                              <span style={{ fontSize:13, fontWeight:700, color:'var(--text-primary)' }}>
-                                {row.comparisons[comp2].score.toFixed(2)}
-                              </span>
-                              <Delta score={row.comparisons[comp2].score} baseline={row.overall_score}/>
-                            </>
-                          ) : <span style={{ color:'var(--text-muted)', fontSize:11 }}>—</span>}
-                        </td>
+                        {activeComps.has(comp1) && (
+                          <td>
+                            {row.comparisons?.[comp1] != null ? (
+                              <>
+                                <span style={{ fontSize:13, fontWeight:700, color:'var(--text-primary)' }}>
+                                  {row.comparisons[comp1].score.toFixed(2)}
+                                </span>
+                                <Delta score={row.comparisons[comp1].score} baseline={row.overall_score}/>
+                              </>
+                            ) : <span style={{ color:'var(--text-muted)', fontSize:11 }}>—</span>}
+                          </td>
+                        )}
+                        {activeComps.has(comp2) && (
+                          <td>
+                            {row.comparisons?.[comp2] != null ? (
+                              <>
+                                <span style={{ fontSize:13, fontWeight:700, color:'var(--text-primary)' }}>
+                                  {row.comparisons[comp2].score.toFixed(2)}
+                                </span>
+                                <Delta score={row.comparisons[comp2].score} baseline={row.overall_score}/>
+                              </>
+                            ) : <span style={{ color:'var(--text-muted)', fontSize:11 }}>—</span>}
+                          </td>
+                        )}
                         <td><SigBadge sig={row.significance_label}/></td>
                       </tr>
                     ))}
@@ -880,7 +1037,10 @@ export default function DynamicPersonaBuilderPage() {
                     {takeaways.length ? takeaways.map((t, i) => (
                       <li key={i} style={{ fontSize:10, color:'var(--text-secondary)', lineHeight:1.5 }}>{t}</li>
                     )) : (
-                      <li style={{ fontSize:10, color:'var(--text-muted)', lineHeight:1.5 }}>Generating takeaways…</li>
+                      <li style={{ listStyle:'none', display:'flex', alignItems:'center', gap:6, marginLeft:-13 }}>
+                        <span className="dpb-spinner-sm"/>
+                        <span style={{ fontSize:10, color:'var(--text-muted)' }}>Generating takeaways…</span>
+                      </li>
                     )}
                   </ul>
                 </div>

@@ -1,6 +1,7 @@
 import json
 import math
 import time
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -8,14 +9,20 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from lib.stats import one_sample_z_test, mean, std_dev
-from lib.llm   import call_llm_json
+from lib.stats import (
+    pearson_r, pearson_p_value, correlation_strength,
+    one_sample_z_test, two_sample_z_test,
+    mean, std_dev,
+)
+from lib.llm import call_llm_json
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
 _DATA    = _BACKEND / "data"
 _SAMPLE  = _DATA / "sample"
 
+
+# ── Data helpers ──────────────────────────────────────────────────────────────
 
 def _read(f: str) -> list:
     for base in (_DATA, _SAMPLE):
@@ -25,283 +32,473 @@ def _read(f: str) -> list:
             pass
     return []
 
+def _read_dict(f: str) -> dict:
+    for base in (_DATA, _SAMPLE):
+        try:
+            return json.loads((base / f).read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
 
-# Map LLM-extracted variable names → flat field names in responses.json
-VARIABLE_MAP = {
-    "engagement":                   "engagement",
-    "leadership":                   "leadership",
-    "performance culture":          "performance_culture",
-    "performance_culture":          "performance_culture",
-    "development":                  "development_and_career",
-    "development and career":       "development_and_career",
-    "development_and_career":       "development_and_career",
-    "career growth":                "development_and_career",
-    "career_growth":                "development_and_career",
-    "career":                       "development_and_career",
-    "career growth opportunities":  "development_and_career",
-    "manager effectiveness":        "manager_effectiveness",
-    "manager_effectiveness":        "manager_effectiveness",
-    "manager":                      "manager_effectiveness",
-    "onboarding":                   "onboarding",
-    "overall":                      "overall",
+
+# ── Constants ─────────────────────────────────────────────────────────────────
+
+THEME_FIELDS = [
+    "engagement", "leadership", "performance_culture",
+    "development_and_career", "manager_effectiveness", "onboarding", "overall",
+]
+THEME_LABELS = {
+    "engagement":              "Engagement",
+    "leadership":              "Leadership",
+    "performance_culture":     "Performance Culture",
+    "development_and_career":  "Career Development",
+    "manager_effectiveness":   "Manager Effectiveness",
+    "onboarding":              "Onboarding",
+    "overall":                 "Overall",
+}
+DEMOGRAPHIC_FIELDS = {
+    "generation":  ["Gen Z", "Gen Y", "Gen X", "Baby Boomer"],
+    "gender":      ["Male", "Female"],
+    "is_manager":  ["Yes", "No"],
+    "job_level":   ["Staff", "Junior Management", "Middle Management", "Senior Management", "Top Management"],
+    "tenure":      ["0-2", "2-5", "5-10", "10-15", "15-20", "20-25", ">25 (Equal or more than 25)"],
+    "abglp":       ["Yes", "No"],
+    "country":     [],
+    "business":    [],
+    "age_group":   [],
 }
 
-# Normalize LLM-guessed group_filter dimension names to real field keys
-GROUP_FILTER_MAP = {
-    # theme aliases
-    "career_growth":               "development_and_career",
-    "career growth":               "development_and_career",
-    "career_growth_opportunities": "development_and_career",
-    "career_development":          "development_and_career",
-    "development":                 "development_and_career",
-    "development_career":          "development_and_career",
-    "performance":                 "performance_culture",
-    "performance_culture":         "performance_culture",
-    "manager_trust":               "manager_effectiveness",
-    "manager_effectiveness":       "manager_effectiveness",
-    "manager":                     "manager_effectiveness",
-    "leadership_trust":            "leadership",
-    "onboarding_experience":       "onboarding",
-    # demographic aliases
-    "is_people_manager":           "is_manager",
-    "people_manager":              "is_manager",
-    "manager_yn":                  "is_manager",
-    "talent_pool":                 "abglp",
-    "generation_group":            "generation",
-    "tenure_band":                 "tenure",
-    "tenure_group":                "tenure",
-    "job_band":                    "job_level",
-    "job_band_level":              "job_level",
-    "level":                       "job_level",
-    "age":                         "age_group",
-    "age_band":                    "age_group",
-    "score":                       "engagement",  # fallback for vague "score"
-}
+
+# ── Statistical helpers ───────────────────────────────────────────────────────
+
+def _bu_theme_means(responses: list, field: str) -> dict:
+    """Per-business-unit average for a theme score field."""
+    bu_data: dict = defaultdict(list)
+    for r in responses:
+        bu = r.get("business")
+        v  = r.get(field)
+        if bu and v and float(v) > 0:
+            bu_data[bu].append(float(v))
+    return {bu: round(mean(vs), 4) for bu, vs in bu_data.items() if vs}
+
+
+def _scores_for_var(var: dict, responses: list, q_bu: dict) -> dict:
+    """
+    Return {bu_name: avg_score} for a variable mapping.
+    Handles both theme-level and question-level variables at BU granularity.
+    """
+    source = var.get("source", "theme")
+    if source == "question":
+        qid = var.get("question_id")
+        if qid:
+            return q_bu.get(qid, {})
+    field = var.get("field", "")
+    if field in THEME_FIELDS:
+        return _bu_theme_means(responses, field)
+    return {}
+
+
+def _filter_responses(responses: list, field: str, value: str) -> list:
+    return [r for r in responses if str(r.get(field, "")).strip() == str(value).strip()]
+
+
+def _get_scores(responses: list, field: str) -> list:
+    """Extract numeric scores for a theme field from a response list."""
+    out = []
+    for r in responses:
+        v = r.get(field)
+        try:
+            f = float(v)
+            if f > 0:
+                out.append(f)
+        except (TypeError, ValueError):
+            pass
+    return out
+
+
+# ── Test runners ──────────────────────────────────────────────────────────────
+
+def _run_pearson(parsed: dict, responses: list, q_bu: dict) -> dict:
+    x_var = parsed.get("x_var", {})
+    y_var = parsed.get("y_var", {})
+
+    x_scores = _scores_for_var(x_var, responses, q_bu)
+    y_scores = _scores_for_var(y_var, responses, q_bu)
+
+    common = sorted(set(x_scores) & set(y_scores))
+    xs = [x_scores[bu] for bu in common]
+    ys = [y_scores[bu] for bu in common]
+    n  = len(xs)
+
+    if n < 3:
+        return {"error": f"Insufficient shared data points for correlation (n={n}, need ≥ 3)."}
+
+    r = pearson_r(xs, ys)
+    p = pearson_p_value(r, n)
+    sig = p < 0.05
+
+    if sig:
+        verdict = "validated" if (r > 0 and parsed.get("direction") != "less") or \
+                                  (r < 0 and parsed.get("direction") == "less") else "rejected"
+    else:
+        verdict = "inconclusive"
+
+    return {
+        "test_type":   "pearson_correlation",
+        "r":           r,
+        "p_value":     p,
+        "n":           n,
+        "significant": sig,
+        "strength":    correlation_strength(r),
+        "direction_found": "positive" if r > 0 else "negative",
+        "verdict":     verdict,
+        "interpretation": "",          # filled by LLM
+        "bu_pairs": [
+            {"bu": bu, "x": round(xs[i], 3), "y": round(ys[i], 3)}
+            for i, bu in enumerate(common)
+        ],
+        "working": {
+            "formula": "r = Σ[(xᵢ−x̄)(yᵢ−ȳ)] / √[Σ(xᵢ−x̄)² · Σ(yᵢ−ȳ)²]",
+            "n": n,
+            "x_mean": round(mean(xs), 3),
+            "y_mean": round(mean(ys), 3),
+        },
+    }
+
+
+def _run_two_sample_z(parsed: dict, responses: list) -> dict:
+    ga      = parsed.get("group_a", {})
+    gb      = parsed.get("group_b", {})
+    outcome = parsed.get("outcome", {})
+
+    a_field, a_val = ga.get("field"), ga.get("value")
+    b_field, b_val = gb.get("field"), gb.get("value")
+    out_field = outcome.get("field")
+
+    if not (a_field and out_field):
+        return {"error": "Missing group or outcome mapping."}
+
+    rows_a = _filter_responses(responses, a_field, a_val)
+    if b_val:
+        rows_b = _filter_responses(responses, b_field or a_field, b_val)
+    else:
+        rows_b = [r for r in responses if str(r.get(a_field, "")).strip() != str(a_val).strip()]
+
+    scores_a = _get_scores(rows_a, out_field)
+    scores_b = _get_scores(rows_b, out_field)
+
+    if len(scores_a) < 30 or len(scores_b) < 30:
+        return {
+            "error": (
+                f"Sample too small — Group A: n={len(scores_a)}, "
+                f"Group B: n={len(scores_b)}. Need ≥ 30 in each group."
+            )
+        }
+
+    m_a, m_b = mean(scores_a), mean(scores_b)
+    s_a, s_b = std_dev(scores_a), std_dev(scores_b)
+    n_a, n_b = len(scores_a), len(scores_b)
+
+    z_res = two_sample_z_test(m_a, m_b, s_a, s_b, n_a, n_b)
+    z     = z_res["z"]
+    p_two = z_res["p"]
+    direction = parsed.get("direction", "two_tailed")
+    p     = round(p_two / 2, 4) if direction != "two_tailed" else p_two
+    sig   = p < 0.05
+
+    if sig:
+        if direction == "greater":
+            verdict = "validated" if z > 0 else "rejected"
+        elif direction == "less":
+            verdict = "validated" if z < 0 else "rejected"
+        else:
+            verdict = "validated"
+    else:
+        verdict = "inconclusive"
+
+    pooled_sd = math.sqrt((s_a ** 2 + s_b ** 2) / 2) if (s_a + s_b) > 0 else 0
+    effect    = round(abs(m_a - m_b) / pooled_sd, 3) if pooled_sd > 0 else 0
+
+    return {
+        "test_type":     "two_sample_z",
+        "z":             z,
+        "p_value":       p,
+        "significant":   sig,
+        "verdict":       verdict,
+        "mean_a":        round(m_a, 3),
+        "mean_b":        round(m_b, 3),
+        "std_a":         round(s_a, 3),
+        "std_b":         round(s_b, 3),
+        "n_a":           n_a,
+        "n_b":           n_b,
+        "effect_size":   effect,
+        "interpretation": "",
+        "working": {
+            "formula": "Z = (X̄ₐ − X̄ᵦ) / √(σₐ²/nₐ + σᵦ²/nᵦ)",
+            "x_bar_a": round(m_a, 3),
+            "x_bar_b": round(m_b, 3),
+            "std_a":   round(s_a, 3),
+            "std_b":   round(s_b, 3),
+            "n_a":     n_a,
+            "n_b":     n_b,
+        },
+    }
+
+
+def _run_one_sample_z(parsed: dict, responses: list, group_avg: float) -> dict:
+    group   = parsed.get("group", {})
+    outcome = parsed.get("outcome", {})
+
+    g_field = group.get("field")
+    g_val   = group.get("value")
+    out_field = outcome.get("field")
+
+    if g_field and g_val:
+        rows = _filter_responses(responses, g_field, g_val)
+    else:
+        rows = responses
+
+    scores = _get_scores(rows, out_field)
+    n = len(scores)
+    if n < 30:
+        return {"error": f"Sample too small (n={n}). Need ≥ 30 responses."}
+
+    baseline = float(parsed.get("baseline_value") or group_avg)
+    sm  = mean(scores)
+    sd  = std_dev(scores)
+    direction = parsed.get("direction", "greater")
+
+    z_res = one_sample_z_test(sm, baseline, sd, n)
+    z     = z_res["z"]
+    p     = z_res["p_two_tailed"] if direction == "two_tailed" else z_res["p_one_tailed"]
+    sig   = p < 0.05
+
+    if sig:
+        if direction == "greater":
+            verdict = "validated" if z > 0 else "rejected"
+        elif direction == "less":
+            verdict = "validated" if z < 0 else "rejected"
+        else:
+            verdict = "validated"
+    else:
+        verdict = "inconclusive"
+
+    return {
+        "test_type":      "one_sample_z",
+        "z":              z,
+        "p_value":        p,
+        "critical_z":     1.645,
+        "significant":    sig,
+        "verdict":        verdict,
+        "sample_mean":    round(sm, 3),
+        "pop_mean":       baseline,
+        "std_dev":        round(sd, 3),
+        "n":              n,
+        "interpretation": "",
+        "working": {
+            "formula": "Z = (X̄ − μ₀) / (σ / √n)",
+            "x_bar":   round(sm, 3),
+            "mu_0":    baseline,
+            "sigma":   round(sd, 3),
+            "sqrt_n":  round(math.sqrt(n), 3),
+            "se":      round(sd / math.sqrt(n), 3),
+        },
+    }
 
 
 # ── Request models ────────────────────────────────────────────────────────────
 
+class ParseRequest(BaseModel):
+    hypothesis_text: str
+
+
 class TestRequest(BaseModel):
     hypothesis_text: str
+    parsed:          dict  = {}   # pre-parsed output from /parse
     filters:         dict  = {}
     alpha:           float = 0.05
 
 
-# ── POST /api/hypothesis/test ─────────────────────────────────────────────────
+# ── POST /api/hypothesis/parse ────────────────────────────────────────────────
 
-@router.post("/test")
-async def run_test(req: TestRequest):
+@router.post("/parse")
+async def parse_hypothesis(req: ParseRequest):
+    """
+    Step 1 + 3: Parse the natural-language hypothesis and map variables
+    to actual survey questions / theme scores. Returns structured params
+    that the frontend shows for confirmation before running the test.
+    """
     try:
-        units     = _read("responses.json")
         questions = _read("questions.json")
-
-        # Read group average for use as default hypothesized_mean
         try:
             meta_data = json.loads((_DATA / "meta.json").read_text(encoding="utf-8"))
             group_avg = meta_data.get("group_avg", 4.44)
         except Exception:
             group_avg = 4.44
 
-        # ── Step 1: LLM parses hypothesis → structured test parameters ──
-        q_list = ", ".join(
-            f"{q.get('id')}: {q.get('short_label', q.get('id'))}"
+        q_list = "\n".join(
+            f'  {q["id"]}: "{q.get("text", q["id"])}" [theme: {q.get("category", "")}]'
             for q in questions
         )
-        parse_prompt = f"""You are a statistical analysis engine for HR survey data.
-Parse this hypothesis into structured test parameters.
 
-Available survey fields: {q_list}
+        prompt = f"""You are a statistical analysis engine for an employee engagement HR survey.
 
-Available group_filter dimensions (EXACT field names — use one of these only):
-  Theme score fields: engagement, leadership, performance_culture, development_and_career, manager_effectiveness, onboarding, overall
-  Demographic fields: business, generation (values: Gen Z, Gen Y, Gen X, Baby Boomer), gender (values: Male, Female), age_group, job_level, tenure, country, is_manager (values: Yes/No), abglp (values: Yes/No)
+SURVEY DATA AVAILABLE:
+Theme score fields (aggregated scores per respondent):
+  engagement, leadership, performance_culture, development_and_career,
+  manager_effectiveness, onboarding, overall
 
-Available variable fields (what to measure as outcome):
-  engagement, leadership, performance_culture, development_and_career, manager_effectiveness, onboarding, overall
+Individual survey questions (OP questions):
+{q_list}
 
-Group average score for this survey: {group_avg}/5
+Demographic split fields and their known values:
+  generation: Gen Z, Gen Y, Gen X, Baby Boomer
+  gender: Male, Female
+  is_manager: Yes, No
+  job_level: Staff, Junior Management, Middle Management, Senior Management, Top Management
+  tenure: 0-2, 2-5, 5-10, 10-15, 15-20, 20-25, >25 (Equal or more than 25)
+  abglp: Yes, No
+  country: <any country name>
+  business: <any business unit name>
 
-Hypothesis: "{req.hypothesis_text}"
+Company group average: {group_avg}/5
+
+HYPOTHESIS: "{req.hypothesis_text}"
+
+TASK — Classify this hypothesis and map every variable to real survey fields.
+
+Hypothesis types:
+- "group_comparison": Two distinct groups compared on same outcome
+    (e.g. "Managers trust leadership more than ICs", "Gen Z vs Gen Y engagement")
+- "relationship": X correlates with / impacts / leads to Y
+    (e.g. "Higher recognition leads to higher engagement")
+- "one_sample": One group vs company/benchmark average
+    (e.g. "Gen Z has higher onboarding score than company average")
+- "unsupported": Cannot map to available data
+
+For variables: prefer theme scores when the concept maps clearly to one.
+For individual questions: only use when the concept maps better to a specific question.
+
+Return ONLY a valid JSON object (no markdown):
+{{
+  "hypothesis_type": "group_comparison|relationship|one_sample|unsupported",
+  "parseable": true,
+  "parse_error": null,
+
+  "group_a": {{"field": "is_manager", "value": "Yes", "label": "People Managers", "confidence": 0.96}},
+  "group_b": {{"field": "is_manager", "value": "No", "label": "Individual Contributors", "confidence": 0.94}},
+
+  "x_var": {{"source": "theme", "field": "development_and_career", "question_id": null, "label": "Career Development Score", "confidence": 0.91}},
+  "y_var": {{"source": "theme", "field": "engagement", "question_id": null, "label": "Engagement Score", "confidence": 0.99}},
+
+  "group": {{"field": "generation", "value": "Gen Z", "label": "Gen Z employees", "confidence": 0.98}},
+  "outcome": {{"source": "theme", "field": "engagement", "question_id": null, "label": "Engagement Score", "confidence": 0.97}},
+  "baseline": "group_average",
+  "baseline_value": {group_avg},
+
+  "h0": "null hypothesis as a complete sentence",
+  "h1": "alternative hypothesis as a complete sentence",
+  "test_recommended": "two_sample_z|pearson_correlation|one_sample_z",
+  "direction": "greater|less|two_tailed"
+}}
 
 RULES:
-- If hypothesis says "rate X high (score >= N)" → group_filter.dimension should be the theme field (e.g. development_and_career for Career Growth), operator="gte", value=N
-- If hypothesis says "group average" or "company average" → hypothesized_mean = {group_avg}
-- Do NOT use the alpha value (0.05) as hypothesized_mean
-- "Career Growth" → development_and_career, "Performance" → performance_culture, "Manager" → manager_effectiveness
+- For group_comparison: always set group_a, group_b, outcome. Set test_recommended=two_sample_z.
+- For relationship: always set x_var, y_var. Set test_recommended=pearson_correlation.
+- For one_sample: always set group, outcome, baseline_value. Set test_recommended=one_sample_z.
+- Only fill the fields relevant to the hypothesis type; set others to null.
+- confidence must be 0.0–1.0 (how certain you are in the mapping).
+- If unsupported, set parseable=false and explain in parse_error."""
 
-Return ONLY a JSON object — no explanation, no markdown:
-{{
-  "h0": "<null hypothesis text>",
-  "h1": "<alternative hypothesis text>",
-  "test_type": "one_sample_z",
-  "variable": "<theme field to measure as outcome>",
-  "group_filter": {{ "dimension": "<EXACT field name from list above>", "operator": "eq|gte|lte", "value": "<val>" }},
-  "hypothesized_mean": <number — use {group_avg} if comparing vs group average>,
-  "threshold": <number or null>,
-  "direction": "greater" | "less" | "two_tailed",
-  "parseable": true,
-  "parse_error": null
-}}"""
+        parsed = await call_llm_json([{"role": "user", "content": prompt}], 600)
+
+        if not parsed.get("parseable", True):
+            return {
+                "parseable":   False,
+                "parse_error": parsed.get("parse_error") or "Could not map hypothesis to survey data.",
+                "suggestion":  'Try: "Employees who rate Career Growth high have higher Engagement than the company average."',
+            }
+
+        parsed["group_avg"] = group_avg
+        return parsed
+
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=str(err))
+
+
+# ── POST /api/hypothesis/test ─────────────────────────────────────────────────
+
+@router.post("/test")
+async def run_test(req: TestRequest):
+    """
+    Step 2: Run the correct statistical test based on parsed hypothesis type.
+    Accepts pre-parsed params from /parse; falls back to LLM re-parse if not provided.
+    """
+    try:
+        responses = _read("responses.json")
+        q_bu      = _read_dict("question_bu_scores.json")
 
         try:
-            params = await call_llm_json([{"role": "user", "content": parse_prompt}], 400)
-        except Exception as e:
-            return {
-                "success":    False,
-                "error":      f"LLM parse failed: {e}",
-                "suggestion": 'Try: "Employees who rate Career Growth high have higher Engagement scores than average."',
-            }
-
-        if not params.get("parseable"):
-            return {
-                "success":    False,
-                "error":      params.get("parse_error") or "Could not parse hypothesis",
-                "suggestion": 'Try: "Employees who rate X high have higher Y scores than those who rate it low."',
-            }
-
-        # Normalize group_filter dimension using alias map
-        gf_raw = params.get("group_filter")
-        if gf_raw and isinstance(gf_raw.get("dimension"), str):
-            dim_key = gf_raw["dimension"].lower().strip()
-            if dim_key in GROUP_FILTER_MAP:
-                params["group_filter"]["dimension"] = GROUP_FILTER_MAP[dim_key]
-
-        # Normalize variable name using alias map
-        raw_var = (params.get("variable") or "").lower().strip()
-        if raw_var in VARIABLE_MAP:
-            params["variable"] = VARIABLE_MAP[raw_var]
-
-        # ── Step 2: Run z-test on real data ──
-        test_group = list(units)
-
-        # Apply LLM-extracted group filter
-        gf = params.get("group_filter")
-        if gf:
-            dim  = gf.get("dimension")
-            op   = gf.get("operator")
-            fval = gf.get("value")
-            def _gf_match(u, _dim=dim, _op=op, _fval=fval) -> bool:
-                val = u.get(_dim)
-                if _op == "eq":  return str(val) == str(_fval)
-                if _op == "gte":
-                    try: return float(val) >= float(_fval)
-                    except: return False
-                if _op == "lte":
-                    try: return float(val) <= float(_fval)
-                    except: return False
-                return True
-            test_group = [u for u in test_group if _gf_match(u)]
-
-        # Apply demographic filters from request body
-        f = req.filters
-        if f.get("business")   and f["business"]   != "All": test_group = [u for u in test_group if u.get("business")   == f["business"]]
-        if f.get("generation") and f["generation"] != "All": test_group = [u for u in test_group if u.get("generation") == f["generation"]]
-        if f.get("gender")     and f["gender"]     != "All": test_group = [u for u in test_group if u.get("gender")     == f["gender"]]
-        if f.get("job_level")  and f["job_level"]  != "All": test_group = [u for u in test_group if u.get("job_level")  == f["job_level"]]
-        if f.get("tenure")     and f["tenure"]     != "All": test_group = [u for u in test_group if u.get("tenure")     == f["tenure"]]
-
-        # score_key is already normalized above
-        score_key = (params.get("variable") or "engagement").replace(" ", "_")
-
-        # Score access: flat field (already normalized), then overall fallback
-        scores = [
-            u[score_key] for u in test_group
-            if u.get(score_key) and u[score_key] > 0
-        ]
-
-        sample_mean = mean(scores)
-        sample_std  = std_dev(scores)
-        n           = len(scores)
-        pop_mean    = params.get("hypothesized_mean") or params.get("threshold") or group_avg
-
-        if n < 30:
-            return {
-                "success": False,
-                "error":   f"Sample too small (n={n}). Need at least 30 responses to run a valid z-test.",
-            }
-
-        z_result = one_sample_z_test(sample_mean, pop_mean, sample_std, n)
-
-        # verdict: validated / rejected / inconclusive
-        significant = z_result["significant"]
-        direction   = params.get("direction")
-        verdict_bool = (
-            (z_result["z"] < 0 if direction == "less" else z_result["z"] > 0)
-            if significant else False
-        )
-        verdict = "validated" if verdict_bool else ("rejected" if significant else "inconclusive")
-
-        p_value = z_result["p_two_tailed"] if direction == "two_tailed" else z_result["p_one_tailed"]
-        critical_z = 1.645 if req.alpha == 0.05 else 2.326
-
-        # Build columns_used so the UI can show exactly what data drove the test
-        _gf_dim = (params.get("group_filter") or {}).get("dimension", "")
-        columns_used = []
-        if _gf_dim:
-            columns_used.append({
-                "id":   _gf_dim,
-                "text": _gf_dim.replace("_", " ").title(),
-                "role": "predictor",
-            })
-        columns_used.append({
-            "id":   score_key,
-            "text": score_key.replace("_", " ").title(),
-            "role": "outcome",
-        })
-
-        result = {
-            "verdict":       verdict,
-            "z":             z_result["z"],
-            "p_value":       p_value,
-            "critical_z":    critical_z,
-            "alpha":         req.alpha,
-            "decision":      z_result["decision"],
-            "sample_mean":   round(sample_mean, 2),
-            "pop_mean":      pop_mean,
-            "std_dev":       round(sample_std, 2),
-            "n":             n,
-            "h0":            params.get("h0"),
-            "h1":            params.get("h1"),
-            "test_type":     f"One-tailed Z-Test ({'Less than' if direction == 'less' else 'Greater than'})",
-            "columns_used":  columns_used,
-            "curve_data": {
-                "z_stat":     z_result["z"],
-                "critical_z": critical_z,
-                "p_value":    p_value,
-            },
-            "working": {
-                "formula":    "Z = (X̄ − μ₀) / (σ / √n)",
-                "x_bar":      round(sample_mean, 2),
-                "mu_0":       pop_mean,
-                "sigma":      round(sample_std, 2),
-                "sqrt_n":     round(math.sqrt(n), 3),
-                "se":         round(sample_std / math.sqrt(n), 3),
-                "numerator":  round(sample_mean - pop_mean, 2),
-                "z_computed": z_result["z"],
-            },
-        }
-
-        # ── Step 3: LLM plain English interpretation ──
-        try:
-            interp_prompt = f"""You are an HR analytics expert. Write a 1-sentence plain English interpretation of this z-test result for an HR director.
-
-p(z) = {result['p_value']}, alpha = {req.alpha}, verdict = {verdict}, z = {result['z']}
-Hypothesis: "{req.hypothesis_text}"
-
-Return ONLY a JSON object: {{ "interpretation": "<one sentence>" }}"""
-
-            interp_data = await call_llm_json([{"role": "user", "content": interp_prompt}], 150)
-            result["interpretation"] = interp_data.get("interpretation") or ""
+            meta_data = json.loads((_DATA / "meta.json").read_text(encoding="utf-8"))
+            group_avg = meta_data.get("group_avg", 4.44)
         except Exception:
-            if verdict == "validated":
-                pfx = "The data supports"
-            elif verdict == "rejected":
-                pfx = "The data does not support"
-            else:
-                pfx = "The evidence is inconclusive for"
-            result["interpretation"] = f"{pfx} the hypothesis (z = {result['z']}, p = {result['p_value']})."
+            group_avg = 4.44
 
-        # ── Step 4: Save to hypothesis history — timestamp ID (18.11) ──
+        parsed = req.parsed
+        if not parsed or not parsed.get("parseable", True) is not False:
+            # Re-parse if caller didn't provide pre-parsed params
+            parse_res = await parse_hypothesis(ParseRequest(hypothesis_text=req.hypothesis_text))
+            if not parse_res.get("parseable", True):
+                return {"success": False, "error": parse_res.get("parse_error", "Could not parse hypothesis.")}
+            parsed = parse_res
+
+        h_type = parsed.get("hypothesis_type", "one_sample")
+
+        # ── Route to correct test ──
+        if h_type == "relationship":
+            result = _run_pearson(parsed, responses, q_bu)
+        elif h_type == "group_comparison":
+            result = _run_two_sample_z(parsed, responses)
+        else:
+            result = _run_one_sample_z(parsed, responses, group_avg)
+
+        if "error" in result:
+            return {"success": False, "error": result["error"]}
+
+        # ── LLM plain-English interpretation ──
+        try:
+            if h_type == "relationship":
+                interp_ctx = f"Pearson r={result['r']}, p={result['p_value']}, n={result['n']} business units, verdict={result['verdict']}"
+            elif h_type == "group_comparison":
+                interp_ctx = (
+                    f"Two-sample Z={result['z']}, p={result['p_value']}, "
+                    f"Group A mean={result['mean_a']} (n={result['n_a']}), "
+                    f"Group B mean={result['mean_b']} (n={result['n_b']}), "
+                    f"effect size={result['effect_size']}, verdict={result['verdict']}"
+                )
+            else:
+                interp_ctx = f"Z={result['z']}, p={result['p_value']}, sample mean={result['sample_mean']}, baseline={result['pop_mean']}, verdict={result['verdict']}"
+
+            interp_prompt = f"""Write a 1–2 sentence plain English interpretation of this statistical result for an HR director.
+Be specific with numbers. Be direct about what it means for HR decision-making.
+
+Hypothesis: "{req.hypothesis_text}"
+Result: {interp_ctx}
+
+Return ONLY JSON: {{"interpretation": "<sentence(s)>"}}"""
+
+            interp = await call_llm_json([{"role": "user", "content": interp_prompt}], 200)
+            result["interpretation"] = interp.get("interpretation", "")
+        except Exception:
+            result["interpretation"] = f"The test result is {result.get('verdict', 'inconclusive')}."
+
+        # ── Attach parsed context for frontend display ──
+        result["h0"]             = parsed.get("h0", "")
+        result["h1"]             = parsed.get("h1", "")
+        result["hypothesis_type"] = h_type
+        result["parsed"]         = parsed
+
+        # ── Save to history ──
         history_path = _DATA / "hypotheses.json"
         history: list = []
         try:
@@ -313,13 +510,12 @@ Return ONLY a JSON object: {{ "interpretation": "<one sentence>" }}"""
         history.insert(0, {
             "id":              f"H-{int(time.time() * 1000)}",
             "hypothesis":      req.hypothesis_text,
-            "result":          result["verdict"],
-            "z":               result["z"],
-            "p_value":         result["p_value"],
-            "alpha":           req.alpha,
+            "result":          result.get("verdict", "inconclusive"),
+            "test_type":       result.get("test_type"),
+            "p_value":         result.get("p_value"),
             "filters_applied": req.filters,
             "date_tested":     f"{now.strftime('%b')} {now.day}, {now.year}",
-            "params":          params,
+            "params":          parsed,
         })
         history_path.write_text(json.dumps(history, indent=2), encoding="utf-8")
 
@@ -335,11 +531,31 @@ Return ONLY a JSON object: {{ "interpretation": "<one sentence>" }}"""
 async def get_templates():
     return {
         "templates": [
-            {"id": "T-001", "text": "Employees who rate Career Growth Opportunities high (score >= 4) have higher Engagement scores than the group average."},
-            {"id": "T-002", "text": "People Managers (is_manager = Yes) have higher trust in Leadership than individual contributors."},
-            {"id": "T-003", "text": "Gen Z employees have higher Onboarding scores than the company average."},
-            {"id": "T-004", "text": "New Joiners (0-2 years tenure) have lower Performance Culture scores than employees with 5+ years."},
-            {"id": "T-005", "text": "Female employees rate Manager Effectiveness higher than the group average."},
+            {
+                "id":   "T-001",
+                "type": "group_comparison",
+                "text": "People Managers have higher trust in Leadership than Individual Contributors.",
+            },
+            {
+                "id":   "T-002",
+                "type": "relationship",
+                "text": "Employees with higher Career Development scores tend to have higher Engagement scores.",
+            },
+            {
+                "id":   "T-003",
+                "type": "one_sample",
+                "text": "Gen Z employees have higher Onboarding scores than the company average.",
+            },
+            {
+                "id":   "T-004",
+                "type": "relationship",
+                "text": "Higher Manager Effectiveness scores are associated with higher Engagement.",
+            },
+            {
+                "id":   "T-005",
+                "type": "group_comparison",
+                "text": "Female employees rate Manager Effectiveness higher than Male employees.",
+            },
         ]
     }
 
@@ -347,10 +563,7 @@ async def get_templates():
 # ── GET /api/hypothesis/history ───────────────────────────────────────────────
 
 @router.get("/history")
-async def get_history(
-    limit:  int = Query(20),
-    offset: int = Query(0),
-):
+async def get_history(limit: int = Query(20), offset: int = Query(0)):
     try:
         history: list = []
         try:

@@ -33,8 +33,8 @@ def _read_dict(f: str) -> dict:
 
 
 def _resolve_business(user: dict, requested: str | None) -> str | None:
-    """Return the effective business filter, enforcing company_hr scope."""
-    if user.get("role") == "company_hr":
+    """Return the effective business filter, enforcing company-role scope."""
+    if user.get("role") == "company":
         return data_company(user)   # locked — ignore whatever frontend sent
     return requested if requested and requested != "All" else None
 

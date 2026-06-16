@@ -147,31 +147,7 @@ export default function ChatWithData() {
         <span className="chat-sub">Your AI analyst</span>
       </div>
 
-      <div className="chat-filters">
-        <select
-          className="chat-filter-select"
-          value={focusArea}
-          onChange={e => setFocusArea(e.target.value)}
-          title="Focus area"
-        >
-          <option value="">All focus areas</option>
-          {FOCUS_AREAS.map(f => <option key={f} value={f}>{f}</option>)}
-        </select>
-
-        {showCompanyFilter && (
-          <select
-            className="chat-filter-select"
-            value={companyFilter}
-            onChange={e => setCompanyFilter(e.target.value)}
-            title="Company"
-          >
-            <option value="">All companies</option>
-            {businesses.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
-          </select>
-        )}
-      </div>
-
-      <div className="chat-messages">
+<div className="chat-messages">
         {messages.map((m, i) => (
           <div key={i} className={`chat-msg ${m.role}`}>
             {m.role === 'assistant' && loading && i === messages.length - 1 && !m.content
