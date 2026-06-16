@@ -69,10 +69,18 @@ async def get_correlations(
     offset:           int           = Query(0),
 ):
     try:
-        filtered   = _filter(_read("responses.json"), business, year, country, department, include_inactive)
-        questions  = _read("questions.json")
+        filtered    = _filter(_read("responses.json"), business, year, country, department, include_inactive)
+        questions   = _read("questions.json")
         base_scores = _scores(filtered, question_id)
-        n           = len(base_scores)
+        n_sample    = len(base_scores)
+
+        # n_total = real respondent count from businesses.json (not the sample)
+        businesses = _read("businesses.json")
+        if business and business != "All":
+            biz_entry = next((b for b in businesses if b["name"] == business), None)
+            n_total = biz_entry["respondent_count"] if biz_entry else n_sample
+        else:
+            n_total = sum(b.get("respondent_count", 0) for b in businesses) or n_sample
 
         correlations = sorted(
             [
@@ -80,7 +88,7 @@ async def get_correlations(
                     "question_id":      q["id"],
                     "question_text":    q.get("text", ""),
                     "category":         q.get("category", ""),
-                    "pearson_r":        (r_val := pearson_r(base_scores[:(_len := min(n, len(_scores(filtered, q["id"]))))], _scores(filtered, q["id"])[:_len])),
+                    "pearson_r":        (r_val := pearson_r(base_scores[:(_len := min(n_sample, len(_scores(filtered, q["id"]))))], _scores(filtered, q["id"])[:_len])),
                     "p_value":          (p_val := pearson_p_value(r_val, _len)),
                     "strength":         correlation_strength(r_val),
                     "category_bucket":  correlation_category(r_val),
@@ -111,7 +119,9 @@ async def get_correlations(
         return {
             "question_id":   question_id,
             "question_text": q_text,
-            "n":             n,
+            "n":             n_total,
+            "n_sample":      n_sample,
+            "n_total":       n_total,
             "tab_counts":    tab_counts,
             "total":         total,
             "showing":       showing,

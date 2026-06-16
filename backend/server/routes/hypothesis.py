@@ -234,20 +234,36 @@ Return ONLY a JSON object — no explanation, no markdown:
         p_value = z_result["p_two_tailed"] if direction == "two_tailed" else z_result["p_one_tailed"]
         critical_z = 1.645 if req.alpha == 0.05 else 2.326
 
+        # Build columns_used so the UI can show exactly what data drove the test
+        _gf_dim = (params.get("group_filter") or {}).get("dimension", "")
+        columns_used = []
+        if _gf_dim:
+            columns_used.append({
+                "id":   _gf_dim,
+                "text": _gf_dim.replace("_", " ").title(),
+                "role": "predictor",
+            })
+        columns_used.append({
+            "id":   score_key,
+            "text": score_key.replace("_", " ").title(),
+            "role": "outcome",
+        })
+
         result = {
-            "verdict":      verdict,
-            "z":            z_result["z"],
-            "p_value":      p_value,
-            "critical_z":   critical_z,
-            "alpha":        req.alpha,
-            "decision":     z_result["decision"],
-            "sample_mean":  round(sample_mean, 2),
-            "pop_mean":     pop_mean,
-            "std_dev":      round(sample_std, 2),
-            "n":            n,
-            "h0":           params.get("h0"),
-            "h1":           params.get("h1"),
-            "test_type":    f"One-tailed Z-Test ({'Less than' if direction == 'less' else 'Greater than'})",
+            "verdict":       verdict,
+            "z":             z_result["z"],
+            "p_value":       p_value,
+            "critical_z":    critical_z,
+            "alpha":         req.alpha,
+            "decision":      z_result["decision"],
+            "sample_mean":   round(sample_mean, 2),
+            "pop_mean":      pop_mean,
+            "std_dev":       round(sample_std, 2),
+            "n":             n,
+            "h0":            params.get("h0"),
+            "h1":            params.get("h1"),
+            "test_type":     f"One-tailed Z-Test ({'Less than' if direction == 'less' else 'Greater than'})",
+            "columns_used":  columns_used,
             "curve_data": {
                 "z_stat":     z_result["z"],
                 "critical_z": critical_z,

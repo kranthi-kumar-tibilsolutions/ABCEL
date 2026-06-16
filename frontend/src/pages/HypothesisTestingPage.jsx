@@ -158,6 +158,7 @@ export default function HypothesisTestingPage() {
           stdDev:          r.std_dev,
           sampleSize:      r.n,
           working:         r.working || {},
+          columnsUsed:     r.columns_used || [],
         });
         setShowDetails(true);
         loadHistory();
@@ -299,6 +300,28 @@ export default function HypothesisTestingPage() {
                     <span className="ht-hyp-label">Confidence Level (α)</span>
                     <span className="ht-hyp-val">{r.confidenceLevel}</span>
                   </div>
+
+                  {/* Columns used — shows which data fields drove the test */}
+                  {r.columnsUsed?.length > 0 && (
+                    <div style={{ marginTop:10, paddingTop:10, borderTop:'1px solid var(--border)' }}>
+                      <span className="ht-hyp-label" style={{ display:'block', marginBottom:6 }}>Data Fields Used</span>
+                      {r.columnsUsed.map(c => (
+                        <div key={c.id} style={{ display:'flex', alignItems:'center', gap:7, marginBottom:5 }}>
+                          <span style={{
+                            fontSize:8.5, fontWeight:700, letterSpacing:'0.03em',
+                            padding:'2px 6px', borderRadius:4,
+                            color:    c.role === 'outcome'   ? '#1D4ED8' : '#6D28D9',
+                            background: c.role === 'outcome' ? '#EFF6FF' : '#F5F3FF',
+                            border:   `1px solid ${c.role === 'outcome' ? '#BFDBFE' : '#DDD6FE'}`,
+                            flexShrink: 0,
+                          }}>
+                            {c.role.toUpperCase()}
+                          </span>
+                          <span style={{ fontSize:11, color:'var(--text-primary)', fontWeight:500 }}>{c.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Col 2 — Results */}
