@@ -123,14 +123,23 @@ def _build_context(dimension: str = "Business Unit", user: Optional[dict] = None
                 meta["lowest_score"]    = low_bu.get("overall")
 
     sorted_biz = sorted(businesses, key=lambda b: b.get("overall") or 0, reverse=True)
-    biz_sample = sorted_biz[:5] + sorted_biz[-3:]
-    biz_lines  = "\n".join(f"{b['name']}: {b['overall']} ({b['band']})" for b in biz_sample)
 
     def _fmt(items, suffix=""):
         # exclude noise: n<30 and "DOB not Available"; sort highest first
         valid = [c for c in (items or []) if (c.get("respondent_count") or 0) >= 30 and c.get("name") != "DOB not Available"]
         valid.sort(key=lambda c: c.get("overall") or 0, reverse=True)
         return ", ".join(f"{c['name']}={c.get('overall')}{suffix} (n={c.get('respondent_count')})" for c in valid)
+
+    # All businesses with overall + key category scores so the LLM can answer
+    # company-specific questions (e.g. "what is Novel Jewels leadership score?")
+    def _biz_line(b):
+        cats = b.get("categories", {})
+        cat_parts = ", ".join(f"{k}={v}" for k, v in cats.items() if v)
+        n = b.get("respondent_count", "")
+        n_str = f" n={n}" if n else ""
+        return f"{b['name']}: {b['overall']} ({b.get('band','')}{n_str}) [{cat_parts}]"
+
+    biz_lines = "\n".join(_biz_line(b) for b in sorted_biz)
 
     cluster_lines   = ", ".join(f"{k}: {len(v or [])} BUs" for k, v in clusters.items())
     gender_line     = _fmt(cohorts.get("gender"))
@@ -139,13 +148,30 @@ def _build_context(dimension: str = "Business Unit", user: Optional[dict] = None
     job_band_line   = _fmt(cohorts.get("job_band"))
     tenure_line     = _fmt(cohorts.get("tenure"), " yrs")
 
+    # Cohort breakdown per business (generation) for cross-company cohort questions
+    units = _read("units.json") or []
+    cohort_by_biz = {}
+    for u in units:
+        bname = u.get("business") or u.get("name", "")
+        if bname and u.get("cohorts"):
+            cohort_by_biz[bname] = u["cohorts"]
+    cohort_lines = ""
+    if cohort_by_biz:
+        cohort_lines = "\n\nPER-BUSINESS COHORT DATA (generation overall scores):\n"
+        for bname, bc in list(cohort_by_biz.items())[:10]:  # limit tokens
+            gen = bc.get("generation", [])
+            if gen:
+                gen_str = ", ".join(f"{g['name']}={g['overall']}(n={g.get('respondent_count','')})" for g in gen if g.get("overall"))
+                cohort_lines += f"{bname}: {gen_str}\n"
+
     return f"""ABG Vibes Employee Survey — {meta.get("survey_name", "2026")}
 Respondents: {meta.get("total_respondents", 55457)} | Businesses: {meta.get("total_businesses", len(businesses))} | BUs: {meta.get("total_units", 415)}
 Group avg: {meta.get("group_avg", 4.46)}/5 | Top: {meta.get("top_business")} ({meta.get("top_score")}) | Lowest: {meta.get("lowest_business")} ({meta.get("lowest_score")})
 Strongest category: {meta.get("strongest_category")} | Weakest: {meta.get("weakest_category")}
 Dimension: {dimension}
 
-TOP/BOTTOM BUSINESSES: {biz_lines}
+ALL BUSINESSES (sorted highest to lowest — every company in the survey):
+{biz_lines}
 
 CLUSTERS: {cluster_lines}
 AGE-TO-GENERATION MAPPING (survey year 2026): <21=Gen Z, 21-25=Gen Z, 25-30=Gen Z/Gen Y, 30-35=Gen Y, 35-40=Gen Y, 40-45=Gen X, 45-50=Gen X, 50-55=Gen X/Baby Boomer, >55=Baby Boomer
@@ -153,7 +179,7 @@ GENDER BREAKDOWN: {gender_line}
 GENERATION BREAKDOWN (Gen Z / Gen Y / Gen X / Baby Boomer — NOT age bands): {generation_line}
 AGE BAND BREAKDOWN (numeric bands like 25-30, 30-35 etc — use these for any "age group" question): {age_group_line or "(not in dataset)"}
 JOB BAND: {job_band_line}
-TENURE (years): {tenure_line}""".strip()
+TENURE (years): {tenure_line}{cohort_lines}""".strip()
 
 
 # ── Non-streaming LLM call + JSON parse ──────────────────────────────────────
@@ -214,11 +240,12 @@ class BusinessInsightRequest(BaseModel):
     business:     Optional[str] = None
 
 class ChatRequest(BaseModel):
-    message:       str
-    history:       List[dict] = []
-    dimension:     str = "Business Unit"
-    focusArea:     Optional[str] = None
-    companyFilter: Optional[str] = None
+    message:             str
+    history:             List[dict] = []
+    dimension:           str = "Business Unit"
+    focusArea:           Optional[str]  = None
+    companyFilter:       Optional[str]  = None
+    active_context:      Optional[dict] = None
 
 class SkillAnalysisRequest(BaseModel):
     skill:     Optional[str]       = None
@@ -334,26 +361,172 @@ Respond ONLY with valid JSON:
 
 # ── CALL 4: Chat with Data — SSE Streaming ────────────────────────────────────
 
+def _compute_full_chat_data(user=None):
+    """
+    Load businesses.json + responses.json and compute all demographic breakdowns
+    at request time so new uploads are always reflected.
+    Returns (businesses, gen_data, gender_data, job_data, tenure_data, manager_data, biz_cohorts)
+    """
+    import json as _j
+    businesses = _read("businesses.json") or []
+    responses  = _read("responses.json")  or []
+
+    # Scope to company for company-role users
+    co = None
+    if user and user.get("role") == "company":
+        co = data_company(user)
+        if co:
+            responses  = [r for r in responses  if r.get("business") == co]
+            businesses = [b for b in businesses if b["name"] == co]
+
+    if not responses:
+        return businesses, [], [], [], [], [], {}
+
+    # Auto-detect theme keys (numeric fields that aren't metadata)
+    _skip = {'employee_id','business','age_group','generation','gender','job_level',
+             'tenure','country','is_manager','abglp','is_active','year','month','overall','scores'}
+    _sample = responses[0]
+    theme_keys = [k for k in _sample if k not in _skip
+                  and isinstance(_sample.get(k), (int, float)) and _sample.get(k) is not None]
+
+    def group_scores(rows, label):
+        if len(rows) < 10:
+            return None
+        scores = {}
+        for tk in theme_keys:
+            vals = [r[tk] for r in rows if r.get(tk) and r[tk] > 0]
+            scores[tk] = round(sum(vals) / len(vals), 2) if vals else None
+        all_vals = [v for v in scores.values() if v]
+        scores['overall'] = round(sum(all_vals) / len(all_vals), 2) if all_vals else None
+        return {'label': label, 'n': len(rows), 'scores': scores}
+
+    _noise = {'unknown', 'nan', 'n/a', 'na', 'not available', 'dob not available',
+              'job band na', 'not specified', ''}
+
+    def _clean(val):
+        return val and str(val).strip().lower() not in _noise
+
+    def _dim_vals(key):
+        return list({r[key] for r in responses if _clean(r.get(key))})
+
+    generations = _dim_vals('generation')
+    job_levels  = _dim_vals('job_level')
+    tenures     = _dim_vals('tenure')
+
+    def _filt(key, val): return [r for r in responses if r.get(key) == val and _clean(r.get(key))]
+    def _bfilt(rows, key, val): return [r for r in rows if r.get(key) == val and _clean(r.get(key))]
+
+    gen_data     = [g for g in (group_scores(_filt('generation', g), g) for g in generations) if g]
+    gender_data  = [g for g in [
+        group_scores([r for r in responses if r.get('gender') == 'Male'],   'Male'),
+        group_scores([r for r in responses if r.get('gender') == 'Female'], 'Female'),
+    ] if g]
+    job_data     = [g for g in (group_scores(_filt('job_level', j), j) for j in job_levels) if g]
+    tenure_data  = [g for g in (group_scores(_filt('tenure', t), t) for t in tenures) if g]
+    manager_data = [g for g in [
+        group_scores([r for r in responses if r.get('is_manager') == 'Yes'], 'People Managers'),
+        group_scores([r for r in responses if r.get('is_manager') == 'No'],  'Individual Contributors'),
+    ] if g]
+
+    # Per-business cohort breakdown (generation/gender/job_level/tenure within each company)
+    biz_cohorts: dict = {}
+    for biz in businesses:
+        bname    = biz['name']
+        biz_rows = [r for r in responses if r.get('business') == bname]
+        if len(biz_rows) < 10:
+            continue
+        biz_gens = [g for g in {r.get('generation') for r in biz_rows} if _clean(g)]
+        biz_cohorts[bname] = {
+            'n': len(biz_rows),
+            'by_generation': [g for g in (group_scores(_bfilt(biz_rows, 'generation', g), g) for g in biz_gens) if g],
+            'by_gender':     [g for g in [
+                group_scores([r for r in biz_rows if r.get('gender') == 'Male'],   'Male'),
+                group_scores([r for r in biz_rows if r.get('gender') == 'Female'], 'Female'),
+            ] if g],
+            'by_job_level':  [g for g in (group_scores(_bfilt(biz_rows, 'job_level', j), j) for j in job_levels) if g],
+            'by_tenure':     [g for g in (group_scores(_bfilt(biz_rows, 'tenure', t), t) for t in tenures) if g],
+        }
+
+    return businesses, gen_data, gender_data, job_data, tenure_data, manager_data, biz_cohorts
+
+
 @router.post("/chat")
 async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
+    import json as _json
+
+    # Compute full data at request time so new uploads are always reflected
+    (businesses, gen_data, gender_data, job_data,
+     tenure_data, manager_data, biz_cohorts) = _compute_full_chat_data(user)
+
     focus_line   = f"\nACTIVE FOCUS AREA: {req.focusArea} — prioritise answers about this theme." if req.focusArea else ""
     company_line = f"\nACTIVE COMPANY FILTER: {req.companyFilter} — answer only about this company unless explicitly asked otherwise." if req.companyFilter else ""
 
-    system_prompt = f"""You are an AI analyst assistant for ABG Vibes — Aditya Birla Group's employee engagement dashboard. You answer ONLY questions about the ABG Vibes survey, employee engagement, HR analytics, and the data below.{focus_line}{company_line}
+    # Screen context block
+    if req.active_context:
+        tab = req.active_context.get("tab", "unknown").replace("_", " ").title()
+        ctx_json = _json.dumps(req.active_context, indent=2)
+        screen_block = f"""
+IMPORTANT — USER IS ON THE "{tab}" TAB.
+WHAT IS ON THEIR SCREEN RIGHT NOW:
+{ctx_json}
+When the user says "this persona", "this analysis", "these results", "what I'm looking at" — they mean the above context.
+"""
+    else:
+        screen_block = ""
 
-STRICT SCOPE RULE: If the user asks something clearly unrelated to employee engagement, HR, workforce demographics, or this survey (e.g. coding, algorithms, general science, recipes, jokes), respond with exactly: "I can only help with questions about the ABG Vibes employee engagement survey. What would you like to know about the data?"
-Follow-up questions that refer to previous answers in this conversation (e.g. "what generation is that?", "tell me more", "why is that?", "compare with X") are ALWAYS valid — treat them as survey questions even if they are short or lack context.
+    biz_json     = _json.dumps([{"name": b["name"], "overall": b.get("overall"), "band": b.get("band"),
+                                  "respondent_count": b.get("respondent_count"),
+                                  "categories": b.get("categories", {})} for b in businesses], indent=2)
+    cohort_json  = _json.dumps(biz_cohorts, indent=2)
 
-- Greetings or small talk → respond briefly and warmly (1 sentence), then offer to help with engagement data. Do NOT cite any numbers.
-- Specific questions about data → answer in 2-3 sentences, lead with the key insight and number, use **bold** for key figures.
-- Never start a reply with "!" or similar punctuation.
-- "age group" or "age band" questions → use ONLY the AGE BAND BREAKDOWN scores (25-30, 30-35, etc.). NEVER use generation names (Gen Z, Traditionalist, etc.) as an answer to age group questions.
-- "generation" questions → use ONLY the GENERATION BREAKDOWN scores (Gen Z, Gen Y, Gen X, Baby Boomer).
-- Traditionalist is NOT an age group — it is a generation label with only 1 respondent and must never be cited.
-- Never say age group data is missing — it is always in the AGE BAND BREAKDOWN section above.
+    system_prompt = f"""You are an expert HR analytics AI analyst for Aditya Birla Group (ABG) Vibes 2026 Employee Engagement Survey, embedded inside their analytics dashboard.{focus_line}{company_line}
+{screen_block}
+=== COMPLETE ABG VIBES 2026 DATA ===
 
-SURVEY DATA (use only when the user asks a data question):
-{_build_context(req.dimension, user)}"""
+GROUP SUMMARY:
+- Total respondents: {sum(b.get('respondent_count', 0) for b in businesses) or 55459}
+- Number of businesses: {len(businesses)}
+- Group overall score: {round(sum(b.get('overall',0) for b in businesses)/len(businesses),2) if businesses else 4.46} / 5.0
+- Scale: 1–5 where 5 is best (favourability = 6 − raw score)
+
+ALL BUSINESSES WITH SCORES AND CATEGORY BREAKDOWN:
+{biz_json}
+
+GENERATION BREAKDOWN (group level):
+{_json.dumps(gen_data, indent=2)}
+
+GENDER BREAKDOWN (group level):
+{_json.dumps(gender_data, indent=2)}
+
+JOB LEVEL BREAKDOWN (group level):
+{_json.dumps(job_data, indent=2)}
+
+TENURE BREAKDOWN (group level):
+{_json.dumps(tenure_data, indent=2)}
+
+MANAGER vs INDIVIDUAL CONTRIBUTOR (group level):
+{_json.dumps(manager_data, indent=2)}
+
+PER-BUSINESS COHORT BREAKDOWNS (generation / gender / job level / tenure within each company):
+{cohort_json}
+
+=== ANSWER RULES ===
+
+PRIORITY ORDER:
+1. If question is about what is on screen ("this persona", "these results", "what I'm looking at") → use active screen context above first
+2. If question is about any ABG business, score, cohort, or category → use the data above — never say you don't have it
+3. If question needs something genuinely not in this data → answer from general HR knowledge and say "Based on general HR knowledge, not your ABG Vibes data"
+
+BEHAVIOUR RULES:
+- Handle typos gracefully — "novel jewels", "novel jewel", "noveljewels" all mean Novel Jewels Ltd. Match fuzzy company names to the closest real name
+- Never make up scores — only use numbers from the data above
+- Never say you don't have access to data
+- If asked which cohort is least/most engaged in a business → compare by_generation and by_job_level scores in biz_cohorts for that business and find the lowest/highest overall
+- "new joiners" or "new employees" → means tenure 0-2 years in tenure breakdown
+- "female employees" → use gender breakdown female data
+- Keep answers to 3–5 sentences unless user asks for more detail
+- Lead with the direct answer and the number, then explain
+- Think like a McKinsey HR consultant — be direct, specific, and insightful"""
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -733,6 +906,7 @@ async def skill_analysis(req: SkillAnalysisRequest, user: dict = Depends(get_cur
 SKILL FOCUS: {skill_def["goal"]}
 ANALYSE BY DIMENSION: {dim_label}
 {"— The riskBUs and brightSpotBUs fields MUST contain exact " + dim_label + " group names from the data below, NOT business unit names." if dim_key else "— The riskBUs and brightSpotBUs fields should be exact Business Unit names."}
+— IMPORTANT: Use ONLY the exact group names that appear in the data. Do NOT invent labels like "non-management", "lower-band", "early-career" etc. Copy the names verbatim.
 
 DATA:
 {step1_data}
@@ -755,7 +929,7 @@ Respond ONLY with valid JSON:
 
             # ── Step 2: Root Cause Investigation ─────────────────────────────
             risk_label = (step1.get("riskBUs") or [dim_label])[0]
-            yield sse({"step": 2, "label": f"Investigating {risk_label} patterns…", "done": False})
+            yield sse({"step": 2, "label": "Investigating root causes…", "done": False})
             print("[AGENT] Step 2 — Root Cause Investigation")
 
             patterns_str = "\n".join(f"{i+1}. {p}" for i, p in enumerate(step1.get("patterns") or []))
@@ -782,7 +956,7 @@ Respond ONLY with valid JSON. All values must be plain strings — no nested obj
             await asyncio.sleep(0.8)
 
             # ── Step 3: Action Generation ─────────────────────────────────────
-            yield sse({"step": 3, "label": "Generating priority actions…", "done": False})
+            yield sse({"step": 3, "label": "Synthesising recommendations…", "done": False})
             print("[AGENT] Step 3 — Action Synthesis")
 
             step3 = await _agent_step([{"role": "user", "content":

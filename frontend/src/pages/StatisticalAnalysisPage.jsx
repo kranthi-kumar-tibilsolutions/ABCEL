@@ -298,7 +298,7 @@ const TILE_CONFIG = [
 
 /* ── page ─────────────────────────────────────────────────────── */
 export default function StatisticalAnalysisPage() {
-  const { setBreadcrumb, saFilters, saCache, setSaCache, meta, user } = useContext(AppContext);
+  const { setBreadcrumb, saFilters, saCache, setSaCache, meta, user, setActiveScreenContext } = useContext(AppContext);
 
   // Ref keeps the cache readable inside fetchQuestionData without adding it to deps
   const saCacheRef = useRef(saCache);
@@ -314,6 +314,7 @@ export default function StatisticalAnalysisPage() {
   const [correlations,    setCorrelations]    = useState(() => saCache?.correlations ?? []);
   const [tabCounts,       setTabCounts]       = useState(() => saCache?.tabCounts ?? {});
   const [baseN,           setBaseN]           = useState(() => saCache?.baseN ?? 0);
+  const [dataBasis,       setDataBasis]       = useState(() => saCache?.dataBasis ?? '');
   const [correlogramData, setCorrelogramData] = useState(() => saCache?.correlogramData ?? null);
   const [networkData,     setNetworkData]     = useState(() => saCache?.networkData ?? null);
   const [insight,         setInsight]         = useState(() => saCache?.insight ?? '');
@@ -322,6 +323,18 @@ export default function StatisticalAnalysisPage() {
   const [topCorr,         setTopCorr]         = useState('Top 10');
   const [topNet,          setTopNet]          = useState('Top 15');
   const [loading,         setLoading]         = useState(false);
+
+  // Broadcast screen context to chatbot
+  useEffect(() => {
+    const selQ = questions.find(q => q.id === selectedQId);
+    setActiveScreenContext({
+      tab: 'statistical_analysis',
+      selected_question: selQ ? { id: selQ.id, text: selQ.text, category: selQ.category } : null,
+      top_correlations: correlations.slice(0, 5).map(c => ({ id: c.question_id, text: c.question_text, r: c.pearson_r, strength: c.strength, p: c.p_value })),
+      data_basis: dataBasis,
+      filters: saFilters,
+    });
+  }, [selectedQId, correlations, saFilters, dataBasis, questions]);
 
   // Fetch questions on mount; don't override selectedQId if already set from cache
   useEffect(() => {
@@ -366,10 +379,12 @@ export default function StatisticalAnalysisPage() {
       const tabCts = corrData.tab_counts || {};
       const bn     = corrData.n || 0;
       const corrs  = corrData.correlations || [];
+      const basis  = corrData.data_basis || '';
       const ins    = insData.insight || '';
 
       setTabCounts(tabCts);
       setBaseN(bn);
+      setDataBasis(basis);
       setCorrelations(corrs);
       setCorrelogramData(cgramData);
       setNetworkData(netData);
@@ -381,6 +396,7 @@ export default function StatisticalAnalysisPage() {
         selectedQId:     qId,
         tabCounts:       tabCts,
         baseN:           bn,
+        dataBasis:       basis,
         correlations:    corrs,
         correlogramData: cgramData,
         networkData:     netData,
@@ -461,7 +477,7 @@ export default function StatisticalAnalysisPage() {
           <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
             {[
               { label:'Question Type', sk:false,   value:'Likert Scale (1–5)' },
-              { label:'Responses',     sk:loading, value:(meta?.total_respondents ?? baseN) > 0 ? (meta?.total_respondents ?? baseN).toLocaleString() : '—' },
+              { label:'Responses',     sk:loading, value:(() => { const n = user?.role === 'company' ? baseN : (meta?.total_respondents ?? baseN); return n > 0 ? n.toLocaleString() : '—'; })() },
             ].map(({ label, sk, value }) => (
               <div key={label} style={{
                 display:'flex', alignItems:'center', justifyContent:'space-between',
@@ -489,7 +505,7 @@ export default function StatisticalAnalysisPage() {
                 <path d="M6 3.5v3M6 8v.5" stroke="#C2410C" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
               <span>
-                <strong>Scoped to {user?.company || 'your company'}</strong> — correlations use respondents from this company only.
+                {dataBasis || `Computed across generation × job-level cohorts within ${user?.company || 'your company'}`}
               </span>
             </div>
           ) : (
@@ -504,7 +520,7 @@ export default function StatisticalAnalysisPage() {
                 <path d="M6 3.5v3M6 8v.5" stroke="#1D4ED8" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
               <span>
-                <strong>Full ABG view</strong> — correlations computed across all 22 business unit averages.
+                {dataBasis || 'Computed across all business unit averages'}
               </span>
             </div>
           )}

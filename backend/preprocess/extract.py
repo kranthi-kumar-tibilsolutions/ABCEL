@@ -121,13 +121,14 @@ def parse_cq_lookup_sheet(df_raw):
 
 
 def build_cq_decode_map(raw_df, cq_lookup_maps):
-    """Match Data columns to CQ lookups by extracting 'CQN' from column names."""
+    """Match Data columns to CQ lookups by extracting 'CQN' from column names.
+    Normalises spaces so 'CQ9', 'CQ 9', 'C Q9' all resolve to the same lookup key."""
     decode_map = {}
     for col in raw_df.columns:
-        m = re.search(r'\bCQ(\d+)\b', str(col), re.IGNORECASE)
+        col_norm = re.sub(r'\s+', '', str(col)).upper()
+        m = re.search(r'CQ(\d+)', col_norm)
         if m:
             key = f'CQ{m.group(1)}'
-            # Only include non-empty mappings; applying {} would null-out the column
             if cq_lookup_maps.get(key):
                 decode_map[col] = cq_lookup_maps[key]
     return decode_map
@@ -255,12 +256,22 @@ GENDER_SIGNALS = ['male', 'female', 'gender', 'prefer not']
 BAND_SIGNALS   = ['band', 'level', 'management', 'executive', 'non-mgmt', 'mgmt']
 TENURE_SIGNALS = ['year', 'tenure', '0-2', '3-5', '6+', '< 1', 'months']
 
-GEN_HEADER    = ['generation', 'age group', 'age_group', 'generation cohort']
-AGE_HEADER    = ['cq23', ' age', 'age band', 'age_band', 'age range', 'age bracket']
-GENDER_HEADER = ['gender', 'sex']
-BAND_HEADER   = ['band', 'job band', 'job_band', 'job level', 'job_level', 'grade']
-TENURE_HEADER = ['tenure', 'years of service', 'years_of_service', 'experience']
-AGE_VALUE_SIGNALS = ['<21', '21-', '25-', '30-', '35-', '40-', '45-', '50-', '>55']
+GEN_HEADER     = ['generation', 'age group', 'age_group', 'generation cohort']
+AGE_HEADER     = ['cq23', ' age', 'age band', 'age_band', 'age range', 'age bracket']
+GENDER_HEADER  = ['gender', 'sex']
+BAND_HEADER    = ['band', 'job band', 'job_band', 'job level', 'job_level', 'grade']
+TENURE_HEADER  = ['tenure', 'years of service', 'years_of_service', 'experience']
+COUNTRY_HEADER = ['country', 'nation', 'location', 'geography', 'region', 'cq43']
+MANAGER_HEADER = ['is_manager', 'ismanager', 'people manager', 'manager status',
+                  'manages team', 'management status', 'cq52']
+ABGLP_HEADER   = ['abglp', 'leadership programme', 'leadership program',
+                  'high potential', 'hi po', 'hipo', 'cq35']
+
+AGE_VALUE_SIGNALS     = ['<21', '21-', '25-', '30-', '35-', '40-', '45-', '50-', '>55']
+COUNTRY_SIGNALS       = ['india', 'usa', 'united states', 'uk', 'china', 'europe',
+                         'australia', 'canada', 'singapore', 'uae', 'germany']
+MANAGER_SIGNALS       = ['people manager', 'individual contributor']
+ABGLP_SIGNALS         = ['abglp', 'leadership programme']
 
 
 def detect_dimensions(decoded_df, decode_map):
@@ -340,6 +351,21 @@ def detect_dimensions(decoded_df, decode_map):
             dimensions.setdefault('tenure', col)
         elif any(s in sample for s in TENURE_SIGNALS) and n <= 8:
             dimensions.setdefault('tenure', col)
+
+        if any(s in col_lower for s in COUNTRY_HEADER) and n <= 150:
+            dimensions.setdefault('country', col)
+        elif any(s in sample for s in COUNTRY_SIGNALS) and n <= 100:
+            dimensions.setdefault('country', col)
+
+        if any(s in col_lower for s in MANAGER_HEADER) and n <= 5:
+            dimensions.setdefault('is_manager', col)
+        elif any(s in sample for s in MANAGER_SIGNALS) and n <= 5:
+            dimensions.setdefault('is_manager', col)
+
+        if any(s in col_lower for s in ABGLP_HEADER) and n <= 5:
+            dimensions.setdefault('abglp', col)
+        elif any(s in sample for s in ABGLP_SIGNALS) and n <= 5:
+            dimensions.setdefault('abglp', col)
 
     # Fallback BU: highest-cardinality text column if nothing found
     if not dimensions.get('business_unit'):
@@ -610,29 +636,61 @@ def read_from_summary(summary_sheets, metadata_sheets):
 
 # ─── Phase 2: responses.json + questions.json extraction ─────────────────────
 
-def extract_phase2_data(raw_df, decoded_df, xl, output_dir):
+def extract_phase2_data(raw_df, decoded_df, xl, output_dir,
+                        detected_dims=None, detected_cats=None):
     """
-    Generate responses.json (per-employee scores) and questions.json (OP question metadata).
-    Uses DATA_REALITY_UPDATE column names and favourability conversion (score = 6 - raw).
-    Theme key fix: .replace(' & ', '_and_').replace(' ', '_')
+    Generate responses.json, questions.json, question_bu_scores.json.
+    Uses detected_dims (from detect_dimensions) and detected_cats (from detect_category_groups)
+    when available, falling back to hardcoded CQ/OP numbers for WTW Vibes standard format.
     """
     import re as _re
 
     def find_col(cq_code, df=raw_df):
+        cq_norm = _re.sub(r'\s+', '', cq_code).upper()
         for col in df.columns:
-            if _re.search(rf'\b{cq_code}\b', str(col), _re.IGNORECASE):
+            col_norm = _re.sub(r'\s+', '', str(col)).upper()
+            if _re.search(rf'(?<![A-Z0-9]){cq_norm}(?![A-Z0-9])', col_norm):
                 return col
         return None
 
     def find_op_col(op_id):
+        op_norm = _re.sub(r'\s+', '', op_id).upper()
         for col in raw_df.columns:
-            cs = str(col).strip()
-            if cs.startswith(op_id + ' ') or cs == op_id:
+            col_norm = _re.sub(r'\s+', '', str(col)).upper()
+            if col_norm == op_norm or col_norm.startswith(op_norm):
                 return col
         return None
 
-    # Category → OP mapping (DATA_REALITY_UPDATE §4)
-    CATEGORIES = {
+    def _dim_col(dim_key, *cq_fallbacks):
+        """Return column: detected dimension first, then CQ code fallbacks."""
+        if detected_dims and detected_dims.get(dim_key):
+            return detected_dims[dim_key]
+        for cq in cq_fallbacks:
+            col = find_col(cq)
+            if col:
+                return col
+        return None
+
+    # ── Demographic column resolution (detected → CQ fallback) ────────────────
+    col_biz    = _dim_col('business_unit', 'CQ9', 'CQ9 Org')
+    col_age    = _dim_col('age_group',     'CQ23')
+    col_gen    = _dim_col('generation',    'CQ24')
+    col_gender = _dim_col('gender',        'CQ25')
+    col_job    = _dim_col('job_band',      'CQ27')
+    col_tenure = _dim_col('tenure',        'CQ29')
+    col_country= _dim_col('country',       'CQ43')
+    col_mgr    = _dim_col('is_manager',    'CQ52')
+    col_abglp  = _dim_col('abglp',         'CQ35')
+
+    print(f"  [Phase 2] Demographic columns resolved:")
+    for name, col in [('business', col_biz), ('generation', col_gen), ('gender', col_gender),
+                      ('job_band', col_job), ('tenure', col_tenure), ('country', col_country),
+                      ('manager', col_mgr), ('abglp', col_abglp)]:
+        print(f"    {name}: {col or 'NOT FOUND'}")
+
+    # ── Category → column mapping (detected groups → CQ/OP fallback) ──────────
+    # Hardcoded WTW Vibes OP numbers used only when detected_cats is unavailable.
+    HARDCODED_CATEGORIES = {
         'Engagement':            ['OP1', 'OP2', 'OP4', 'OP48'],
         'Development & Career':  ['OP29', 'OP30', 'OP31', 'OP32', 'OP33', 'OP34'],
         'Leadership':            ['OP5', 'OP6', 'OP7', 'OP8', 'OP9', 'OP10', 'OP11', 'OP12', 'OP13'],
@@ -643,25 +701,22 @@ def extract_phase2_data(raw_df, decoded_df, xl, output_dir):
         'Onboarding':            ['OP49', 'OP50', 'OP52'],
     }
 
+    if detected_cats:
+        # Use detected category groups — full column names already resolved
+        CAT_COLS = {cat: [c for c in cols if c in raw_df.columns]
+                    for cat, cols in detected_cats.items()}
+        print(f"  [Phase 2] Using detected category groups: {list(CAT_COLS.keys())}")
+    else:
+        CAT_COLS = {
+            cat: [find_op_col(op) for op in ops if find_op_col(op)]
+            for cat, ops in HARDCODED_CATEGORIES.items()
+        }
+        print(f"  [Phase 2] Using hardcoded WTW Vibes category mapping")
+
     EXCLUDE_OPS = ['OP88', 'OP89', 'OP90', 'OP91', 'OP51']
-    all_op_cols = [c for c in raw_df.columns if str(c).strip().startswith('OP')
-                   and not any(ex in str(c) for ex in EXCLUDE_OPS)]
-
-    CAT_COLS = {
-        cat: [find_op_col(op) for op in ops if find_op_col(op)]
-        for cat, ops in CATEGORIES.items()
-    }
-
-    # Demographic column references
-    col_biz    = find_col('CQ9')   or find_col('CQ9 Org')
-    col_age    = find_col('CQ23')
-    col_gen    = find_col('CQ24')
-    col_gender = find_col('CQ25')
-    col_job    = find_col('CQ27')
-    col_tenure = find_col('CQ29')
-    col_country= find_col('CQ43')
-    col_mgr    = find_col('CQ52')
-    col_abglp  = find_col('CQ35')
+    all_op_cols = [c for c in raw_df.columns if _re.sub(r'\s+', '', str(c)).upper().startswith('OP')
+                   and not any(_re.sub(r'\s+', '', ex) in _re.sub(r'\s+', '', str(c)).upper()
+                               for ex in EXCLUDE_OPS)]
 
     # Sample up to 2000 rows for performance
     sample_n  = min(2000, len(decoded_df))
@@ -719,21 +774,24 @@ def extract_phase2_data(raw_df, decoded_df, xl, output_dir):
             'scores':                 scores_dict,
         })
 
-    # Build questions.json from OP column names
+    # Build questions.json from resolved CAT_COLS (works for both detected and hardcoded mapping)
     questions = []
-    for cat, ops in CATEGORIES.items():
-        for op_id in ops:
-            col = find_op_col(op_id)
-            if col:
-                full_text = str(col).strip()
-                text = ' '.join(full_text.split(' ')[1:]).strip() or full_text
-                questions.append({
-                    'id':          op_id,
-                    'text':        text,
-                    'short_label': op_id,
-                    'category':    cat,
-                    'type':        'likert_1_5',
-                })
+    for cat, cols in CAT_COLS.items():
+        for col in cols:
+            full_text = str(col).strip()
+            # Strip leading OP-code prefix (e.g. "OP1 I feel proud…" → "I feel proud…")
+            parts = full_text.split(' ', 1)
+            text = parts[1].strip() if len(parts) > 1 and _re.match(r'^OP\d+$', parts[0]) else full_text
+            words = text.split()
+            short = ' '.join(words[:6]) + ('…' if len(words) > 6 else '')
+            op_id = parts[0] if len(parts) > 1 and _re.match(r'^OP\d+$', parts[0]) else col
+            questions.append({
+                'id':          op_id,
+                'text':        text,
+                'short_label': short,
+                'category':    cat,
+                'type':        'likert_1_5',
+            })
 
     with open(f"{output_dir}/responses.json", 'w', encoding='utf-8') as f:
         json.dump(responses, f, indent=2)
@@ -742,6 +800,40 @@ def extract_phase2_data(raw_df, decoded_df, xl, output_dir):
     with open(f"{output_dir}/questions.json", 'w', encoding='utf-8') as f:
         json.dump(questions, f, indent=2)
     print(f"  [Phase 2] questions.json — {len(questions)} questions")
+
+    # ── BU-level question means (full dataset, not sample) ────────────────────
+    # Pearson on individual rows gives near-zero r (low within-person variance
+    # when most respondents answer identically). Computing means per business
+    # unit first (415 BUs) then correlating across BUs gives statistically
+    # meaningful results that HR directors can actually interpret.
+    from collections import defaultdict as _dd
+    bu_q_sums  = _dd(lambda: _dd(list))   # bu → qid → [scores]
+    col_bu_raw = col_biz  # already resolved via _dim_col('business_unit', 'CQ9', ...)
+
+    for i in range(len(decoded_df)):
+        dec_row = decoded_df.iloc[i]
+        raw_row = raw_df.iloc[i]
+        bu_name  = str(dec_row.get(col_bu_raw, 'Unknown')).strip() if col_bu_raw else 'Unknown'
+        if not bu_name or bu_name in ('nan', ''):
+            bu_name = 'Unknown'
+        for op_col in all_op_cols:
+            op_id = str(op_col).strip().split(' ')[0]
+            val   = pd.to_numeric(raw_row.get(op_col), errors='coerce')
+            if pd.notna(val) and 1 <= val <= 5:
+                bu_q_sums[bu_name][op_id].append(float(6 - val))
+
+    # {question_id → {bu_name → mean_score}}
+    q_bu_scores = {}
+    for bu, q_map in bu_q_sums.items():
+        for qid, vals in q_map.items():
+            if qid not in q_bu_scores:
+                q_bu_scores[qid] = {}
+            q_bu_scores[qid][bu] = round(sum(vals) / len(vals), 4)
+
+    with open(f"{output_dir}/question_bu_scores.json", 'w', encoding='utf-8') as f:
+        json.dump(q_bu_scores, f, indent=2)
+    print(f"  [Phase 2] question_bu_scores.json — {len(q_bu_scores)} questions × {len(bu_q_sums)} BUs")
+
 
     # Create empty Phase 2 files if they don't exist
     for fname, default in [
@@ -769,19 +861,22 @@ def parse_excel(excel_path, output_dir):
     raw_dfs, lookup_sheets, summary_sheets, metadata_sheets = {}, {}, {}, {}
 
     # ── Pass 1: Parse all CQ lookup sheets by name pattern (WTW Vibes format) ──
+    # Normalise sheet names so "CQ9", "CQ 9", "C Q9" are all treated as CQ lookup sheets.
     cq_lookup_maps = {}
     for sheet_name in xl.sheet_names:
-        if re.match(r'^CQ\d+$', str(sheet_name), re.IGNORECASE):
+        normalised = re.sub(r'\s+', '', str(sheet_name)).upper()
+        if re.match(r'^CQ\d+$', normalised):
             df_raw  = xl.parse(sheet_name, header=None)
             mapping = parse_cq_lookup_sheet(df_raw)
             if mapping:
-                cq_lookup_maps[sheet_name] = mapping
+                cq_lookup_maps[normalised] = mapping   # store under normalised key
             sheet_types[sheet_name] = 'cq_lookup'
             print(f"  Sheet '{sheet_name}': cq_lookup ({len(mapping)} codes)")
 
     # ── Pass 2: Classify remaining sheets ─────────────────────────────────────
     for sheet_name in xl.sheet_names:
-        if re.match(r'^CQ\d+$', str(sheet_name), re.IGNORECASE):
+        normalised = re.sub(r'\s+', '', str(sheet_name)).upper()
+        if re.match(r'^CQ\d+$', normalised):
             continue
         df = xl.parse(sheet_name)
         if df.empty:
@@ -875,7 +970,9 @@ def parse_excel(excel_path, output_dir):
     # ── Phase 2: generate responses.json and questions.json ──────────────────
     if raw_dfs:
         try:
-            extract_phase2_data(raw_df, decoded_df, xl, output_dir)
+            extract_phase2_data(raw_df, decoded_df, xl, output_dir,
+                                detected_dims=dimensions,
+                                detected_cats=category_groups if category_groups else None)
         except Exception as e:
             print(f"  [Phase 2] Warning: could not generate responses/questions: {e}")
 

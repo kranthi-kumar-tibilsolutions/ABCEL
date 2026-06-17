@@ -111,8 +111,9 @@ export default function App() {
   const [summaryData,    setSummaryData]    = useState(null);
   const [insightsData,   setInsightsData]   = useState(null);
   const [focusAreasData, setFocusAreasData] = useState(null);
-  const [saCache,        setSaCache]        = useState(null);
-  const [dataLoaded,     setDataLoaded]     = useState(false);
+  const [saCache,              setSaCache]              = useState(null);
+  const [activeScreenContext,  setActiveScreenContext]  = useState(null);
+  const [dataLoaded,           setDataLoaded]           = useState(false);
 
   const navigate = useCallback((nextPage, params = {}) => {
     setNavHistory(prev => [...prev, page]);
@@ -257,6 +258,7 @@ export default function App() {
     logout: handleLogout,
     rightPanelCollapsed, setRightPanelCollapsed,
     saCache, setSaCache,
+    activeScreenContext, setActiveScreenContext,
   };
 
   const PageComponent = PAGE_MAP[page] ?? Overview;

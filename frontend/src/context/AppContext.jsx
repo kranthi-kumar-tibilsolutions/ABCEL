@@ -53,6 +53,10 @@ export const AppContext = createContext({
   breadcrumb:    [],
   setBreadcrumb: () => {},
 
+  // Active screen context — set by whichever page is visible; read by ChatWithData
+  activeScreenContext:    null,
+  setActiveScreenContext: () => {},
+
   // Statistical Analysis filters (TopBar-hosted)
   saFilters:      {},
   setSaFilters:   () => {},
