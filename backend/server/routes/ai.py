@@ -123,14 +123,23 @@ def _build_context(dimension: str = "Business Unit", user: Optional[dict] = None
                 meta["lowest_score"]    = low_bu.get("overall")
 
     sorted_biz = sorted(businesses, key=lambda b: b.get("overall") or 0, reverse=True)
-    biz_sample = sorted_biz[:5] + sorted_biz[-3:]
-    biz_lines  = "\n".join(f"{b['name']}: {b['overall']} ({b['band']})" for b in biz_sample)
 
     def _fmt(items, suffix=""):
         # exclude noise: n<30 and "DOB not Available"; sort highest first
         valid = [c for c in (items or []) if (c.get("respondent_count") or 0) >= 30 and c.get("name") != "DOB not Available"]
         valid.sort(key=lambda c: c.get("overall") or 0, reverse=True)
         return ", ".join(f"{c['name']}={c.get('overall')}{suffix} (n={c.get('respondent_count')})" for c in valid)
+
+    # All businesses with overall + key category scores so the LLM can answer
+    # company-specific questions (e.g. "what is Novel Jewels leadership score?")
+    def _biz_line(b):
+        cats = b.get("categories", {})
+        cat_parts = ", ".join(f"{k}={v}" for k, v in cats.items() if v)
+        n = b.get("respondent_count", "")
+        n_str = f" n={n}" if n else ""
+        return f"{b['name']}: {b['overall']} ({b.get('band','')}{n_str}) [{cat_parts}]"
+
+    biz_lines = "\n".join(_biz_line(b) for b in sorted_biz)
 
     cluster_lines   = ", ".join(f"{k}: {len(v or [])} BUs" for k, v in clusters.items())
     gender_line     = _fmt(cohorts.get("gender"))
@@ -139,13 +148,30 @@ def _build_context(dimension: str = "Business Unit", user: Optional[dict] = None
     job_band_line   = _fmt(cohorts.get("job_band"))
     tenure_line     = _fmt(cohorts.get("tenure"), " yrs")
 
+    # Cohort breakdown per business (generation) for cross-company cohort questions
+    units = _read("units.json") or []
+    cohort_by_biz = {}
+    for u in units:
+        bname = u.get("business") or u.get("name", "")
+        if bname and u.get("cohorts"):
+            cohort_by_biz[bname] = u["cohorts"]
+    cohort_lines = ""
+    if cohort_by_biz:
+        cohort_lines = "\n\nPER-BUSINESS COHORT DATA (generation overall scores):\n"
+        for bname, bc in list(cohort_by_biz.items())[:10]:  # limit tokens
+            gen = bc.get("generation", [])
+            if gen:
+                gen_str = ", ".join(f"{g['name']}={g['overall']}(n={g.get('respondent_count','')})" for g in gen if g.get("overall"))
+                cohort_lines += f"{bname}: {gen_str}\n"
+
     return f"""ABG Vibes Employee Survey — {meta.get("survey_name", "2026")}
 Respondents: {meta.get("total_respondents", 55457)} | Businesses: {meta.get("total_businesses", len(businesses))} | BUs: {meta.get("total_units", 415)}
 Group avg: {meta.get("group_avg", 4.46)}/5 | Top: {meta.get("top_business")} ({meta.get("top_score")}) | Lowest: {meta.get("lowest_business")} ({meta.get("lowest_score")})
 Strongest category: {meta.get("strongest_category")} | Weakest: {meta.get("weakest_category")}
 Dimension: {dimension}
 
-TOP/BOTTOM BUSINESSES: {biz_lines}
+ALL BUSINESSES (sorted highest to lowest — every company in the survey):
+{biz_lines}
 
 CLUSTERS: {cluster_lines}
 AGE-TO-GENERATION MAPPING (survey year 2026): <21=Gen Z, 21-25=Gen Z, 25-30=Gen Z/Gen Y, 30-35=Gen Y, 35-40=Gen Y, 40-45=Gen X, 45-50=Gen X, 50-55=Gen X/Baby Boomer, >55=Baby Boomer
@@ -153,7 +179,7 @@ GENDER BREAKDOWN: {gender_line}
 GENERATION BREAKDOWN (Gen Z / Gen Y / Gen X / Baby Boomer — NOT age bands): {generation_line}
 AGE BAND BREAKDOWN (numeric bands like 25-30, 30-35 etc — use these for any "age group" question): {age_group_line or "(not in dataset)"}
 JOB BAND: {job_band_line}
-TENURE (years): {tenure_line}""".strip()
+TENURE (years): {tenure_line}{cohort_lines}""".strip()
 
 
 # ── Non-streaming LLM call + JSON parse ──────────────────────────────────────
@@ -341,8 +367,14 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
 
     system_prompt = f"""You are an AI analyst assistant for ABG Vibes — Aditya Birla Group's employee engagement dashboard. You answer ONLY questions about the ABG Vibes survey, employee engagement, HR analytics, and the data below.{focus_line}{company_line}
 
-STRICT SCOPE RULE: If the user asks something clearly unrelated to employee engagement, HR, workforce demographics, or this survey (e.g. coding, algorithms, general science, recipes, jokes), respond with exactly: "I can only help with questions about the ABG Vibes employee engagement survey. What would you like to know about the data?"
-Follow-up questions that refer to previous answers in this conversation (e.g. "what generation is that?", "tell me more", "why is that?", "compare with X") are ALWAYS valid — treat them as survey questions even if they are short or lack context.
+STRICT SCOPE RULE: Only refuse if the question is CLEARLY about something with zero relation to HR, employees, or this survey — e.g. coding problems, recipes, general science, sports scores, jokes. DO NOT refuse if:
+- The question mentions a company name you don't recognise (it may be a business unit in the survey)
+- The question asks about a demographic group, cohort, persona, or score
+- The question is vague but could plausibly be about engagement data
+- The conversation history is about the survey
+When refusing, say exactly: "I can only help with questions about the ABG Vibes employee engagement survey. What would you like to know about the data?"
+If a company or BU name is not found in the data above, say "I don't have data for [name] in this dataset" — do NOT refuse the question entirely.
+Follow-up questions that refer to previous answers (e.g. "what generation is that?", "tell me more", "why is that?", "compare with X") are ALWAYS valid — treat them as survey questions even if they are short or lack context.
 
 - Greetings or small talk → respond briefly and warmly (1 sentence), then offer to help with engagement data. Do NOT cite any numbers.
 - Specific questions about data → answer in 2-3 sentences, lead with the key insight and number, use **bold** for key figures.
