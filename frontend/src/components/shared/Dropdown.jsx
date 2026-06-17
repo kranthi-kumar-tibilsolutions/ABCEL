@@ -21,13 +21,14 @@ function normalise(opt) {
  * variant="filter"  — compact trigger showing value only (filter-bar style)
  */
 export default function Dropdown({
-  variant  = 'topbar',
-  label    = '',
+  variant   = 'topbar',
+  label     = '',
   value,
-  options  = [],
+  options   = [],
   onChange,
   placeholder,
   menuAlign = 'left',   // 'left' | 'right'
+  className = '',
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -78,7 +79,7 @@ export default function Dropdown({
 
   /* ── Filter variant ─────────────────────────────────────── */
   return (
-    <div className="fdd" ref={ref}>
+    <div className={`fdd${className ? ` ${className}` : ''}`} ref={ref}>
       <button className={`fdd-trigger${open ? ' open' : ''}`} onClick={() => setOpen(o => !o)}>
         <span className="fdd-value">{display}</span>
         <span className={`fdd-chevron${open ? ' open' : ''}`}>
