@@ -2,17 +2,17 @@ import { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../context/AppContext';
 import { apiFetch } from '../utils/api';
 import { Bar, Radar } from 'react-chartjs-2';
-import Badge       from '../components/shared/Badge';
-import Breadcrumb  from '../components/shared/Breadcrumb';
-import Skeleton    from '../components/shared/Skeleton';
+import Badge from '../components/shared/Badge';
+import Skeleton from '../components/shared/Skeleton';
+import PaginatedTable from '../components/shared/PaginatedTable';
 
 const CATEGORY_COLORS = {
-  'Engagement':          '#F97316',
-  'Onboarding':          '#2563EB',
-  'Wellbeing':           '#16A34A',
-  'Performance Culture': '#7C3AED',
-  'Leadership':          '#0891B2',
-  'Communication':       '#D97706',
+  'Engagement Index':        '#F97316',
+  'Development & Career':    '#16A34A',
+  'Leadership':              '#D97706',
+  'Performance culture':     '#7C3AED',
+  'Manager Effectiveness':   '#EA580C',
+  'Uncategorized':           '#94A3B8',
 };
 
 function scoreColor(s) {
@@ -25,13 +25,20 @@ function scoreColor(s) {
 }
 
 export default function BusinessDetail() {
-  const { selectedBusiness, navigate, units, businesses, dimension } = useContext(AppContext);
+  const { selectedBusiness, navigate, units, businesses, dimension, setBreadcrumb } = useContext(AppContext);
   const [insight,      setInsight]     = useState(null);
   const [loadInsight,  setLoadInsight] = useState(false);
-  const [showAllBUs,   setShowAllBUs]  = useState(false);
 
   const biz = businesses?.find(b => b.name === selectedBusiness);
   const bizUnits = units?.filter(u => u.business === selectedBusiness) ?? [];
+
+  useEffect(() => {
+    if (!selectedBusiness) return;
+    setBreadcrumb([
+      { label: 'Business Overview', page: 'business-overview' },
+      { label: selectedBusiness },
+    ]);
+  }, [selectedBusiness]);
 
   useEffect(() => {
     if (!selectedBusiness) return;
@@ -81,35 +88,80 @@ export default function BusinessDetail() {
 
   return (
     <div className="page-container">
-      <Breadcrumb items={[
-        { label: 'Overview',   page: 'overview' },
-        { label: biz.name },
-      ]} />
-
-      <div className="biz-detail-header">
-        <div>
-          <h1 className="page-title">{biz.name}</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 6 }}>
-            <Badge status={biz.band} />
-            {biz.rank && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Rank #{biz.rank} of {businesses?.length}</span>}
-            {biz.respondent_count && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{biz.respondent_count?.toLocaleString()} respondents</span>}
-          </div>
-        </div>
-        <div className="biz-score-big" style={{ color: scoreColor(biz.overall ?? biz.score ?? 0) }}>
-          {(biz.overall ?? biz.score ?? 0).toFixed(2)}
-          <span style={{ fontSize: 14, color: 'var(--text-muted)', marginLeft: 4 }}>/ 5.00</span>
-        </div>
-      </div>
-
-      {/* Category scores */}
+      {/* Header + Category scores in one container */}
       {cats.length > 0 && (
-        <div className="cat-scores-grid">
-          {cats.map(([cat, val]) => (
-            <div key={cat} className="cat-score-card" style={{ borderTop: `3px solid ${CATEGORY_COLORS[cat] || '#6B7280'}` }}>
-              <div className="cat-score-label">{cat}</div>
-              <div className="cat-score-value" style={{ color: scoreColor(+val) }}>{(+val).toFixed(2)}</div>
-            </div>
-          ))}
+        <div className="chart-card" style={{ padding: '18px 20px 20px', background: '#F1F5F9' }}>
+          <div className="biz-detail-header" style={{ marginBottom: 16 }}>
+            <h1 className="page-title">{biz.name}</h1>
+            {(() => {
+              const sc = biz.overall ?? biz.score ?? 0;
+              const color = scoreColor(sc);
+              const size = 88, stroke = 7, r = (size - stroke) / 2;
+              const circ = 2 * Math.PI * r;
+              const pct  = sc / 5;
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  <div style={{ position: 'relative', width: size, height: size }}>
+                    <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+                      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={`${color}20`} strokeWidth={stroke} />
+                      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+                        strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)}
+                        strokeLinecap="round" />
+                    </svg>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: 20, fontWeight: 800, color, lineHeight: 1 }}>{sc.toFixed(2)}</span>
+                      <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500 }}>/ 5.00</span>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 600, color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Overall</span>
+                </div>
+              );
+            })()}
+          </div>
+          <div className="cat-scores-grid">
+            {cats.map(([cat, val], idx) => {
+              const sorted = [...cats].sort((a, b) => +b[1] - +a[1]);
+              const rank = sorted.findIndex(([k]) => k === cat) + 1;
+              const total = cats.length;
+              const pct = rank / total;
+              const theme = pct <= 0.33
+                ? { color: '#16A34A', border: '#4ADE80', bg: 'rgba(74,222,128,0.06)', shadow: 'rgba(74,222,128,0.18)' }
+                : pct <= 0.66
+                ? { color: '#B45309', border: '#FCD34D', bg: 'rgba(252,211,77,0.06)',  shadow: 'rgba(252,211,77,0.18)'  }
+                : { color: '#DC2626', border: '#FCA5A5', bg: 'rgba(252,165,165,0.06)', shadow: 'rgba(252,165,165,0.18)' };
+              const color = theme.border;
+              const bg    = theme.bg;
+              const shadow = theme.shadow;
+              return (
+                <div key={cat} style={{
+                  background: `linear-gradient(135deg, ${bg} 0%, var(--bg-card) 60%)`,
+                  border: '1px solid var(--border)',
+                  borderLeft: `4px solid ${color}`,
+                  borderRadius: 8,
+                  padding: '14px 14px 12px',
+                  boxShadow: `0 4px 16px ${shadow}, 0 1px 4px rgba(0,0,0,0.05)`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}>
+                  {/* Index + circle */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: theme.color }}>{idx + 1}</span>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%',
+                      border: `2.5px solid ${theme.border}`,
+                      background: bg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: theme.color, lineHeight: 1 }}>{(+val).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  {/* Label */}
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: 1.3 }}>{cat}</div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -201,48 +253,23 @@ export default function BusinessDetail() {
       {bizUnits.length > 0 && (
         <div style={{ marginTop: 24 }}>
           <h3 className="section-title">All Business Units</h3>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>#</th><th>Business Unit</th><th>Score</th><th>Band</th><th>Respondents</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bizUnits
-                .slice()
-                .sort((a,b) => (b.score??b.overall??0)-(a.score??a.overall??0))
-                .slice(0, showAllBUs ? undefined : 10)
-                .map((u, i) => (
-                  <tr
-                    key={u.name}
-                    onClick={() => navigate('bu-detail', { business: selectedBusiness, unit: u.name })}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <td>{i+1}</td>
-                    <td>{u.name}</td>
-                    <td style={{ color: scoreColor(+(u.score??u.overall??0)), fontWeight: 700 }}>
-                      {(+(u.score??u.overall??0)).toFixed(2)}
-                    </td>
-                    <td><Badge status={u.band} /></td>
-                    <td>{u.respondent_count?.toLocaleString() ?? '—'}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-          {bizUnits.length > 10 && (
-            <button
-              onClick={() => setShowAllBUs(v => !v)}
-              style={{
-                marginTop: 10, width: '100%', padding: '9px 0',
-                background: 'none', border: '1px solid var(--border)',
-                borderRadius: 8, fontSize: 12, fontWeight: 600,
-                color: 'var(--blue-primary)', cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
-            >
-              {showAllBUs ? `Show less ↑` : `View more (${bizUnits.length - 10} more) ↓`}
-            </button>
-          )}
+          <PaginatedTable
+            pageSize={10}
+            headers={<><th>#</th><th>Business Unit</th><th>Score</th><th>Band</th><th>Respondents</th></>}
+            rows={bizUnits
+              .slice()
+              .sort((a,b) => (b.score??b.overall??0)-(a.score??a.overall??0))
+              .map((u, i) => (
+                <tr key={u.name} onClick={() => navigate('bu-detail', { business: selectedBusiness, unit: u.name })} style={{ cursor: 'pointer' }}>
+                  <td>{i+1}</td>
+                  <td>{u.name}</td>
+                  <td style={{ color: scoreColor(+(u.score??u.overall??0)), fontWeight: 700 }}>{(+(u.score??u.overall??0)).toFixed(2)}</td>
+                  <td><Badge status={u.band} /></td>
+                  <td>{u.respondent_count?.toLocaleString() ?? '—'}</td>
+                </tr>
+              ))
+            }
+          />
         </div>
       )}
     </div>

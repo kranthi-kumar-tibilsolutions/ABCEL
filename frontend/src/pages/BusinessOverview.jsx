@@ -10,6 +10,13 @@ function scoreColor(s) {
   return '#DC2626';
 }
 
+function rankTheme(rank, total) {
+  const pct = rank / total;
+  if (pct <= 0.33) return { border: '#4ADE80', shadow: 'rgba(74,222,128,0.18)',  bg: 'rgba(74,222,128,0.06)',  text: '#16A34A' };
+  if (pct <= 0.66) return { border: '#FCD34D', shadow: 'rgba(252,211,77,0.18)',  bg: 'rgba(252,211,77,0.06)',  text: '#B45309' };
+  return              { border: '#FCA5A5', shadow: 'rgba(252,165,165,0.18)',  bg: 'rgba(252,165,165,0.06)', text: '#DC2626' };
+}
+
 const SORT_OPTIONS = [
   { field: 'score',      label: 'Engagement Score' },
   { field: 'responses', label: 'No. of Responses'  },
@@ -29,10 +36,7 @@ export default function BusinessOverview() {
   const { businesses, filteredBusinesses, navigate, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
 
   useEffect(() => {
-    setBreadcrumb([
-      { label: 'Overview', page: 'overview' },
-      { label: 'All Businesses' },
-    ]);
+    setBreadcrumb([{ label: 'Business Overview' }]);
   }, []);
 
   const [sortField, setSortField] = useState('score');
@@ -71,53 +75,85 @@ export default function BusinessOverview() {
     return sortDir === 'desc' ? vb - va : va - vb;
   });
 
-  return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="biz-sort-row">
-          <span className="biz-sort-label">Sort by</span>
-          {SORT_OPTIONS.map(opt => (
-            <button
-              key={opt.field}
-              className={`biz-sort-btn${sortField === opt.field ? ' active' : ''}`}
-              onClick={() => handleSort(opt.field)}
-            >
-              {opt.label}
-              {sortField === opt.field && <SortArrow dir={sortDir} />}
-            </button>
-          ))}
-        </div>
-      </div>
+  const LEGEND = [
+    { color: '#4ADE80', label: 'Top 33%'    },
+    { color: '#FCD34D', label: 'Mid 34%'    },
+    { color: '#FCA5A5', label: 'Bottom 33%' },
+  ];
 
-      <div className="biz-cards-grid">
-        {sorted.map((biz) => {
-          const sc = +(biz.overall ?? biz.score ?? 0);
-          return (
-            <div
-              key={biz.name}
-              className="biz-overview-card"
-              onClick={() => navigate('business-detail', { business: biz.name })}
-            >
-              <div className="biz-card-top">
-                <div className="biz-card-rank" style={{ color: scoreColor(sc) }}>
-                  #{biz.rank ?? '—'}
-                </div>
-                <div className="biz-card-score" style={{ color: scoreColor(sc) }}>
-                  {sc.toFixed(2)}
-                </div>
+  return (
+    <div className="page-container" style={{ display: 'flex', flexDirection: 'column' }}>
+      <div className="chart-card" style={{ padding: '14px 28px 28px', background: '#F1F5F9', flex: 1, display: 'flex', flexDirection: 'column' }}>
+
+        {/* Header row — legend left, sort right */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          {/* Legend */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            {LEGEND.map(l => (
+              <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 11, height: 11, borderRadius: '50%', background: l.color, display: 'inline-block', flexShrink: 0, border: `1.5px solid ${l.color}` }} />
+                <span style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600 }}>{l.label}</span>
               </div>
-              <div className="biz-card-name" title={biz.name}>{biz.name}</div>
-              <div style={{ marginTop: 8 }}>
-                <Badge status={biz.band} />
-              </div>
-              {biz.respondent_count && (
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
-                  {biz.respondent_count.toLocaleString()} respondents
+            ))}
+          </div>
+
+          {/* Sort */}
+          <div className="biz-sort-row">
+            <span className="biz-sort-label">Sort by</span>
+            {SORT_OPTIONS.map(opt => (
+              <button
+                key={opt.field}
+                className={`biz-sort-btn${sortField === opt.field ? ' active' : ''}`}
+                onClick={() => handleSort(opt.field)}
+              >
+                {opt.label}
+                {sortField === opt.field && <SortArrow dir={sortDir} />}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="biz-cards-grid">
+          {sorted.map((biz, idx) => {
+            const sc    = +(biz.overall ?? biz.score ?? 0);
+            const theme = rankTheme(idx + 1, sorted.length);
+            return (
+              <div
+                key={biz.name}
+                className="biz-overview-card"
+                onClick={() => navigate('business-detail', { business: biz.name })}
+                style={{
+                  borderLeft: `4px solid ${theme.border}`,
+                  background: `linear-gradient(135deg, ${theme.bg} 0%, var(--bg-card) 60%)`,
+                  boxShadow: `0 4px 16px ${theme.shadow}, 0 1px 4px rgba(0,0,0,0.06)`,
+                }}
+              >
+                {/* Rank + Score circle */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: theme.text }}>#{biz.rank ?? '—'}</span>
+                  {/* Score circle */}
+                  <div style={{
+                    width: 40, height: 40, borderRadius: '50%',
+                    border: `2.5px solid ${theme.border}`,
+                    background: theme.bg,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: theme.text, lineHeight: 1 }}>{sc.toFixed(2)}</span>
+                  </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
+                {/* Name */}
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={biz.name}>{biz.name}</div>
+                {/* Badge + Respondents */}
+                {biz.respondent_count && (
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    {biz.respondent_count.toLocaleString()} respondents
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Lottie from 'lottie-react';
 import loaderAnim from './assets/loader.json';
 import { AppContext }      from './context/AppContext';
@@ -72,6 +72,20 @@ export default function App() {
   const [loggingOut,     setLoggingOut]     = useState(false);
   const [page,           setPage]           = useState('upload');
   const [navHistory,     setNavHistory]     = useState([]);
+  const contentRef = useRef(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const check = () => setShowScrollHint(el.scrollTop + el.clientHeight < el.scrollHeight - 10);
+    check();
+    el.addEventListener('scroll', check);
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => { el.removeEventListener('scroll', check); ro.disconnect(); };
+  }, [page]);
+  const [dpbTopbarSlot,  setDpbTopbarSlot]  = useState(null);
   const [dimension,      setDimension]      = useState('overall');
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [selectedBU,     setSelectedBU]     = useState(null);
@@ -171,6 +185,10 @@ export default function App() {
       .catch(() => {});
   }, [auth, fetchData]);
 
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [page]);
+
   const handleLogin = useCallback((user, token) => {
     const next = { user, token };
     setAuth(next);
@@ -226,6 +244,7 @@ export default function App() {
     isFiltersOpen, setIsFiltersOpen,
     dpbFilters, setDpbFilters,
     dpbResetSignal, setDpbResetSignal,
+    dpbTopbarSlot, setDpbTopbarSlot,
     saFilters, setSaFilters,
     breadcrumb, setBreadcrumb,
     outliersTopN, setOutliersTopN,
@@ -279,14 +298,24 @@ export default function App() {
           <div className="main-area">
             <TopBar />
             <div className="content-with-panel">
-              <div className="content">
+              <div className="content" ref={contentRef}>
                 <PageComponent />
               </div>
+              {showScrollHint && (
+                <div className="scroll-hint" onClick={() => contentRef.current?.scrollBy({ top: 200, behavior: 'smooth' })}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 4.5L7 9.5L12 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              )}
               <RightPanel />
             </div>
           </div>
           <FilterDrawer />
         </div>
+        <footer className="app-footer">
+          <span>ABG VIBES · v{__APP_VERSION__}</span>
+        </footer>
       </div>
       {loggingOutOverlay}
     </AppContext.Provider>

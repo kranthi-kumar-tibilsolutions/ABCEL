@@ -9,7 +9,11 @@ import EngagementHeatmap from '../components/overview/charts/EngagementHeatmap';
 import DriversTree       from '../components/overview/charts/DriversTree';
 
 export default function Overview() {
-  const { navigate, dimension, meta, setActiveScreenContext } = useContext(AppContext);
+  const { navigate, dimension, meta, setActiveScreenContext, setBreadcrumb } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([{ label: 'Overview' }]);
+  }, []);
 
   useEffect(() => {
     setActiveScreenContext({

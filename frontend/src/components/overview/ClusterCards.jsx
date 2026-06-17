@@ -1,6 +1,47 @@
 import { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
 
+function InfoTip({ text }) {
+  const [show, setShow] = useState(false);
+  return (
+    <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', marginLeft: 4 }}>
+      <svg
+        width="13" height="13" viewBox="0 0 13 13" fill="none"
+        style={{ cursor: 'pointer', flexShrink: 0 }}
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+      >
+        <circle cx="6.5" cy="6.5" r="6" fill="var(--blue-light)" stroke="var(--blue-primary)" strokeWidth="1.2" strokeOpacity="0.4"/>
+        <circle cx="6.5" cy="4.2" r="0.7" fill="var(--blue-primary)"/>
+        <rect x="5.9" y="5.8" width="1.2" height="3.2" rx="0.6" fill="var(--blue-primary)"/>
+      </svg>
+      {show && (
+        <span style={{
+          position: 'absolute', bottom: 'calc(100% + 8px)', left: '50%',
+          transform: 'translateX(-50%)', zIndex: 1000,
+          background: 'var(--bg-card)', border: '1px solid var(--border)',
+          borderBottom: '3px solid var(--blue-primary)',
+          borderRadius: 8, padding: '10px 13px',
+          width: 220, fontSize: 11.5, color: 'var(--text-primary)',
+          lineHeight: 1.6, fontWeight: 400,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+          pointerEvents: 'none',
+        }}>
+          {/* arrow */}
+          <span style={{
+            position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)',
+            width: 0, height: 0,
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderTop: '6px solid var(--blue-primary)',
+          }}/>
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
 const CLUSTER_CONFIG = {
   thriving: {
     label:    'THRIVING',
@@ -110,11 +151,7 @@ export default function ClusterCards() {
         <div>
           <h3 className="cluster-section-title">
             BU Health by Cluster
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" title="Business units grouped by engagement score and variance" style={{cursor:'default',flexShrink:0}}>
-              <circle cx="6.5" cy="6.5" r="6" stroke="#9CA3AF" strokeWidth="1.2"/>
-              <circle cx="6.5" cy="4.2" r="0.7" fill="#9CA3AF"/>
-              <rect x="5.9" y="5.8" width="1.2" height="3.2" rx="0.6" fill="#9CA3AF"/>
-            </svg>
+            <InfoTip text="Business units are grouped by engagement score and variance to help prioritise attention and action." />
           </h3>
           <p className="cluster-section-sub">Understand variance and prioritise attention</p>
         </div>

@@ -1,6 +1,7 @@
 import { useContext, useState, useMemo, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
-import Badge      from '../components/shared/Badge';
+import Badge from '../components/shared/Badge';
+import PaginatedTable from '../components/shared/PaginatedTable';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -15,7 +16,7 @@ export default function BUExplorer() {
 
   useEffect(() => {
     setBreadcrumb([
-      { label: 'Overview', page: 'overview' },
+      { label: 'Explore' },
       { label: 'BU Explorer' },
     ]);
   }, []);
@@ -105,48 +106,32 @@ export default function BUExplorer() {
         </div>
 
       {/* Table */}
-      <table className="data-table" style={{ marginTop: 0, border: 'none', borderRadius: 0 }}>
-        <thead>
-          <tr>
+      <div style={{ padding: '12px 16px 16px' }}>
+        <PaginatedTable
+          pageSize={15}
+          headers={<>
             <th>#</th>
-            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('name')}>
-              Unit <SortArrow col="name" />
-            </th>
-            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('business')}>
-              Business <SortArrow col="business" />
-            </th>
-            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('score')}>
-              Score <SortArrow col="score" />
-            </th>
+            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('name')}>Unit <SortArrow col="name" /></th>
+            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('business')}>Business <SortArrow col="business" /></th>
+            <th style={{ cursor: 'pointer' }} onClick={() => toggleSort('score')}>Score <SortArrow col="score" /></th>
             <th>Band</th>
             <th>Respondents</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map((u, i) => {
+          </>}
+          rows={filtered.map((u, i) => {
             const sc = +(u.score ?? u.overall ?? 0);
             return (
-              <tr
-                key={u.name + i}
-                onClick={() => navigate('bu-detail', { business: u.business, unit: u.name })}
-                style={{ cursor: 'pointer' }}
-              >
+              <tr key={u.name + i} onClick={() => navigate('bu-detail', { business: u.business, unit: u.name })} style={{ cursor: 'pointer' }}>
                 <td>{i+1}</td>
                 <td>{u.name}</td>
-                <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{u.business ?? '—'}</td>
-                <td style={{ color: scoreColor(sc), fontWeight: 700 }}>
-                  {sc > 0 ? sc.toFixed(2) : '—'}
-                </td>
+                <td style={{ color: 'var(--text-muted)' }}>{u.business ?? '—'}</td>
+                <td style={{ color: scoreColor(sc), fontWeight: 700 }}>{sc > 0 ? sc.toFixed(2) : '—'}</td>
                 <td><Badge status={u.band} /></td>
                 <td>{u.respondent_count?.toLocaleString() ?? '—'}</td>
               </tr>
             );
           })}
-          {filtered.length === 0 && (
-            <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 24 }}>No units found</td></tr>
-          )}
-        </tbody>
-      </table>
+        />
+      </div>
       </div>
     </div>
   );
