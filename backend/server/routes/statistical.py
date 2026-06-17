@@ -40,16 +40,37 @@ def _resolve_business(user: dict, requested: str | None) -> str | None:
 
 
 def _bu_corr_vectors(q_bu: dict, q_id_a: str, q_id_b: str, business: str | None = None):
-    """Return aligned (xs, ys) lists using business-unit level question means."""
+    """Return aligned (xs, ys) using business-unit level question means (group_hr view)."""
     a_scores = q_bu.get(q_id_a, {})
     b_scores = q_bu.get(q_id_b, {})
-    # If a business filter is set, keep only BUs belonging to that business;
-    # the BU keys in question_bu_scores are business names (CQ9 = Org Level 1).
     if business and business != "All":
         a_scores = {k: v for k, v in a_scores.items() if k == business}
         b_scores = {k: v for k, v in b_scores.items() if k == business}
     common = sorted(set(a_scores) & set(b_scores))
     return [a_scores[k] for k in common], [b_scores[k] for k in common]
+
+
+def _cohort_means(responses: list, q_id: str, min_n: int = 5) -> dict:
+    """Aggregate scores by generation × job_level cohort. Returns {cohort_key: mean}."""
+    from collections import defaultdict as _dd
+    groups = _dd(list)
+    for row in responses:
+        gen = row.get("generation", "")
+        job = row.get("job_level", "")
+        if not gen or not job or gen in ("Unknown", "nan") or job in ("Unknown", "nan"):
+            continue
+        v = row.get("scores", {}).get(q_id)
+        if v is not None:
+            groups[f"{gen}|{job}"].append(v)
+    return {k: sum(vs) / len(vs) for k, vs in groups.items() if len(vs) >= min_n}
+
+
+def _cohort_corr_vectors(responses: list, q_id_a: str, q_id_b: str):
+    """Return aligned (xs, ys) using cohort means — used for company-role users."""
+    a = _cohort_means(responses, q_id_a)
+    b = _cohort_means(responses, q_id_b)
+    common = sorted(set(a) & set(b))
+    return [a[k] for k in common], [b[k] for k in common]
 
 
 def _filter(responses: list, business, year, country, department,
@@ -102,19 +123,25 @@ async def get_correlations(
     try:
         business  = _resolve_business(user, business)
         questions = _read("questions.json")
-        q_bu      = _read_dict("question_bu_scores.json")
+        # company role: use cohort means (gen × job_level) within their company
+        # group_hr: use BU-level means across all 22 businesses
+        use_cohort = bool(business and business != "All")
+        filtered   = _filter(_read("responses.json"), business, year, country, department, include_inactive) if use_cohort else []
+        q_bu       = {} if use_cohort else _read_dict("question_bu_scores.json")
 
-        # n = number of BUs used for correlation (full dataset, not filtered sample)
-        base_bu = q_bu.get(question_id, {})
-        if business and business != "All":
-            base_bu = {k: v for k, v in base_bu.items() if k == business}
-        n = len(base_bu)
+        def _corr_vecs(id_a, id_b):
+            if use_cohort:
+                return _cohort_corr_vectors(filtered, id_a, id_b)
+            return _bu_corr_vectors(q_bu, id_a, id_b)
+
+        sample_xs, _ = _corr_vecs(question_id, questions[0]["id"] if questions else question_id)
+        n = len(sample_xs)
 
         correlations = []
         for q in questions:
             if q["id"] == question_id:
                 continue
-            xs, ys = _bu_corr_vectors(q_bu, question_id, q["id"], business)
+            xs, ys = _corr_vecs(question_id, q["id"])
             r_val  = pearson_r(xs, ys)
             p_val  = pearson_p_value(r_val, len(xs))
             correlations.append({
@@ -126,7 +153,7 @@ async def get_correlations(
                 "strength":        correlation_strength(r_val),
                 "category_bucket": correlation_category(r_val),
                 "significant":     p_val < 0.05,
-                "n_bus":           len(xs),
+                "n_points":        len(xs),
             })
         correlations.sort(key=lambda x: -abs(x["pearson_r"]))
 
@@ -147,10 +174,17 @@ async def get_correlations(
         )
         q_text = next((q.get("text", "") for q in questions if q["id"] == question_id), "")
 
+        data_basis = (
+            f"Computed across generation × job-level cohorts within {business}"
+            if use_cohort
+            else f"Computed across all {len(q_bu.get(question_id, {}))} business unit averages"
+        )
+
         return {
             "question_id":   question_id,
             "question_text": q_text,
             "n":             n,
+            "data_basis":    data_basis,
             "tab_counts":    tab_counts,
             "total":         total,
             "showing":       showing,
@@ -174,30 +208,29 @@ async def get_correlogram(
     user:             dict          = Depends(get_current_user),
 ):
     try:
-        business  = _resolve_business(user, business)
-        questions = _read("questions.json")
-        q_bu      = _read_dict("question_bu_scores.json")
+        business    = _resolve_business(user, business)
+        questions   = _read("questions.json")
+        use_cohort  = bool(business and business != "All")
+        filtered    = _filter(_read("responses.json"), business, year, country, department, include_inactive) if use_cohort else []
+        q_bu        = {} if use_cohort else _read_dict("question_bu_scores.json")
+
+        def _corr_pair(id_a, id_b):
+            if id_a == id_b:
+                return 1.0
+            if use_cohort:
+                xs, ys = _cohort_corr_vectors(filtered, id_a, id_b)
+            else:
+                xs, ys = _bu_corr_vectors(q_bu, id_a, id_b)
+            return pearson_r(xs, ys)
 
         ranked = sorted(
-            [
-                {
-                    "id": q["id"],
-                    "r":  abs(pearson_r(*_bu_corr_vectors(q_bu, question_id, q["id"], business))),
-                }
-                for q in questions if q["id"] != question_id
-            ],
+            [{"id": q["id"], "r": abs(_corr_pair(question_id, q["id"]))}
+             for q in questions if q["id"] != question_id],
             key=lambda x: -x["r"],
         )[:top]
 
         top_ids = [question_id] + [r["id"] for r in ranked]
-
-        def _pearson_pair(id_a: str, id_b: str) -> float:
-            if id_a == id_b:
-                return 1.0
-            xs, ys = _bu_corr_vectors(q_bu, id_a, id_b, business)
-            return pearson_r(xs, ys)
-
-        matrix = [[_pearson_pair(id_a, id_b) for id_b in top_ids] for id_a in top_ids]
+        matrix  = [[_corr_pair(id_a, id_b) for id_b in top_ids] for id_a in top_ids]
 
         def _short_label(q_id: str) -> str:
             q = next((q for q in questions if q["id"] == q_id), None)
@@ -232,16 +265,21 @@ async def get_network(
     user:             dict          = Depends(get_current_user),
 ):
     try:
-        business  = _resolve_business(user, business)
-        questions = _read("questions.json")
-        q_bu      = _read_dict("question_bu_scores.json")
+        business   = _resolve_business(user, business)
+        questions  = _read("questions.json")
+        use_cohort = bool(business and business != "All")
+        filtered   = _filter(_read("responses.json"), business, year, country, department, include_inactive) if use_cohort else []
+        q_bu       = {} if use_cohort else _read_dict("question_bu_scores.json")
 
         all_edges = []
         for q in questions:
             if q["id"] == question_id:
                 continue
-            xs, ys = _bu_corr_vectors(q_bu, question_id, q["id"], business)
-            r_val  = pearson_r(xs, ys)
+            if use_cohort:
+                xs, ys = _cohort_corr_vectors(filtered, question_id, q["id"])
+            else:
+                xs, ys = _bu_corr_vectors(q_bu, question_id, q["id"])
+            r_val = pearson_r(xs, ys)
             all_edges.append({
                 "source":    question_id,
                 "target":    q["id"],

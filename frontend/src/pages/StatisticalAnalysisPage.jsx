@@ -314,6 +314,7 @@ export default function StatisticalAnalysisPage() {
   const [correlations,    setCorrelations]    = useState(() => saCache?.correlations ?? []);
   const [tabCounts,       setTabCounts]       = useState(() => saCache?.tabCounts ?? {});
   const [baseN,           setBaseN]           = useState(() => saCache?.baseN ?? 0);
+  const [dataBasis,       setDataBasis]       = useState(() => saCache?.dataBasis ?? '');
   const [correlogramData, setCorrelogramData] = useState(() => saCache?.correlogramData ?? null);
   const [networkData,     setNetworkData]     = useState(() => saCache?.networkData ?? null);
   const [insight,         setInsight]         = useState(() => saCache?.insight ?? '');
@@ -366,10 +367,12 @@ export default function StatisticalAnalysisPage() {
       const tabCts = corrData.tab_counts || {};
       const bn     = corrData.n || 0;
       const corrs  = corrData.correlations || [];
+      const basis  = corrData.data_basis || '';
       const ins    = insData.insight || '';
 
       setTabCounts(tabCts);
       setBaseN(bn);
+      setDataBasis(basis);
       setCorrelations(corrs);
       setCorrelogramData(cgramData);
       setNetworkData(netData);
@@ -381,6 +384,7 @@ export default function StatisticalAnalysisPage() {
         selectedQId:     qId,
         tabCounts:       tabCts,
         baseN:           bn,
+        dataBasis:       basis,
         correlations:    corrs,
         correlogramData: cgramData,
         networkData:     netData,
@@ -489,7 +493,7 @@ export default function StatisticalAnalysisPage() {
                 <path d="M6 3.5v3M6 8v.5" stroke="#C2410C" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
               <span>
-                <strong>Scoped to {user?.company || 'your company'}</strong> — correlations use respondents from this company only.
+                {dataBasis || `Computed across generation × job-level cohorts within ${user?.company || 'your company'}`}
               </span>
             </div>
           ) : (
@@ -504,7 +508,7 @@ export default function StatisticalAnalysisPage() {
                 <path d="M6 3.5v3M6 8v.5" stroke="#1D4ED8" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
               <span>
-                <strong>Full ABG view</strong> — correlations computed across all 22 business unit averages.
+                {dataBasis || 'Computed across all business unit averages'}
               </span>
             </div>
           )}
