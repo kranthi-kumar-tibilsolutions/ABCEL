@@ -24,7 +24,7 @@ export default function TrendsPage() {
 
   useEffect(() => {
     setBreadcrumb([
-      { label: 'Overview', page: 'overview' },
+      { label: 'Explore' },
       { label: 'Trends' },
     ]);
   }, []);
@@ -101,9 +101,9 @@ export default function TrendsPage() {
   };
 
   return (
-    <div className="page-container">
+    <div className="page-container" style={{ display:'flex', flexDirection:'column', gap:12 }}>
       {/* Group trend — click a point to drill down */}
-      <div className="chart-card" style={{ marginBottom: 16 }}>
+      <div className="chart-card">
         <div className="chart-title" style={{ display:'flex', alignItems:'center', gap:8 }}>
           Group Engagement Trend
           <span style={{ fontSize:10.5, fontWeight:400, color:'var(--text-muted)' }}>
@@ -130,7 +130,7 @@ export default function TrendsPage() {
 
       {/* Drill-down panel */}
       {drillWave && drillData && (
-        <div className="chart-card" style={{ marginBottom: 16, borderColor: '#F97316' }}>
+        <div className="chart-card" style={{ borderColor: '#F97316' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
             <div className="chart-title" style={{ marginBottom:0 }}>
               <span style={{ color:'#F97316' }}>{drillWave}</span> — Category Breakdown
@@ -151,7 +151,7 @@ export default function TrendsPage() {
       )}
 
       {/* Top 5 businesses */}
-      <div className="chart-card" style={{ marginBottom: 16 }}>
+      <div className="chart-card">
         <div className="chart-title">Top 5 Businesses — Engagement Over Time</div>
         <div style={{ height: 320 }}>
           <Line
@@ -165,7 +165,7 @@ export default function TrendsPage() {
       </div>
 
       {/* Category placeholders */}
-      <div className="chart-card" style={{ marginTop: 8 }}>
+      <div className="chart-card">
         <div className="chart-title" style={{ marginBottom: 8 }}>Category Trends</div>
         <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
           Multi-wave category trend data requires historical survey uploads. Upload previous wave Excel files to enable this view.

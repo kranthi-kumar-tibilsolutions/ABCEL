@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import KpiCards          from '../components/overview/KpiCards';
 import ExploreBy         from '../components/overview/ExploreBy';
@@ -9,7 +9,11 @@ import EngagementHeatmap from '../components/overview/charts/EngagementHeatmap';
 import DriversTree       from '../components/overview/charts/DriversTree';
 
 export default function Overview() {
-  const { navigate } = useContext(AppContext);
+  const { navigate, setBreadcrumb } = useContext(AppContext);
+
+  useEffect(() => {
+    setBreadcrumb([{ label: 'Overview' }]);
+  }, []);
 
   return (
     <div className="overview-page">

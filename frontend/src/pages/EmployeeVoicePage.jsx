@@ -19,7 +19,7 @@ export default function EmployeeVoicePage() {
 
   useEffect(() => {
     setBreadcrumb([
-      { label: 'Overview', page: 'overview' },
+      { label: 'Explore' },
       { label: 'Employee Voice' },
     ]);
   }, []);
@@ -27,23 +27,38 @@ export default function EmployeeVoicePage() {
   const { cohort, company, bu } = evFilters;
 
   return (
-    <div className="page-container">
-      {/* Task 18 — sentiment cards moved above the bar chart */}
-      <div className="kpi-grid" style={{ marginBottom: 16, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+      {/* Sentiment summary cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
         {[
-          { label: 'Positive', value: '58%', color: '#16A34A', bg: '#DCFCE7' },
-          { label: 'Mixed',    value: '28%', color: '#D97706', bg: '#FEF3C7' },
-          { label: 'Negative', value: '14%', color: '#DC2626', bg: '#FEE2E2' },
+          { label: 'Positive', value: '58%', border: '#16A34A', bg: 'rgba(220,252,231,0.5)', shadow: 'rgba(22,163,74,0.12)', text: '#15803D' },
+          { label: 'Mixed',    value: '28%', border: '#D97706', bg: 'rgba(254,243,199,0.5)', shadow: 'rgba(217,119,6,0.12)',  text: '#B45309' },
+          { label: 'Negative', value: '14%', border: '#DC2626', bg: 'rgba(254,226,226,0.5)', shadow: 'rgba(220,38,38,0.12)',  text: '#B91C1C' },
         ].map(s => (
-          <div key={s.label} className="kpi-card" style={{ textAlign: 'center', borderTop: `3px solid ${s.color}` }}>
-            <div className="kpi-value" style={{ color: s.color }}>{s.value}</div>
-            <div className="kpi-label">{s.label} Sentiment</div>
+          <div key={s.label} className="biz-overview-card" style={{
+            borderLeft: `4px solid ${s.border}`,
+            background: `linear-gradient(135deg, ${s.bg} 0%, var(--bg-card) 60%)`,
+            boxShadow: `0 4px 16px ${s.shadow}, 0 1px 4px rgba(0,0,0,0.06)`,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: s.text }}>{s.label}</span>
+              <div style={{
+                width: 40, height: 40, borderRadius: '50%',
+                border: `2.5px solid ${s.border}`,
+                background: s.bg,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: s.text, lineHeight: 1 }}>{s.value}</span>
+              </div>
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>{s.label} Sentiment</div>
           </div>
         ))}
       </div>
 
       {/* Theme bar chart */}
-      <div className="chart-card" style={{ marginBottom: 16 }}>
+      <div className="chart-card">
         <div className="chart-title">Top Themes from Free-Text Responses</div>
         <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
           Based on {meta?.total_respondents?.toLocaleString() ?? '55,457'} respondents
@@ -77,6 +92,7 @@ export default function EmployeeVoicePage() {
           The system will automatically detect and process open-ended question columns.
         </p>
       </div>
+
     </div>
   );
 }

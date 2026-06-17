@@ -34,6 +34,8 @@ export default function TopBar() {
     outliersTopN, setOutliersTopN,
     evFilters, setEvFilters,
     senFilters, setSenFilters,
+    dpbFilters, setDpbFilters, setDpbResetSignal,
+    dpbTopbarSlot,
   } = useContext(AppContext);
 
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -127,21 +129,22 @@ export default function TopBar() {
     }
   };
 
-  const isOverviewPage = page === 'overview' || page === 'business-detail' || page === 'bu-detail' || page === 'cluster-detail';
+  const isOverviewPage = page === 'overview';
+  const isDetailPage = page === 'business-detail' || page === 'bu-detail' || page === 'cluster-detail';
 
   const renderBreadcrumb = () => (
-    <nav style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+    <nav style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
       {breadcrumb.map((item, i) => {
         const isLast = i === breadcrumb.length - 1;
         return (
           <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             {i > 0 && <span style={{ color: 'var(--text-muted)' }}>›</span>}
             {isLast
-              ? <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{item.label}</span>
+              ? <span style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: 12 }}>{item.label}</span>
               : (
                 <button
                   onClick={() => item.page && navigate(item.page, item.params || {})}
-                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12, padding: 0 }}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 11, padding: 0 }}
                 >
                   {item.label}
                 </button>
@@ -172,12 +175,14 @@ export default function TopBar() {
     </div>
   );
 
-  if (page === 'dynamic-persona-builder' && breadcrumb?.length) {
+  if (page === 'dynamic-persona-builder') {
     return (
-      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8 }}>
-        {renderBreadcrumb()}
+      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8, gap: 8, flexWrap: 'nowrap' }}>
+        {breadcrumb?.length > 0 && (
+          <div style={{ flexShrink: 0 }}>{renderBreadcrumb()}</div>
+        )}
         <div className="topbar-spacer" />
-        {renderExportDropdown()}
+        {dpbTopbarSlot}
       </div>
     );
   }
@@ -190,6 +195,7 @@ export default function TopBar() {
       { key: 'business', opts: saBusinessOpts },
       { key: 'inactive', opts: ['No', 'Yes'] },
     ];
+    const saLabels = { business: 'Business', inactive: 'Inactive' };
     return (
       <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8, gap: 8 }}>
         {breadcrumb?.length > 0 && (
@@ -201,7 +207,8 @@ export default function TopBar() {
         {saFiltersCfg.map(f => (
           <Dropdown
             key={f.key}
-            variant="filter"
+            variant="topbar"
+            label={saLabels[f.key]}
             value={saFilters[f.key]}
             options={f.opts.map(o => ({ value: o, label: o }))}
             onChange={v => setSaFilters(prev => ({ ...prev, [f.key]: v }))}
@@ -247,19 +254,22 @@ export default function TopBar() {
         {renderBreadcrumb()}
         <div className="topbar-spacer" />
         <Dropdown
-          variant="filter"
+          variant="topbar"
+          label="Cohort"
           value={evFilters.cohort}
           options={COHORT_OPTIONS.map(o => ({ value: o, label: o }))}
           onChange={v => setEvFilters(prev => ({ ...prev, cohort: v }))}
         />
         <Dropdown
-          variant="filter"
+          variant="topbar"
+          label="Company"
           value={evFilters.company}
           options={companyList.map(o => ({ value: o, label: o }))}
           onChange={v => setEvFilters({ cohort: evFilters.cohort, company: v, bu: 'All' })}
         />
         <Dropdown
-          variant="filter"
+          variant="topbar"
+          label="BU"
           value={evFilters.bu}
           options={['All'].map(o => ({ value: o, label: o }))}
           onChange={v => setEvFilters(prev => ({ ...prev, bu: v }))}
@@ -271,22 +281,24 @@ export default function TopBar() {
 
   if (page === 'sentiment-analysis' && breadcrumb?.length) {
     const SEN_FILTERS_CFG = [
-      { key: 'survey',   opts: ['Q4 2024 Employee Survey', 'Q3 2024', 'Q2 2024'] },
-      { key: 'bu',       opts: ['All', 'ABG Corp', 'Tech', 'Operations'] },
-      { key: 'dept',     opts: ['All', 'HR', 'Finance', 'Engineering'] },
-      { key: 'location', opts: ['All', 'APAC', 'EMEA', 'Americas'] },
-      { key: 'tenure',   opts: ['All', '0–1 yr', '1–3 yrs', '3+ yrs'] },
-      { key: 'level',    opts: ['All', 'Junior', 'Mid', 'Senior', 'Lead'] },
-      { key: 'inactive', opts: ['No', 'Yes'] },
+      { key: 'survey',   label: 'Survey',   opts: ['Q4 2024 Employee Survey', 'Q3 2024', 'Q2 2024'] },
+      { key: 'bu',       label: 'BU',       opts: ['All', 'ABG Corp', 'Tech', 'Operations'] },
+      { key: 'dept',     label: 'Dept',     opts: ['All', 'HR', 'Finance', 'Engineering'] },
+      { key: 'location', label: 'Location', opts: ['All', 'APAC', 'EMEA', 'Americas'] },
+      { key: 'tenure',   label: 'Tenure',   opts: ['All', '0–1 yr', '1–3 yrs', '3+ yrs'] },
+      { key: 'level',    label: 'Level',    opts: ['All', 'Junior', 'Mid', 'Senior', 'Lead'] },
+      { key: 'inactive', label: 'Inactive', opts: ['No', 'Yes'] },
     ];
     return (
-      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8, gap: 6 }}>
-        {renderBreadcrumb()}
-        <div className="topbar-spacer" />
+      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8, gap: 6, flexWrap: 'nowrap', overflow: 'hidden' }}>
+        <div style={{ flexShrink: 0 }}>{renderBreadcrumb()}</div>
+        <div style={{ flex: 1 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
         {SEN_FILTERS_CFG.map(f => (
           <Dropdown
             key={f.key}
-            variant="filter"
+            variant="topbar"
+            label={f.label}
             value={senFilters[f.key]}
             options={f.opts.map(o => ({ value: o, label: o }))}
             onChange={v => setSenFilters(prev => ({ ...prev, [f.key]: v }))}
@@ -302,12 +314,22 @@ export default function TopBar() {
         >
           <RotateCcw size={13} />
         </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isDetailPage) {
+    return (
+      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8 }}>
+        {renderBreadcrumb()}
+        <div className="topbar-spacer" />
         {renderExportDropdown()}
       </div>
     );
   }
 
-  if (!isOverviewPage && breadcrumb?.length) {
+  if (breadcrumb?.length && !isOverviewPage) {
     return (
       <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8 }}>
         {renderBreadcrumb()}
@@ -319,6 +341,13 @@ export default function TopBar() {
 
   return (
     <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8 }}>
+      {/* Breadcrumb always shown on left */}
+      {breadcrumb?.length > 0 && (
+        <div style={{ flexShrink: 0 }}>{renderBreadcrumb()}</div>
+      )}
+
+      <div className="topbar-spacer" />
+
       {isOverviewPage && (
         <>
           {/* Filters */}
@@ -352,8 +381,6 @@ export default function TopBar() {
         <RotateCcw size={13} />
         Reset
       </button>
-
-      <div className="topbar-spacer" />
 
       {/* Export */}
       <div className="tb-dropdown" ref={exportRef}>

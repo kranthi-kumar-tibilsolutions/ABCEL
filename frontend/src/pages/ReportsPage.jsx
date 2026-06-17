@@ -6,10 +6,7 @@ export default function ReportsPage() {
   const { businesses, units, clusters, meta, setBreadcrumb } = useContext(AppContext);
 
   useEffect(() => {
-    setBreadcrumb([
-      { label: 'Overview', page: 'overview' },
-      { label: 'Reports' },
-    ]);
+    setBreadcrumb([{ label: 'Reports' }]);
   }, []);
 
   const downloadCsv = (data, filename) => {
@@ -115,8 +112,8 @@ export default function ReportsPage() {
   ];
 
   return (
-    <div className="page-container">
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginTop: 8 }}>
+    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
         {REPORT_CARDS.map((r) => (
           <div key={r.title} className="chart-card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>{r.icon}</div>
@@ -135,7 +132,7 @@ export default function ReportsPage() {
         ))}
       </div>
 
-      <div className="chart-card" style={{ marginTop: 24 }}>
+      <div className="chart-card">
         <div className="chart-title">Survey Metadata</div>
         {meta ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
