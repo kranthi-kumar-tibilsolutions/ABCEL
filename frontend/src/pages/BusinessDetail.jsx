@@ -5,6 +5,7 @@ import { Bar, Radar } from 'react-chartjs-2';
 import Badge from '../components/shared/Badge';
 import Skeleton from '../components/shared/Skeleton';
 import PaginatedTable from '../components/shared/PaginatedTable';
+import InfoTip from '../components/shared/InfoTip';
 
 const CATEGORY_COLORS = {
   'Engagement Index':        '#F97316',
@@ -169,7 +170,10 @@ export default function BusinessDetail() {
         {/* Radar */}
         {catLabels.length > 2 && (
           <div className="chart-card">
-            <div className="chart-title">Category Profile</div>
+            <div className="chart-title" style={{ display:'flex', alignItems:'center' }}>
+              Category Profile
+              <InfoTip text="Radar chart showing this business's mean engagement score across each driver category on a 1–5 scale. Larger area = stronger overall engagement profile." />
+            </div>
             <div className="chart-inner">
               <div style={{ height: 280 }}>
                 <Radar data={radarData} options={{
@@ -193,7 +197,10 @@ export default function BusinessDetail() {
         {/* BU bar */}
         {bizUnits.length > 0 && (
           <div className="chart-card">
-            <div className="chart-title">Business Units</div>
+            <div className="chart-title" style={{ display:'flex', alignItems:'center' }}>
+              Business Units
+              <InfoTip text="Engagement scores for all business units within this business, colour-coded by performance band. Click a bar to drill into that unit's detail." />
+            </div>
             <div className="chart-inner">
               <div style={{ height: Math.max(200, bizUnits.length * 26) }}>
                 <Bar data={barData} options={{
@@ -220,7 +227,10 @@ export default function BusinessDetail() {
       <div className="ai-summary-card" style={{ marginTop: 24 }}>
         <div className="ai-summary-header">
           <span className="ai-badge">AI</span>
-          <span>Business Intelligence</span>
+          <span style={{ display:'flex', alignItems:'center' }}>
+            Business Intelligence
+            <InfoTip text="AI-generated summary of this business's engagement profile — key strengths, concerns, and prioritised action recommendations based on category scores and benchmark comparisons." />
+          </span>
         </div>
         {loadInsight ? <Skeleton count={3} height={10} /> :
          insight ? (
@@ -252,7 +262,10 @@ export default function BusinessDetail() {
       {/* BU Table */}
       {bizUnits.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <h3 className="section-title">All Business Units</h3>
+          <h3 className="section-title" style={{ display:'flex', alignItems:'center' }}>
+            All Business Units
+            <InfoTip text="Full list of business units within this business, ranked by engagement score. Click any row to view that unit's detailed breakdown." />
+          </h3>
           <PaginatedTable
             pageSize={10}
             headers={<><th>#</th><th>Business Unit</th><th>Score</th><th>Band</th><th>Respondents</th></>}

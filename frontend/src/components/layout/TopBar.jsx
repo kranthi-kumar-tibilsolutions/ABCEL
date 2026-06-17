@@ -2,7 +2,23 @@ import { useContext, useState, useRef, useEffect } from 'react';
 import { SlidersHorizontal, RotateCcw, Download, Upload, ChevronDown } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import Dropdown from '../shared/Dropdown';
+import InfoTip from '../shared/InfoTip';
 
+
+const PAGE_TOOLTIPS = {
+  'business-overview':          'Scores and rankings for every business unit — sorted by overall engagement favourability, with category breakdowns per BU.',
+  'bu-explorer':                'Explore individual business units and sub-units in detail, comparing engagement scores across categories and demographic dimensions.',
+  'statistical-analysis':       'Pearson correlation analysis between survey questions, showing which items drive engagement and how strongly they relate to each other.',
+  'sentiment-analysis':         'NLP-based analysis of open-text responses — classifying sentiment as positive, neutral, or negative and surfacing key topics.',
+  'hypothesis-testing':         'Test whether observed score differences between groups are statistically significant, using t-tests and effect-size measures.',
+  'ai-insights':                'AI-generated narrative summary of the full survey dataset — key findings, drivers, and recommended focus areas.',
+  'insights-studio':            'Run custom AI skill analyses across selected competency areas, broken down by a chosen demographic dimension.',
+  'employee-voice':             'Browse and filter verbatim employee responses by sentiment, topic, cohort, and business unit.',
+  trends:                       'Track how engagement scores change over time across survey waves, dimensions, and business units.',
+  outliers:                     'Highlights business units with unusually high or low scores relative to the group average — flagged for attention.',
+  'cluster-detail':             'Deep-dive into a specific cluster — Thriving, At Risk, Polarised, or Critical — showing all BUs and their scores.',
+  benchmarks:                   'Compare your engagement scores against industry benchmarks and peer organisations.',
+};
 
 const PAGE_TITLES = {
   overview:              'Employee Engagement Intelligence',
@@ -232,13 +248,13 @@ export default function TopBar() {
         <div className="topbar-spacer" />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
           <span style={{ fontWeight: 600 }}>Show top / bottom</span>
-          <select
+          <Dropdown
+            variant="filter"
             value={outliersTopN}
-            onChange={e => setOutliersTopN(+e.target.value)}
-            style={{ padding: '4px 8px', border: '1px solid var(--border)', borderRadius: 6, background: 'var(--bg-card)', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', outline: 'none', color: 'var(--text-primary)' }}
-          >
-            {[3, 5, 10, 15, 20].map(n => <option key={n} value={n}>{n}</option>)}
-          </select>
+            options={[3, 5, 10, 15, 20].map(n => ({ value: n, label: String(n) }))}
+            onChange={v => setOutliersTopN(+v)}
+            menuAlign="right"
+          />
           <span>units</span>
         </div>
         {renderExportDropdown()}
@@ -290,7 +306,7 @@ export default function TopBar() {
       { key: 'inactive', label: 'Inactive', opts: ['No', 'Yes'] },
     ];
     return (
-      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8, gap: 6, flexWrap: 'nowrap', overflow: 'hidden' }}>
+      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8, gap: 6, flexWrap: 'nowrap', overflow: 'visible', zIndex: 20 }}>
         <div style={{ flexShrink: 0 }}>{renderBreadcrumb()}</div>
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>

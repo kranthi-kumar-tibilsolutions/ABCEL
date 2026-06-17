@@ -1,5 +1,6 @@
 import { useContext, useMemo } from 'react';
 import { AppContext } from '../../../context/AppContext';
+import InfoTip from '../../shared/InfoTip';
 
 const CATEGORIES = [
   'Engagement',
@@ -60,7 +61,10 @@ export default function EngagementHeatmap({ onCellClick }) {
     <div className="chart-card">
       <div className="chart-section-header">
         <div>
-          <div className="chart-section-title">Competency Heatmap by {DIM_LABELS[dimension] ?? 'Business'}</div>
+          <div className="chart-section-title" style={{ display: 'flex', alignItems: 'center' }}>
+            Competency Heatmap by {DIM_LABELS[dimension] ?? 'Business'}
+            <InfoTip text="Favorability scores (1–5) per business unit across survey categories — Engagement, Leadership, Performance Culture, and more — averaged from employee responses." />
+          </div>
           <div className="chart-section-sub">Score by {rowLabel.toLowerCase()} × category</div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
+import InfoTip from '../components/shared/InfoTip';
 
 const MOCK_THEMES = [
   { theme: 'Work-Life Balance',     sentiment: 'mixed',    count: 1432, pct: 38, color: '#D97706' },
@@ -32,9 +33,9 @@ export default function EmployeeVoicePage() {
       {/* Sentiment summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
         {[
-          { label: 'Positive', value: '58%', border: '#16A34A', bg: 'rgba(220,252,231,0.5)', shadow: 'rgba(22,163,74,0.12)', text: '#15803D' },
-          { label: 'Mixed',    value: '28%', border: '#D97706', bg: 'rgba(254,243,199,0.5)', shadow: 'rgba(217,119,6,0.12)',  text: '#B45309' },
-          { label: 'Negative', value: '14%', border: '#DC2626', bg: 'rgba(254,226,226,0.5)', shadow: 'rgba(220,38,38,0.12)',  text: '#B91C1C' },
+          { label: 'Positive', value: '58%', border: '#16A34A', bg: 'rgba(220,252,231,0.5)', shadow: 'rgba(22,163,74,0.12)', text: '#15803D', tip: 'Employees whose open-text responses were classified as net positive — expressing satisfaction, appreciation, or optimism about their work experience.' },
+          { label: 'Mixed',    value: '28%', border: '#D97706', bg: 'rgba(254,243,199,0.5)', shadow: 'rgba(217,119,6,0.12)',  text: '#B45309', tip: 'Employees whose responses contained both positive and negative sentiments — acknowledging strengths but also raising concerns.' },
+          { label: 'Negative', value: '14%', border: '#DC2626', bg: 'rgba(254,226,226,0.5)', shadow: 'rgba(220,38,38,0.12)',  text: '#B91C1C', tip: 'Employees whose responses were classified as net negative — expressing frustration, dissatisfaction, or disengagement. A high share here signals areas needing urgent action.' },
         ].map(s => (
           <div key={s.label} className="biz-overview-card" style={{
             borderLeft: `4px solid ${s.border}`,
@@ -42,7 +43,10 @@ export default function EmployeeVoicePage() {
             boxShadow: `0 4px 16px ${s.shadow}, 0 1px 4px rgba(0,0,0,0.06)`,
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: s.text }}>{s.label}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: s.text, display: 'flex', alignItems: 'center' }}>
+                {s.label}
+                <InfoTip text={s.tip} />
+              </span>
               <div style={{
                 width: 40, height: 40, borderRadius: '50%',
                 border: `2.5px solid ${s.border}`,
@@ -59,7 +63,10 @@ export default function EmployeeVoicePage() {
 
       {/* Theme bar chart */}
       <div className="chart-card">
-        <div className="chart-title">Top Themes from Free-Text Responses</div>
+        <div className="chart-title" style={{ display: 'flex', alignItems: 'center' }}>
+          Top Themes from Free-Text Responses
+          <InfoTip text="NLP-extracted themes from open-ended survey responses, ranked by mention frequency. Each bar shows the relative share of respondents who raised that theme, coloured by its dominant sentiment." />
+        </div>
         <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
           Based on {meta?.total_respondents?.toLocaleString() ?? '55,457'} respondents
           {cohort !== 'All Cohorts' && ` · ${cohort}`}
@@ -86,7 +93,10 @@ export default function EmployeeVoicePage() {
       </div>
 
       <div className="chart-card">
-        <div className="chart-title">Upload free-text data</div>
+        <div className="chart-title" style={{ display: 'flex', alignItems: 'center' }}>
+          Upload Free-Text Data
+          <InfoTip text="Include an open-ended question column in your Excel upload to enable automatic NLP theme extraction and sentiment classification on real response data." />
+        </div>
         <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
           To enable NLP-powered theme extraction and sentiment analysis, include a free-text response column in your Excel file.
           The system will automatically detect and process open-ended question columns.

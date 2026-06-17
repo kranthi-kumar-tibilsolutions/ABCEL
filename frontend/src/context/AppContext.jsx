@@ -72,6 +72,10 @@ export const AppContext = createContext({
   // Sentiment Analysis filters (TopBar-hosted)
   senFilters:    {},
   setSenFilters: () => {},
+
+  // Dynamic Persona Builder topbar slot
+  dpbTopbarSlot:    null,
+  setDpbTopbarSlot: () => {},
 });
 
 export const useApp = () => useContext(AppContext);

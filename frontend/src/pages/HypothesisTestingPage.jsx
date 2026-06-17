@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect, useCallback } from 'react';
 import { AppContext } from '../context/AppContext';
 import { apiFetch } from '../utils/api';
+import InfoTip from '../components/shared/InfoTip';
 
 /* ── Bell Curve (one-sample Z only) ──────────────────────────── */
 function BellCurve({ critZ = 1.645, testZ = 2.45 }) {
@@ -923,7 +924,10 @@ export default function HypothesisTestingPage() {
 
         {/* Left: Input */}
         <div className="ht-card">
-          <div className="ht-section-label">1. Enter Your Hypothesis</div>
+          <div className="ht-section-label" style={{ display: 'flex', alignItems: 'center' }}>
+            1. Enter Your Hypothesis
+            <InfoTip text="Write a plain-English hypothesis about your survey data. The system automatically detects the test type (Group Comparison, Correlation, or Benchmark) and maps it to the relevant survey variables." />
+          </div>
           <div className="ht-section-sub">
             Write a natural-language hypothesis. The system detects the test type and maps variables automatically.
           </div>
@@ -983,7 +987,10 @@ export default function HypothesisTestingPage() {
 
         {/* Right: Templates */}
         <div className="ht-card">
-          <div className="ht-section-label">Try a Template</div>
+          <div className="ht-section-label" style={{ display: 'flex', alignItems: 'center' }}>
+            Try a Template
+            <InfoTip text="Pre-built hypothesis templates based on common HR research questions. Click any to load it into the input field, then customise or run it as-is." />
+          </div>
           <div className="ht-templates-list">
             {templates.map(t => (
               <button key={t.id} className="ht-template-row" onClick={() => useTemplate(t)}>
@@ -1017,7 +1024,10 @@ export default function HypothesisTestingPage() {
       {/* ── Previous Hypotheses ── */}
       <div className="ht-history-card">
         <div className="ht-history-hdr">
-          <span className="ht-section-label" style={{ fontSize: 14 }}>Previous Hypotheses</span>
+          <span className="ht-section-label" style={{ fontSize: 14, display: 'flex', alignItems: 'center' }}>
+            Previous Hypotheses
+            <InfoTip text="History of all hypotheses tested, showing the detected test type, statistical outcome (Validated / Rejected), and p-value. Click the trash icon to remove an entry." />
+          </span>
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table className="ht-history-table">

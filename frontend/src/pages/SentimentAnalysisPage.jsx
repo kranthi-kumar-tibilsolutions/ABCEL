@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Dropdown   from '../components/shared/Dropdown';
+import InfoTip    from '../components/shared/InfoTip';
 
 /* ── Static data ──────────────────────────────────────────── */
 
@@ -345,7 +346,10 @@ export default function SentimentAnalysisPage() {
 
         {/* Overall Sentiment Score */}
         <div className="sa-card">
-          <div className="sa-card-title">Overall Sentiment Score <InfoIcon /></div>
+          <div className="sa-card-title" style={{ display:'flex', alignItems:'center' }}>
+            Overall Sentiment Score
+            <InfoTip text="Composite sentiment score ranging from -1 (very negative) to +1 (very positive), derived from NLP analysis of open-text responses. A score above 0 indicates net positive sentiment across the surveyed population." />
+          </div>
           <ScoreGauge score={0.28} />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, color: 'var(--text-muted)', marginTop: 2 }}>
             <span>Very Negative</span>
@@ -358,7 +362,10 @@ export default function SentimentAnalysisPage() {
         {/* Sentiment Distribution */}
         <div className="sa-card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div className="sa-card-title" style={{ marginBottom: 0 }}>Sentiment Distribution <InfoIcon /></div>
+            <div className="sa-card-title" style={{ marginBottom: 0, display:'flex', alignItems:'center' }}>
+              Sentiment Distribution
+              <InfoTip text="Breakdown of responses by classified sentiment — Negative, Neutral, and Positive. Click a segment to filter the topic breakdown below to that sentiment only." />
+            </div>
             {activeSentiment && (
               <button onClick={() => setActiveSentiment(null)} style={{
                 fontSize: 10, fontWeight: 600, color: 'var(--text-muted)',
@@ -402,8 +409,9 @@ export default function SentimentAnalysisPage() {
 
         {/* Sentiment Over Time — two parallel survey trend lines */}
         <div className="sa-card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div className="sa-card-title" style={{ marginBottom: 8 }}>
-            Sentiment Over Time <InfoIcon />
+          <div className="sa-card-title" style={{ marginBottom: 8, display:'flex', alignItems:'center' }}>
+            Sentiment Over Time
+            <InfoTip text="Year-over-year sentiment trend across quarterly survey waves (2024–2026). Each line represents one survey year plotted by average sentiment score per wave." />
           </div>
           <TwinTrendChart />
           {/* Legend */}
@@ -436,7 +444,7 @@ export default function SentimentAnalysisPage() {
           <div className="sa-card-title">
             Top Topics
             <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 400 }}>(by volume)</span>
-            <InfoIcon />
+            <InfoTip text="Word cloud of the most frequently mentioned themes in open-text responses. Word size reflects mention volume; colour indicates dominant sentiment — green = positive, red = negative, grey = neutral." />
           </div>
           <div style={{ overflow: 'hidden', maxHeight: compact ? 130 : undefined }}>
             <WordCloud />
@@ -454,7 +462,8 @@ export default function SentimentAnalysisPage() {
         {/* Topic Sentiment Breakdown */}
         <div className="sa-card" style={{ padding: compact ? '10px 10px' : '14px 12px' }}>
           <div className="sa-card-title" style={{ marginBottom: 8 }}>
-            Topic Sentiment Breakdown <InfoIcon />
+            Topic Sentiment Breakdown
+            <InfoTip text="Each topic's share of total responses, average sentiment score, and whether it trends up or down vs the previous wave. Scores above 0 are net positive; below 0 are net negative." />
             {activeSentiment && (
               <span style={{
                 marginLeft: 4, fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 8,
@@ -514,7 +523,8 @@ export default function SentimentAnalysisPage() {
         {/* Sentiments Validate Statistical Findings */}
         <div className="sa-card" style={{ padding: compact ? '10px 10px' : '14px 12px' }}>
           <div className="sa-card-title" style={{ marginBottom: compact ? 2 : 3, fontSize: 11 }}>
-            Sentiments Validate Statistical Findings <InfoIcon />
+            Sentiments Validate Statistical Findings
+            <InfoTip text="Cross-references NLP sentiment themes with statistical drivers identified via Pearson correlation. A 'Consistent' alignment means open-text sentiment confirms the quantitative finding; 'Conflicting' means they diverge." />
           </div>
           <p style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: compact ? 6 : 10 }}>
             Do open-text sentiments support key statistical drivers?
@@ -581,8 +591,9 @@ export default function SentimentAnalysisPage() {
       {/* Row 3 — Sample Responses */}
       <div className="sa-card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div className="sa-card-title" style={{ marginBottom: 0 }}>
-            Sample Responses by Sentiment <InfoIcon />
+          <div className="sa-card-title" style={{ marginBottom: 0, display: 'flex', alignItems: 'center' }}>
+            Sample Responses by Sentiment
+            <InfoTip text="Verbatim free-text responses filtered by the selected sentiment bucket. Click a sentiment bar in the Distribution chart to filter responses to that category." />
           </div>
           {activeSentiment && (
             <span style={{
@@ -626,7 +637,10 @@ export default function SentimentAnalysisPage() {
 
       {/* Footer disclaimer */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5, color: 'var(--text-muted)', paddingBottom: 4 }}>
-        <InfoIcon />
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink:0, color:'var(--text-muted)' }}>
+          <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/>
+          <path d="M6 5.5v3M6 3.5v.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+        </svg>
         Sentiment scores are generated using NLP and may not capture sarcasm or context in all responses.
       </div>
 

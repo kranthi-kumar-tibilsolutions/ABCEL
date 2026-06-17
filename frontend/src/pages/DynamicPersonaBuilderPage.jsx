@@ -11,6 +11,7 @@ import {
   Tooltip,
 } from 'chart.js';
 import Dropdown from '../components/shared/Dropdown';
+import InfoTip from '../components/shared/InfoTip';
 import { apiFetch } from '../utils/api';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip);
@@ -110,10 +111,12 @@ function DimSelect({ value, opts, color, onChange }) {
         </svg>
       </button>
       {open && (
-        <div style={{
+        <div className="dim-select-menu" style={{
           position:'absolute', top:'calc(100% + 4px)', left:0, right:0, minWidth:140,
           background:'var(--bg-card)', border:'1px solid var(--border)',
           borderRadius:8, boxShadow:'0 8px 24px rgba(0,0,0,0.12)', zIndex:400, padding:4,
+          maxHeight:200, overflowY:'auto',
+          scrollbarWidth:'thin', scrollbarColor:'var(--border) transparent',
         }}>
           {opts.map(opt => (
             <button key={opt} onClick={() => { onChange(opt); setOpen(false); }} style={{
@@ -491,18 +494,16 @@ export default function DynamicPersonaBuilderPage() {
         {/* ── LEFT: Build Persona ── */}
         <div className="sa-card dpb-build-card">
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-            <span style={{ fontSize:12.5, fontWeight:800, color:'var(--text-primary)' }}>Build a New Persona</span>
-            <button style={{ border:'none', background:'none', cursor:'pointer', color:'var(--text-muted)', padding:3, display:'flex', borderRadius:4 }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </button>
+            <span style={{ fontSize:12.5, fontWeight:800, color:'var(--text-primary)', display:'flex', alignItems:'center' }}>
+              Build a New Persona
+              <InfoTip text="Define your persona by selecting dimension filters (age group, gender, job band, tenure, etc.). The system analyses engagement scores for this sub-group and compares them against the overall population." />
+            </span>
           </div>
 
           {/* Persona Name */}
           <div style={{ marginBottom:14 }}>
             <div className="sa-filter-label" style={{ marginBottom:4 }}>Persona Name</div>
-            <div style={{ position:'relative' }}>
+            <div style={{ position:'relative', width:'60%' }}>
               <input
                 value={personaName}
                 onChange={e => setPersonaName(e.target.value.slice(0, 60))}
@@ -735,8 +736,9 @@ export default function DynamicPersonaBuilderPage() {
             {/* Card header */}
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, gap:8, flexWrap:'wrap' }}>
               <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <span style={{ fontSize:12.5, fontWeight:800, color:'var(--text-primary)' }}>
+                <span style={{ fontSize:12.5, fontWeight:800, color:'var(--text-primary)', display:'flex', alignItems:'center' }}>
                   Comparing: {personaName}
+                  <InfoTip text="Shows engagement theme scores for the selected persona side-by-side with the overall population and comparison cohorts. Arrows indicate the delta vs overall; significance is tested at α = 0.05." />
                 </span>
               </div>
               <button className="dpb-btn-outline" style={{ fontSize:10 }}>
@@ -987,8 +989,9 @@ export default function DynamicPersonaBuilderPage() {
                 {/* Radar */}
                 <div>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8, gap:6 }}>
-                    <span style={{ fontSize:11, fontWeight:700, color:'var(--text-primary)' }}>
-                      Visual Comparison <InfoIcon />
+                    <span style={{ fontSize:11, fontWeight:700, color:'var(--text-primary)', display:'flex', alignItems:'center' }}>
+                      Visual Comparison
+                      <InfoTip text="Radar chart showing how the persona scores across engagement themes relative to the overall population and comparison cohorts." />
                     </span>
                     <div style={{ display:'flex', alignItems:'center', gap:5 }}>
                       <span style={{ fontSize:9.5, color:'var(--text-muted)' }}>View by:</span>
@@ -1015,8 +1018,9 @@ export default function DynamicPersonaBuilderPage() {
 
                 {/* Statistical summary */}
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:'var(--text-primary)', marginBottom:5 }}>
-                    Stat. Difference <InfoIcon />
+                  <div style={{ fontSize:11, fontWeight:700, color:'var(--text-primary)', marginBottom:5, display:'flex', alignItems:'center' }}>
+                    Stat. Difference
+                    <InfoTip text="Count of themes where the persona's score is statistically significantly different from each cohort, based on a two-sample z-test at α = 0.05." />
                   </div>
                   <p style={{ fontSize:9.5, color:'var(--text-muted)', margin:'0 0 8px', lineHeight:1.4 }}>
                     Themes significantly different vs:
@@ -1042,7 +1046,10 @@ export default function DynamicPersonaBuilderPage() {
                       <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26A6.99 6.99 0 0019 9c0-3.87-3.13-7-7-7z" fill="#F59E0B"/>
                       <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1z" fill="#F59E0B"/>
                     </svg>
-                    <span style={{ fontSize:11, fontWeight:700, color:'var(--text-primary)' }}>Key Takeaways</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:'var(--text-primary)', display:'flex', alignItems:'center' }}>
+                      Key Takeaways
+                      <InfoTip text="AI-generated narrative summarising where this persona significantly differs from the overall population and what actions HR might consider." />
+                    </span>
                   </div>
                   <ul style={{ margin:0, paddingLeft:13, display:'flex', flexDirection:'column', gap:5 }}>
                     {takeaways.length ? takeaways.map((t, i) => (

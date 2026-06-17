@@ -1,6 +1,7 @@
 import { useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Papa from 'papaparse';
+import InfoTip from '../components/shared/InfoTip';
 
 export default function ReportsPage() {
   const { businesses, units, clusters, meta, setBreadcrumb } = useContext(AppContext);
@@ -46,6 +47,7 @@ export default function ReportsPage() {
   const REPORT_CARDS = [
     {
       title:    'Executive Summary',
+      tip:      'Printable group-level report combining AI narrative, overall engagement KPIs, top drivers, and focus area recommendations — suitable for board or leadership presentations.',
       desc:     'Full group-level engagement summary with AI insights and KPIs',
       icon:     (
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -60,6 +62,7 @@ export default function ReportsPage() {
     },
     {
       title:    'Business Scorecard',
+      tip:      'CSV export of every business\'s overall engagement score, rank, performance band, respondent count, and individual category scores.',
       desc:     `${businesses?.length ?? 0} businesses with scores, ranks, and category breakdowns`,
       icon:     (
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -74,6 +77,7 @@ export default function ReportsPage() {
     },
     {
       title:    'Business Unit Report',
+      tip:      'CSV export of all business units with their engagement score, performance band, parent business, and respondent count — useful for HR business partners.',
       desc:     `${units?.length ?? 0} business units with engagement scores and band classifications`,
       icon:     (
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -87,6 +91,7 @@ export default function ReportsPage() {
     },
     {
       title:    'Cluster Analysis',
+      tip:      'CSV export grouping all business units into four engagement clusters — Thriving, At Risk, Polarised, and Critical — based on score and variance thresholds.',
       desc:     'Thriving, At Risk, Polarised, and Critical unit listings',
       icon:     (
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -118,7 +123,10 @@ export default function ReportsPage() {
           <div key={r.title} className="chart-card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>{r.icon}</div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{r.title}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center' }}>
+                {r.title}
+                {r.tip && <InfoTip text={r.tip} />}
+              </div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{r.desc}</div>
             </div>
             <button
@@ -133,7 +141,10 @@ export default function ReportsPage() {
       </div>
 
       <div className="chart-card">
-        <div className="chart-title">Survey Metadata</div>
+        <div className="chart-title" style={{ display: 'flex', alignItems: 'center' }}>
+          Survey Metadata
+          <InfoTip text="Key facts about the current survey dataset — survey name, total businesses and units covered, total respondents, group average engagement score, and top-performing business." />
+        </div>
         {meta ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
             {Object.entries(meta).map(([k, v]) => (

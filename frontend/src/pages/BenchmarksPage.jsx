@@ -3,6 +3,7 @@ import { AppContext } from '../context/AppContext';
 import { Bar } from 'react-chartjs-2';
 import BENCHMARKS from '../data/benchmarks.json';
 import PaginatedTable from '../components/shared/PaginatedTable';
+import InfoTip from '../components/shared/InfoTip';
 
 const TYPE_LABELS = { peer: 'Peer Conglomerate', industry: 'Industry', regional: 'Regional / Norm' };
 const TYPE_COLORS = { peer: '#7C3AED', industry: '#2563EB', regional: '#0891B2' };
@@ -87,10 +88,10 @@ export default function BenchmarksPage() {
         const indiaTop  = BENCHMARKS.regional.find(r => r.name === 'India Top Quartile')?.score ?? 4.45;
         const globalAvg = BENCHMARKS.regional.find(r => r.name === 'Global Average')?.score ?? 3.85;
         const cards = [
-          { label: 'ABG Group Average',     value: groupAvg.toFixed(2),                                                                          border: '#F97316', bg: 'rgba(249,115,22,0.08)',  shadow: 'rgba(249,115,22,0.12)',  text: '#C2410C' },
-          { label: 'Benchmarks Exceeded',   value: `${aboveAll} / ${totalComp}`,                                                                  border: '#16A34A', bg: 'rgba(22,163,74,0.08)',   shadow: 'rgba(22,163,74,0.12)',   text: '#15803D' },
-          { label: 'vs India Top Quartile', value: groupAvg >= indiaTop ? 'Top Quartile' : `${(groupAvg - indiaTop).toFixed(2)} gap`,             border: groupAvg >= indiaTop ? '#15803D' : '#D97706', bg: groupAvg >= indiaTop ? 'rgba(22,163,74,0.08)' : 'rgba(217,119,6,0.08)', shadow: groupAvg >= indiaTop ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', text: groupAvg >= indiaTop ? '#15803D' : '#B45309' },
-          { label: 'vs Global Average',     value: `+${(groupAvg - globalAvg).toFixed(2)}`,                                                       border: '#2563EB', bg: 'rgba(37,99,235,0.08)',   shadow: 'rgba(37,99,235,0.12)',   text: '#1D4ED8' },
+          { label: 'ABG Group Average',     tip: 'The group\'s overall mean engagement score averaged across all businesses and respondents on a 1–5 Likert scale.',                                                                    value: groupAvg.toFixed(2),                                                                          border: '#F97316', bg: 'rgba(249,115,22,0.08)',  shadow: 'rgba(249,115,22,0.12)',  text: '#C2410C' },
+          { label: 'Benchmarks Exceeded',   tip: 'Number of external peer, industry, and regional benchmarks that ABG\'s group score surpasses out of the total available.',                                                            value: `${aboveAll} / ${totalComp}`,                                                                  border: '#16A34A', bg: 'rgba(22,163,74,0.08)',   shadow: 'rgba(22,163,74,0.12)',   text: '#15803D' },
+          { label: 'vs India Top Quartile', tip: 'How ABG\'s group score compares to the India top-quartile norm (top 25% of Indian organisations). A negative gap means points below that threshold.',                                 value: groupAvg >= indiaTop ? 'Top Quartile' : `${(groupAvg - indiaTop).toFixed(2)} gap`,             border: groupAvg >= indiaTop ? '#15803D' : '#D97706', bg: groupAvg >= indiaTop ? 'rgba(22,163,74,0.08)' : 'rgba(217,119,6,0.08)', shadow: groupAvg >= indiaTop ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', text: groupAvg >= indiaTop ? '#15803D' : '#B45309' },
+          { label: 'vs Global Average',     tip: 'ABG\'s advantage over the global mean engagement score, sourced from Willis Towers Watson, Gallup, Korn Ferry, and Mercer 2024–25 norms.',                                           value: `+${(groupAvg - globalAvg).toFixed(2)}`,                                                       border: '#2563EB', bg: 'rgba(37,99,235,0.08)',   shadow: 'rgba(37,99,235,0.12)',   text: '#1D4ED8' },
         ];
         return (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
@@ -101,7 +102,9 @@ export default function BenchmarksPage() {
                 boxShadow: `0 4px 16px ${c.shadow}, 0 1px 4px rgba(0,0,0,0.06)`,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>{c.label}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: c.text }}>
+                  {c.label}
+                </span>
                 <div style={{
                   width: 48, height: 48, borderRadius: '50%',
                   border: `2.5px solid ${c.border}`,
@@ -118,7 +121,7 @@ export default function BenchmarksPage() {
 
       {/* Tabs + bar chart */}
       <div className="chart-card">
-        <div style={{ display: 'flex', gap: 2, marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
+        <div style={{ display: 'flex', gap: 2, marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 0, alignItems: 'flex-end' }}>
           {tabs.map(t => (
             <button
               key={t.key}
@@ -127,9 +130,11 @@ export default function BenchmarksPage() {
                 padding: '6px 14px', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', borderRadius: '6px 6px 0 0',
                 background: activeTab === t.key ? 'var(--blue-primary)' : 'transparent',
                 color:      activeTab === t.key ? '#fff' : 'var(--text-secondary)',
+                display: 'flex', alignItems: 'center',
               }}
             >
               {t.label}
+              {t.key === 'peers' && <InfoTip text="ABG's overall engagement score plotted against peer conglomerates. Orange = ABG Group; blue = below ABG; grey = above ABG." />}
             </button>
           ))}
         </div>
@@ -162,7 +167,10 @@ export default function BenchmarksPage() {
 
       {/* Detailed comparison table */}
       <div className="chart-card">
-        <div className="chart-title" style={{ marginBottom: 12 }}>Full Benchmark Comparison</div>
+        <div className="chart-title" style={{ marginBottom: 12, display: 'flex', alignItems: 'center' }}>
+          Full Benchmark Comparison
+          <InfoTip text="Ranked list of all external benchmarks — peer conglomerates, industry norms, and regional averages — with a gap bar showing how far each is from ABG's group score." />
+        </div>
         <PaginatedTable
           pageSize={10}
           headers={<>
@@ -200,7 +208,10 @@ export default function BenchmarksPage() {
       {/* Category-level benchmarks */}
       {catRows.length > 0 && (
         <div className="chart-card">
-          <div className="chart-title" style={{ marginBottom: 4 }}>Category-Level Benchmark</div>
+          <div className="chart-title" style={{ marginBottom: 4, display: 'flex', alignItems: 'center' }}>
+            Category-Level Benchmark
+            <InfoTip text="ABG's score for each engagement driver compared to India median, India top-quartile, and global average norms. Position badge shows whether ABG is Top Quartile, Above Median, or Below Median for that category." />
+          </div>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>ABG category scores vs India median and top-quartile norms</p>
           <PaginatedTable
             pageSize={10}
@@ -234,7 +245,10 @@ export default function BenchmarksPage() {
       )}
 
       <div className="chart-card">
-        <div className="chart-title">About These Benchmarks</div>
+        <div className="chart-title" style={{ display: 'flex', alignItems: 'center' }}>
+          About These Benchmarks
+          <InfoTip text="Benchmark data sourced from Willis Towers Watson 2025, Korn Ferry 2024, Gallup 2025, and Mercer 2024. All scores use mean favourability on a 1–5 Likert scale. Comparisons are indicative — ensure scoring methodology alignment before drawing direct conclusions." />
+        </div>
         <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.7 }}>
           Benchmark data is sourced from Willis Towers Watson 2025 Employee Engagement Report, Korn Ferry 2024 Engagement Survey, Gallup State of the Global Workplace 2025, and Mercer 2024 Global Engagement Norms. All scores represent mean favourability on a 1–5 Likert scale. Industry and peer scores are aggregated from publicly available survey reports and anonymised proprietary databases. Comparisons are for strategic orientation; ensure your scoring methodology aligns before drawing direct conclusions.
         </p>

@@ -1,6 +1,7 @@
 import { useContext, useState, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Badge      from '../components/shared/Badge';
+import InfoTip    from '../components/shared/InfoTip';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -89,6 +90,7 @@ export default function BusinessOverview() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           {/* Legend */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <InfoTip text="Business units ranked by overall engagement favourability score. Colour bands show relative standing: Top 33%, Mid 34%, and Bottom 33% within the group." />
             {LEGEND.map(l => (
               <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 11, height: 11, borderRadius: '50%', background: l.color, display: 'inline-block', flexShrink: 0, border: `1.5px solid ${l.color}` }} />

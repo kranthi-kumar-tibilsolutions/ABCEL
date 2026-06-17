@@ -2,6 +2,7 @@ import { useContext, useMemo, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Badge from '../components/shared/Badge';
 import PaginatedTable from '../components/shared/PaginatedTable';
+import InfoTip from '../components/shared/InfoTip';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -45,7 +46,10 @@ export default function OutliersPage() {
       <div className="outliers-grid">
         {/* Top performers */}
         <div className="chart-card">
-          <div className="chart-title" style={{ color: '#16A34A' }}>Top Business Units</div>
+          <div className="chart-title" style={{ color: '#16A34A', display: 'flex', alignItems: 'center' }}>
+            Top Business Units
+            <InfoTip text="Business units with the highest overall engagement favourability scores in the current survey wave. Click any row to drill into that unit's detailed breakdown." />
+          </div>
           {top5.map((u, i) => {
             const sc = +(u.score??u.overall??0);
             return (
@@ -63,7 +67,10 @@ export default function OutliersPage() {
 
         {/* Bottom performers */}
         <div className="chart-card">
-          <div className="chart-title" style={{ color: '#DC2626' }}>Critical Business Units</div>
+          <div className="chart-title" style={{ color: '#DC2626', display: 'flex', alignItems: 'center' }}>
+            Critical Business Units
+            <InfoTip text="Business units with the lowest overall engagement scores — flagged for immediate HR attention. Scores below 4.0 indicate a critical engagement gap requiring intervention." />
+          </div>
           {bottom5.map((u, i) => {
             const sc = +(u.score??u.overall??0);
             return (
@@ -81,7 +88,10 @@ export default function OutliersPage() {
 
         {/* Top businesses */}
         <div className="chart-card">
-          <div className="chart-title" style={{ color: '#16A34A' }}>Thriving Businesses</div>
+          <div className="chart-title" style={{ color: '#16A34A', display: 'flex', alignItems: 'center' }}>
+            Thriving Businesses
+            <InfoTip text="Businesses ranked in the top tier by overall engagement score — consistently high-performing entities that can serve as internal benchmarks." />
+          </div>
           {topBiz.map((b, i) => {
             const sc = +(b.overall??b.score??0);
             return (
@@ -99,7 +109,10 @@ export default function OutliersPage() {
 
         {/* Bottom businesses */}
         <div className="chart-card">
-          <div className="chart-title" style={{ color: '#D97706' }}>At-Risk Businesses</div>
+          <div className="chart-title" style={{ color: '#D97706', display: 'flex', alignItems: 'center' }}>
+            At-Risk Businesses
+            <InfoTip text="Businesses with the lowest overall engagement scores — at risk of attrition or disengagement. HR should prioritise intervention and action planning for these entities." />
+          </div>
           {bottomBiz.map((b, i) => {
             const sc = +(b.overall??b.score??0);
             return (
@@ -118,7 +131,10 @@ export default function OutliersPage() {
         {/* High variance */}
         {highVariance.length > 0 && (
           <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
-            <div className="chart-title" style={{ color: '#7C3AED' }}>High Variance — Polarised Units</div>
+            <div className="chart-title" style={{ color: '#7C3AED', display: 'flex', alignItems: 'center' }}>
+              High Variance — Polarised Units
+              <InfoTip text="Units where employee engagement scores vary significantly within the group (variance > 0.8). High variance suggests a split experience — some employees are engaged while others are not, masking the true picture in averages." />
+            </div>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
               These units show high internal variation — engagement is split across employee groups
             </p>

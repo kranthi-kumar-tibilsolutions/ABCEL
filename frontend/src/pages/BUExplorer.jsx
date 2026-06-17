@@ -2,6 +2,8 @@ import { useContext, useState, useMemo, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Badge from '../components/shared/Badge';
 import PaginatedTable from '../components/shared/PaginatedTable';
+import InfoTip from '../components/shared/InfoTip';
+import Dropdown from '../components/shared/Dropdown';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -84,7 +86,10 @@ export default function BUExplorer() {
     <div className="page-container">
       <div className="bu-explorer-card">
         <div className="bu-explorer-card-header">
-          <p className="page-sub" style={{ margin: 0 }}>{filtered.length} of {units?.length ?? 0} units</p>
+          <p className="page-sub" style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+            {filtered.length} of {units?.length ?? 0} units
+            <InfoTip text="Searchable, sortable table of all business units with their engagement score, performance band, and respondent count. Click any row to drill into that unit's detailed breakdown." />
+          </p>
 
           {/* Filters */}
           <div className="bu-filters">
@@ -94,14 +99,17 @@ export default function BUExplorer() {
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
-            <select
+            <Dropdown
+              variant="combobox"
               className="bu-filter-select"
-              value={filterBiz}
-              onChange={e => setFilterBiz(e.target.value)}
-            >
-              <option value="">All Businesses</option>
-              {bizList.map(b => <option key={b} value={b}>{b}</option>)}
-            </select>
+              placeholder="All Businesses"
+              value={filterBiz || ''}
+              options={[
+                { value: '', label: 'All Businesses' },
+                ...bizList.map(b => ({ value: b, label: b })),
+              ]}
+              onChange={v => setFilterBiz(v)}
+            />
           </div>
         </div>
 

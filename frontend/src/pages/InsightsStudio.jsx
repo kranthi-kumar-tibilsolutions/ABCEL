@@ -3,6 +3,8 @@ import { AppContext } from '../context/AppContext';
 import { apiFetch } from '../utils/api';
 import Skeleton from '../components/shared/Skeleton';
 import PaginatedTable from '../components/shared/PaginatedTable';
+import Dropdown from '../components/shared/Dropdown';
+import InfoTip from '../components/shared/InfoTip';
 
 const SKILLS = [
   { id: 'leadership-effectiveness', label: 'Leadership Effectiveness' },
@@ -99,7 +101,10 @@ export default function InsightsStudio() {
 
         {/* Config panel */}
         <div>
-          <div className="chart-title">Select Skills to Analyse</div>
+          <div className="chart-title" style={{ display: 'flex', alignItems: 'center' }}>
+            Select Skills to Analyse
+            <InfoTip text="Choose one or more engagement skill themes for the AI agent to analyse. The agent reasons through survey data to surface insights, risk areas, and actionable recommendations." />
+          </div>
           <div className="skill-pills">
             {SKILLS.map(s => (
               <button
@@ -114,17 +119,18 @@ export default function InsightsStudio() {
 
           <div style={{ display: 'flex', gap: 12, marginTop: 16, alignItems: 'flex-end' }}>
             <div style={{ flex: 1 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', marginBottom: 6 }}>
                 Analyse by Dimension
+                <InfoTip text="Segment the analysis by this organisational or demographic dimension. The AI will compare scores across groups within the chosen dimension to highlight disparities and patterns." />
               </label>
-              <select
-                className="bu-filter-select"
-                style={{ width: '100%' }}
+              <Dropdown
+                variant="combobox"
+                className="fdd-full"
+                placeholder="Select dimension…"
                 value={dimension}
-                onChange={e => setDimension(e.target.value)}
-              >
-                {DIMENSIONS.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
+                options={DIMENSIONS.map(d => ({ value: d, label: d }))}
+                onChange={v => setDimension(v)}
+              />
             </div>
             <button
               className="primary-btn"
@@ -186,8 +192,9 @@ export default function InsightsStudio() {
 
           {/* Agent Reasoning */}
           <div style={{ border: '1.5px solid var(--blue-primary)', borderRadius: 10, padding: '14px 16px', background: '#EFF6FF' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--blue-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--blue-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8, display: 'flex', alignItems: 'center' }}>
               Agent Reasoning
+              <InfoTip text="The AI agent's step-by-step thought process — how it interpreted the data and arrived at its findings." />
             </div>
             <p style={{ fontSize: 13, color: '#1E3A5F', fontStyle: 'italic', lineHeight: 1.7, margin: 0 }}>
               {result.agentReasoning}
@@ -199,7 +206,10 @@ export default function InsightsStudio() {
             <div className="ai-summary-card">
               <div className="ai-summary-header">
                 <span className="ai-badge">AI</span>
-                <span>Key Findings</span>
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                  Key Findings
+                  <InfoTip text="AI-identified patterns and notable observations from the survey data for the selected skills and dimension." />
+                </span>
               </div>
               <ul className="ai-bullets">
                 {result.keyFindings.map((f, i) => <li key={i}>{f}</li>)}
@@ -211,7 +221,10 @@ export default function InsightsStudio() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {result.riskBUs?.length > 0 && (
               <div className="chart-card" style={{ borderTop: '3px solid #DC2626' }}>
-                <div className="chart-title" style={{ color: '#DC2626' }}>Risk BUs</div>
+                <div className="chart-title" style={{ color: '#DC2626', display: 'flex', alignItems: 'center' }}>
+                  Risk BUs
+                  <InfoTip text="Business units with the lowest scores on the selected skill themes — these need prioritised HR attention." />
+                </div>
                 {result.riskBUs.map((bu, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#DC2626', flexShrink: 0 }} />
@@ -222,7 +235,10 @@ export default function InsightsStudio() {
             )}
             {result.brightSpotBUs?.length > 0 && (
               <div className="chart-card" style={{ borderTop: '3px solid #16A34A' }}>
-                <div className="chart-title" style={{ color: '#16A34A' }}>Bright Spots</div>
+                <div className="chart-title" style={{ color: '#16A34A', display: 'flex', alignItems: 'center' }}>
+                  Bright Spots
+                  <InfoTip text="Business units performing above average on the selected skill themes — potential models for best practice sharing." />
+                </div>
                 {result.brightSpotBUs.map((bu, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#16A34A', flexShrink: 0 }} />
@@ -236,7 +252,10 @@ export default function InsightsStudio() {
           {/* Priority Actions table */}
           {result.priorityActions?.length > 0 && (
             <div className="chart-card">
-              <div className="chart-title">Priority Actions</div>
+              <div className="chart-title" style={{ display: 'flex', alignItems: 'center' }}>
+                Priority Actions
+                <InfoTip text="Ranked HR interventions with suggested owner, timeline, and expected impact — ordered by urgency and feasibility." />
+              </div>
               <PaginatedTable
                 pageSize={10}
                 headers={<><th style={{ width: 32 }}>#</th><th>Action</th><th>Owner</th><th>Timeline</th><th>Expected Impact</th></>}
@@ -262,8 +281,9 @@ export default function InsightsStudio() {
           {/* Cohort Insight */}
           {result.cohortInsight && (
             <div style={{ background: '#FFFBEB', border: '1.5px solid #D97706', borderRadius: 10, padding: '14px 16px' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6, display: 'flex', alignItems: 'center' }}>
                 Cohort Insight
+                <InfoTip text="A targeted observation about a specific demographic or tenure group that shows a notable pattern distinct from the overall population." />
               </div>
               <p style={{ fontSize: 13, color: '#92400E', lineHeight: 1.6, margin: 0 }}>{result.cohortInsight}</p>
             </div>

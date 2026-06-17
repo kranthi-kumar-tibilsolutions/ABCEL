@@ -1,6 +1,7 @@
 import { useContext, useMemo, useState, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import { Line, Bar } from 'react-chartjs-2';
+import InfoTip from '../components/shared/InfoTip';
 
 // Task 15 — wave labels instead of months
 const MOCK_WAVES = ['Vibes 2022', 'Vibes 2023', 'Vibes Q1 2024', 'Vibes Q2 2024', 'Vibes 2025', 'Vibes 2026'];
@@ -106,6 +107,7 @@ export default function TrendsPage() {
       <div className="chart-card">
         <div className="chart-title" style={{ display:'flex', alignItems:'center', gap:8 }}>
           Group Engagement Trend
+          <InfoTip text="Overall group engagement score across survey waves (Vibes 2022 – 2026). Each point is the average favourability score for that wave. Click any point to drill down into category-level scores for that wave." />
           <span style={{ fontSize:10.5, fontWeight:400, color:'var(--text-muted)' }}>
             · Click a point to drill down by category
           </span>
@@ -152,7 +154,10 @@ export default function TrendsPage() {
 
       {/* Top 5 businesses */}
       <div className="chart-card">
-        <div className="chart-title">Top 5 Businesses — Engagement Over Time</div>
+        <div className="chart-title" style={{ display:'flex', alignItems:'center' }}>
+          Top 5 Businesses — Engagement Over Time
+          <InfoTip text="Tracks the engagement score trajectory of the top 5 highest-scoring businesses across all survey waves, allowing year-over-year performance comparison." />
+        </div>
         <div style={{ height: 320 }}>
           <Line
             data={lineData}
@@ -166,7 +171,10 @@ export default function TrendsPage() {
 
       {/* Category placeholders */}
       <div className="chart-card">
-        <div className="chart-title" style={{ marginBottom: 8 }}>Category Trends</div>
+        <div className="chart-title" style={{ marginBottom: 8, display:'flex', alignItems:'center' }}>
+          Category Trends
+          <InfoTip text="Multi-wave trend lines broken down by engagement category (Leadership, Wellbeing, etc.). Requires historical survey uploads to populate — upload previous wave Excel files to enable this view." />
+        </div>
         <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
           Multi-wave category trend data requires historical survey uploads. Upload previous wave Excel files to enable this view.
         </p>

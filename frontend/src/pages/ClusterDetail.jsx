@@ -3,6 +3,7 @@ import { AppContext } from '../context/AppContext';
 import Badge from '../components/shared/Badge';
 import Breadcrumb from '../components/shared/Breadcrumb';
 import PaginatedTable from '../components/shared/PaginatedTable';
+import InfoTip from '../components/shared/InfoTip';
 
 const CLUSTER_CONFIG = {
   thriving:  { label: 'Thriving',   color: '#16A34A', bg: '#F0FDF4' },
@@ -36,7 +37,10 @@ export default function ClusterDetail() {
         { label: filterKey ? CLUSTER_CONFIG[filterKey]?.label ?? filterKey : 'All Clusters' },
       ]} />
 
-      <h1 className="page-title">{filterKey ? CLUSTER_CONFIG[filterKey]?.label ?? filterKey : 'All Clusters'}</h1>
+      <h1 className="page-title" style={{ display:'flex', alignItems:'center' }}>
+        {filterKey ? CLUSTER_CONFIG[filterKey]?.label ?? filterKey : 'All Clusters'}
+        <InfoTip text="Business units grouped into engagement clusters based on score and variance. Thriving = high score, low variance; At Risk = low score; Polarised = high variance across respondents; Critical = low score and high concern." />
+      </h1>
       <p className="page-sub">Business unit clusters by engagement profile</p>
 
       {clusterEntries.map(([key, items]) => {
