@@ -2,6 +2,7 @@ import { useState, useContext, useEffect, useCallback } from 'react';
 import { AppContext } from '../context/AppContext';
 import { apiFetch } from '../utils/api';
 import InfoTip from '../components/shared/InfoTip';
+import Skeleton from '../components/shared/Skeleton';
 
 /* ── Bell Curve (one-sample Z only) ──────────────────────────── */
 function BellCurve({ critZ = 1.645, testZ = 2.45 }) {
@@ -1008,6 +1009,24 @@ export default function HypothesisTestingPage() {
         </div>
       </div>
 
+      {/* ── Parsing skeleton ── */}
+      {stage === 'parsing' && (
+        <div className="ht-card" style={{ marginTop: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <span className="dpb-spinner-sm" style={{ borderTopColor: 'var(--blue-primary)', borderColor: 'rgba(37,99,235,0.2)', flexShrink: 0 }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Analysing hypothesis…</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Skeleton count={1} height={14} />
+            <Skeleton count={1} height={14} width="75%" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 }}>
+              <Skeleton count={3} height={36} />
+              <Skeleton count={3} height={36} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Step 2: Confirmation card ── */}
       {(stage === 'confirm' || stage === 'running') && parsed && (
         <ConfirmCard
@@ -1016,6 +1035,24 @@ export default function HypothesisTestingPage() {
           onEdit={handleEdit}
           running={stage === 'running'}
         />
+      )}
+
+      {/* ── Running skeleton (result placeholder) ── */}
+      {stage === 'running' && (
+        <div className="ht-card" style={{ marginTop: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <span className="dpb-spinner-sm" style={{ borderTopColor: 'var(--blue-primary)', borderColor: 'rgba(37,99,235,0.2)', flexShrink: 0 }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Running statistical test…</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 14 }}>
+            {['Hypothesis', 'Results', 'Visual', 'Working'].map(label => (
+              <div key={label}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{label}</div>
+                <Skeleton count={5} height={10} />
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* ── Step 3: Result ── */}

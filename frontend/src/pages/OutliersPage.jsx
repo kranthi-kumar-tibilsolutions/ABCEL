@@ -69,7 +69,7 @@ export default function OutliersPage() {
         <div className="chart-card">
           <div className="chart-title" style={{ color: '#DC2626', display: 'flex', alignItems: 'center' }}>
             Critical Business Units
-            <InfoTip text="Business units with the lowest overall engagement scores — flagged for immediate HR attention. Scores below 4.0 indicate a critical engagement gap requiring intervention." />
+            <InfoTip text="The bottom-ranked business units by overall engagement score in the current survey wave — flagged for immediate HR attention and intervention." />
           </div>
           {bottom5.map((u, i) => {
             const sc = +(u.score??u.overall??0);
