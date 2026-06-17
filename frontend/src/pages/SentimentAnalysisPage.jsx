@@ -57,6 +57,12 @@ const POS_DATA = [0.35,0.38,0.40,0.36,0.33,0.38,0.40,0.42,0.38,0.36,0.39,0.38];
 const NEU_DATA = [0.05,0.08,0.05,0.06,0.04,0.05,0.03,0.05,0.04,0.06,0.04,0.05];
 const NEG_DATA = [-0.25,-0.28,-0.22,-0.26,-0.30,-0.24,-0.22,-0.18,-0.24,-0.26,-0.22,-0.20];
 
+/* Survey trend lines — year-over-year comparison */
+const SURVEY_WAVES = ['Q1', 'Q2', 'Q3', 'Q4'];
+const TREND_2024   = [0.18, 0.21, 0.19, 0.22];
+const TREND_2025   = [0.22, 0.25, 0.23, 0.27];
+const TREND_2026   = [0.32];  // Wave 1 only
+
 /* ── Sub-components ─────────────────────────────────────────── */
 
 function InfoIcon() {
@@ -130,6 +136,83 @@ function TimeChart() {
       {/* End badge */}
       <rect x={W-pR+3} y={toY(POS_DATA[N-1])-7} width={28} height={13} rx={3} fill="#16A34A"/>
       <text x={W-pR+17} y={toY(POS_DATA[N-1])+2.5} textAnchor="middle" fontSize="8" fill="white" fontWeight="700" fontFamily="inherit">+0.38</text>
+    </svg>
+  );
+}
+
+function TwinTrendChart() {
+  const W = 280, H = 120;
+  const pL = 26, pR = 38, pT = 18, pB = 28;
+  const cW = W - pL - pR, cH = H - pT - pB;
+  const N  = SURVEY_WAVES.length;
+  const yMin = 0.0, yMax = 0.45;
+
+  const toX = i => pL + (i / (N - 1)) * cW;
+  const toY = v => pT + (1 - (v - yMin) / (yMax - yMin)) * cH;
+
+  const mkPath = arr => arr
+    .map((v, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(v).toFixed(1)}`)
+    .join(' ');
+
+  const path24 = mkPath(TREND_2024);
+  const path25 = mkPath(TREND_2025);
+
+  const v26 = TREND_2026[0];
+  const x26 = toX(0);
+  const y26 = toY(v26);
+
+  const gridVals = [0.1, 0.2, 0.3, 0.4];
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block' }}>
+      {/* Grid lines */}
+      {gridVals.map(v => (
+        <g key={v}>
+          <line x1={pL} y1={toY(v)} x2={W - pR} y2={toY(v)} stroke="#E2E8F0" strokeWidth="0.6"/>
+          <text x={pL - 3} y={toY(v) + 3} textAnchor="end" fontSize="7.5" fill="#CBD5E1" fontFamily="inherit">
+            +{v.toFixed(1)}
+          </text>
+        </g>
+      ))}
+      <line x1={pL} y1={toY(0)} x2={W - pR} y2={toY(0)} stroke="#CBD5E1" strokeWidth="0.8"/>
+      <text x={pL - 3} y={toY(0) + 3} textAnchor="end" fontSize="7.5" fill="#CBD5E1" fontFamily="inherit">0</text>
+
+      {/* 2024 trend line + dots */}
+      <path d={path24} fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      {TREND_2024.map((v, i) => (
+        <circle key={i} cx={toX(i)} cy={toY(v)} r={3} fill="#3B82F6" stroke="white" strokeWidth="1.5"/>
+      ))}
+
+      {/* 2025 trend line + dots */}
+      <path d={path25} fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      {TREND_2025.map((v, i) => (
+        <circle key={i} cx={toX(i)} cy={toY(v)} r={3} fill="#6366F1" stroke="white" strokeWidth="1.5"/>
+      ))}
+
+      {/* 2026 Wave 1 dot only */}
+      <circle cx={x26} cy={y26} r={4} fill="#F97316" stroke="white" strokeWidth="1.5"/>
+      {/* 2026 Wave 1 value badge */}
+      <rect x={x26 + 7} y={y26 - 8} width={32} height={14} rx={3} fill="#F97316"/>
+      <text x={x26 + 23} y={y26 + 3} textAnchor="middle" fontSize="8" fill="white" fontWeight="700" fontFamily="inherit">
+        +{v26.toFixed(2)}
+      </text>
+
+      {/* X-axis wave labels */}
+      {SURVEY_WAVES.map((w, i) => (
+        <text key={w} x={toX(i)} y={H - 6} textAnchor="middle" fontSize="7.5" fill="#94A3B8" fontFamily="inherit">{w}</text>
+      ))}
+
+      {/* 2024 Q4 end badge */}
+      <rect x={W - pR + 2} y={toY(TREND_2024[N - 1]) - 7} width={32} height={14} rx={3} fill="#3B82F6"/>
+      <text x={W - pR + 18} y={toY(TREND_2024[N - 1]) + 3.5} textAnchor="middle" fontSize="8" fill="white" fontWeight="700" fontFamily="inherit">
+        +{TREND_2024[N - 1].toFixed(2)}
+      </text>
+
+      {/* 2025 Q4 end badge */}
+      <rect x={W - pR + 2} y={toY(TREND_2025[N - 1]) - 7} width={32} height={14} rx={3} fill="#6366F1"/>
+      <text x={W - pR + 18} y={toY(TREND_2025[N - 1]) + 3.5} textAnchor="middle" fontSize="8" fill="white" fontWeight="700" fontFamily="inherit">
+        +{TREND_2025[N - 1].toFixed(2)}
+      </text>
     </svg>
   );
 }
@@ -301,39 +384,29 @@ export default function SentimentAnalysisPage() {
           <p style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 10 }}>Total Responses: 4,892</p>
         </div>
 
-        {/* Sentiment Over Time — placeholder until multi-wave data is available */}
+        {/* Sentiment Over Time — two parallel survey trend lines */}
         <div className="sa-card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div className="sa-card-title" style={{ marginBottom: 10, color: 'var(--text-muted)' }}>
+          <div className="sa-card-title" style={{ marginBottom: 8 }}>
             Sentiment Over Time <InfoIcon />
           </div>
-          <div style={{
-            flex: 1, display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            gap: 10, padding: '18px 12px',
-            background: 'var(--bg-page)', borderRadius: 8,
-            border: '1.5px dashed var(--border)',
-          }}>
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" opacity="0.4">
-              <rect x="2" y="2" width="32" height="32" rx="6" stroke="#94A3B8" strokeWidth="1.8"/>
-              <path d="M8 24l5-6 5 4 5-8 5 4" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx="28" cy="10" r="3" fill="#CBD5E1"/>
-              <path d="M26.5 10h3M28 8.5v3" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
-            </svg>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>
-                Trend data not yet available
+          <TwinTrendChart />
+          {/* Legend */}
+          <div style={{ display: 'flex', gap: 16, marginTop: 8, paddingTop: 6, borderTop: '1px solid var(--border)' }}>
+            {[
+              { color: '#3B82F6', label: '2024', dot: true  },
+              { color: '#6366F1', label: '2025', dot: true  },
+              { color: '#F97316', label: '2026 (Wave 1)', dot: false },
+            ].map(({ color, label, dot }) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'var(--text-muted)' }}>
+                <svg width="22" height="8" style={{ flexShrink: 0 }}>
+                  {dot
+                    ? <><line x1="0" y1="4" x2="22" y2="4" stroke={color} strokeWidth="2" strokeLinecap="round"/><circle cx="11" cy="4" r="2.5" fill={color}/></>
+                    : <circle cx="4" cy="4" r="3.5" fill={color} stroke="white" strokeWidth="1"/>
+                  }
+                </svg>
+                {label}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.55, maxWidth: 180 }}>
-                Sentiment trends will appear here once multiple survey waves are loaded.
-              </div>
-            </div>
-            <div style={{
-              fontSize: 10, fontWeight: 600, color: '#92400E',
-              background: '#FFFBEB', border: '1px solid #FDE68A',
-              borderRadius: 20, padding: '3px 10px',
-            }}>
-              Available from Wave 2 onwards
-            </div>
+            ))}
           </div>
         </div>
 
