@@ -361,50 +361,172 @@ Respond ONLY with valid JSON:
 
 # ── CALL 4: Chat with Data — SSE Streaming ────────────────────────────────────
 
+def _compute_full_chat_data(user=None):
+    """
+    Load businesses.json + responses.json and compute all demographic breakdowns
+    at request time so new uploads are always reflected.
+    Returns (businesses, gen_data, gender_data, job_data, tenure_data, manager_data, biz_cohorts)
+    """
+    import json as _j
+    businesses = _read("businesses.json") or []
+    responses  = _read("responses.json")  or []
+
+    # Scope to company for company-role users
+    co = None
+    if user and user.get("role") == "company":
+        co = data_company(user)
+        if co:
+            responses  = [r for r in responses  if r.get("business") == co]
+            businesses = [b for b in businesses if b["name"] == co]
+
+    if not responses:
+        return businesses, [], [], [], [], [], {}
+
+    # Auto-detect theme keys (numeric fields that aren't metadata)
+    _skip = {'employee_id','business','age_group','generation','gender','job_level',
+             'tenure','country','is_manager','abglp','is_active','year','month','overall','scores'}
+    _sample = responses[0]
+    theme_keys = [k for k in _sample if k not in _skip
+                  and isinstance(_sample.get(k), (int, float)) and _sample.get(k) is not None]
+
+    def group_scores(rows, label):
+        if len(rows) < 10:
+            return None
+        scores = {}
+        for tk in theme_keys:
+            vals = [r[tk] for r in rows if r.get(tk) and r[tk] > 0]
+            scores[tk] = round(sum(vals) / len(vals), 2) if vals else None
+        all_vals = [v for v in scores.values() if v]
+        scores['overall'] = round(sum(all_vals) / len(all_vals), 2) if all_vals else None
+        return {'label': label, 'n': len(rows), 'scores': scores}
+
+    _noise = {'unknown', 'nan', 'n/a', 'na', 'not available', 'dob not available',
+              'job band na', 'not specified', ''}
+
+    def _clean(val):
+        return val and str(val).strip().lower() not in _noise
+
+    def _dim_vals(key):
+        return list({r[key] for r in responses if _clean(r.get(key))})
+
+    generations = _dim_vals('generation')
+    job_levels  = _dim_vals('job_level')
+    tenures     = _dim_vals('tenure')
+
+    def _filt(key, val): return [r for r in responses if r.get(key) == val and _clean(r.get(key))]
+    def _bfilt(rows, key, val): return [r for r in rows if r.get(key) == val and _clean(r.get(key))]
+
+    gen_data     = [g for g in (group_scores(_filt('generation', g), g) for g in generations) if g]
+    gender_data  = [g for g in [
+        group_scores([r for r in responses if r.get('gender') == 'Male'],   'Male'),
+        group_scores([r for r in responses if r.get('gender') == 'Female'], 'Female'),
+    ] if g]
+    job_data     = [g for g in (group_scores(_filt('job_level', j), j) for j in job_levels) if g]
+    tenure_data  = [g for g in (group_scores(_filt('tenure', t), t) for t in tenures) if g]
+    manager_data = [g for g in [
+        group_scores([r for r in responses if r.get('is_manager') == 'Yes'], 'People Managers'),
+        group_scores([r for r in responses if r.get('is_manager') == 'No'],  'Individual Contributors'),
+    ] if g]
+
+    # Per-business cohort breakdown (generation/gender/job_level/tenure within each company)
+    biz_cohorts: dict = {}
+    for biz in businesses:
+        bname    = biz['name']
+        biz_rows = [r for r in responses if r.get('business') == bname]
+        if len(biz_rows) < 10:
+            continue
+        biz_gens = [g for g in {r.get('generation') for r in biz_rows} if _clean(g)]
+        biz_cohorts[bname] = {
+            'n': len(biz_rows),
+            'by_generation': [g for g in (group_scores(_bfilt(biz_rows, 'generation', g), g) for g in biz_gens) if g],
+            'by_gender':     [g for g in [
+                group_scores([r for r in biz_rows if r.get('gender') == 'Male'],   'Male'),
+                group_scores([r for r in biz_rows if r.get('gender') == 'Female'], 'Female'),
+            ] if g],
+            'by_job_level':  [g for g in (group_scores(_bfilt(biz_rows, 'job_level', j), j) for j in job_levels) if g],
+            'by_tenure':     [g for g in (group_scores(_bfilt(biz_rows, 'tenure', t), t) for t in tenures) if g],
+        }
+
+    return businesses, gen_data, gender_data, job_data, tenure_data, manager_data, biz_cohorts
+
+
 @router.post("/chat")
 async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
     import json as _json
+
+    # Compute full data at request time so new uploads are always reflected
+    (businesses, gen_data, gender_data, job_data,
+     tenure_data, manager_data, biz_cohorts) = _compute_full_chat_data(user)
+
     focus_line   = f"\nACTIVE FOCUS AREA: {req.focusArea} — prioritise answers about this theme." if req.focusArea else ""
     company_line = f"\nACTIVE COMPANY FILTER: {req.companyFilter} — answer only about this company unless explicitly asked otherwise." if req.companyFilter else ""
 
-    # Build screen-context block when the frontend sends what's on screen
+    # Screen context block
     if req.active_context:
         tab = req.active_context.get("tab", "unknown").replace("_", " ").title()
         ctx_json = _json.dumps(req.active_context, indent=2)
         screen_block = f"""
-ACTIVE SCREEN CONTEXT — THE USER IS CURRENTLY VIEWING THE "{tab}" TAB.
-THIS IS EXACTLY WHAT IS ON THEIR SCREEN RIGHT NOW:
+IMPORTANT — USER IS ON THE "{tab}" TAB.
+WHAT IS ON THEIR SCREEN RIGHT NOW:
 {ctx_json}
-
-ANSWER PRIORITY:
-1. If the question uses words like "this", "these results", "what I'm looking at", "this persona", "this analysis" → answer about the ACTIVE SCREEN CONTEXT above first, then use general ABG data to support.
-2. For any ABG business, score, category, or cohort question → use FULL ABG DATA below.
-3. For questions with no ABG data at all → answer from general HR knowledge and say "This is based on general HR best practice, not your ABG Vibes data."
+When the user says "this persona", "this analysis", "these results", "what I'm looking at" — they mean the above context.
 """
     else:
         screen_block = ""
 
-    system_prompt = f"""You are an AI analyst for ABG Vibes — Aditya Birla Group's 2026 employee engagement dashboard. You are embedded inside their HR analytics platform.{focus_line}{company_line}
+    biz_json     = _json.dumps([{"name": b["name"], "overall": b.get("overall"), "band": b.get("band"),
+                                  "respondent_count": b.get("respondent_count"),
+                                  "categories": b.get("categories", {})} for b in businesses], indent=2)
+    cohort_json  = _json.dumps(biz_cohorts, indent=2)
+
+    system_prompt = f"""You are an expert HR analytics AI analyst for Aditya Birla Group (ABG) Vibes 2026 Employee Engagement Survey, embedded inside their analytics dashboard.{focus_line}{company_line}
 {screen_block}
-STRICT SCOPE RULE: Only refuse if the question is CLEARLY about something with zero relation to HR, employees, or this survey — e.g. coding problems, recipes, general science, sports scores, jokes. DO NOT refuse if:
-- The question mentions a company name you don't recognise (it may be a business unit in the survey)
-- The question asks about a demographic group, cohort, persona, or score
-- The question is vague but could plausibly be about engagement data
-- The conversation history is about the survey
-When refusing, say exactly: "I can only help with questions about the ABG Vibes employee engagement survey. What would you like to know about the data?"
-If a company or BU name is not found in the data, say "I don't have data for [name] in this dataset" — do NOT refuse the question entirely.
-Follow-up questions that refer to previous answers (e.g. "what generation is that?", "tell me more", "why is that?", "compare with X") are ALWAYS valid.
+=== COMPLETE ABG VIBES 2026 DATA ===
 
-- Greetings → respond briefly and warmly (1 sentence), then offer to help. Do NOT cite numbers.
-- Data questions → lead with the key insight and number, use **bold** for key figures, 2-4 sentences max.
-- Never start a reply with "!" or similar punctuation.
-- Never say you don't have access to data — always try to answer from context or general knowledge.
-- "age group"/"age band" questions → use ONLY AGE BAND BREAKDOWN scores (25-30, 30-35 etc.). Never use generation names for age group questions.
-- "generation" questions → use ONLY GENERATION BREAKDOWN scores (Gen Z, Gen Y, Gen X, Baby Boomer).
-- Traditionalist is a generation label with 1 respondent — never cite it.
+GROUP SUMMARY:
+- Total respondents: {sum(b.get('respondent_count', 0) for b in businesses) or 55459}
+- Number of businesses: {len(businesses)}
+- Group overall score: {round(sum(b.get('overall',0) for b in businesses)/len(businesses),2) if businesses else 4.46} / 5.0
+- Scale: 1–5 where 5 is best (favourability = 6 − raw score)
 
-FULL ABG SURVEY DATA (use for any question about ABG businesses, scores, or cohorts):
-{_build_context(req.dimension, user)}"""
+ALL BUSINESSES WITH SCORES AND CATEGORY BREAKDOWN:
+{biz_json}
+
+GENERATION BREAKDOWN (group level):
+{_json.dumps(gen_data, indent=2)}
+
+GENDER BREAKDOWN (group level):
+{_json.dumps(gender_data, indent=2)}
+
+JOB LEVEL BREAKDOWN (group level):
+{_json.dumps(job_data, indent=2)}
+
+TENURE BREAKDOWN (group level):
+{_json.dumps(tenure_data, indent=2)}
+
+MANAGER vs INDIVIDUAL CONTRIBUTOR (group level):
+{_json.dumps(manager_data, indent=2)}
+
+PER-BUSINESS COHORT BREAKDOWNS (generation / gender / job level / tenure within each company):
+{cohort_json}
+
+=== ANSWER RULES ===
+
+PRIORITY ORDER:
+1. If question is about what is on screen ("this persona", "these results", "what I'm looking at") → use active screen context above first
+2. If question is about any ABG business, score, cohort, or category → use the data above — never say you don't have it
+3. If question needs something genuinely not in this data → answer from general HR knowledge and say "Based on general HR knowledge, not your ABG Vibes data"
+
+BEHAVIOUR RULES:
+- Handle typos gracefully — "novel jewels", "novel jewel", "noveljewels" all mean Novel Jewels Ltd. Match fuzzy company names to the closest real name
+- Never make up scores — only use numbers from the data above
+- Never say you don't have access to data
+- If asked which cohort is least/most engaged in a business → compare by_generation and by_job_level scores in biz_cohorts for that business and find the lowest/highest overall
+- "new joiners" or "new employees" → means tenure 0-2 years in tenure breakdown
+- "female employees" → use gender breakdown female data
+- Keep answers to 3–5 sentences unless user asks for more detail
+- Lead with the direct answer and the number, then explain
+- Think like a McKinsey HR consultant — be direct, specific, and insightful"""
 
     messages = [
         {"role": "system", "content": system_prompt},
