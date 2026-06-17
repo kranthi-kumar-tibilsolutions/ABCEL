@@ -2,10 +2,11 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from lib.stats import pearson_r, pearson_p_value, correlation_strength, correlation_category
 from lib.llm   import call_llm_json
+from routes.auth import data_company, get_current_user
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -96,8 +97,10 @@ async def get_correlations(
     include_inactive: str           = Query("No"),
     limit:            Optional[int] = Query(None),
     offset:           int           = Query(0),
+    user:             dict          = Depends(get_current_user),
 ):
     try:
+        business   = _resolve_business(user, business)
         filtered   = _filter(_read("responses.json"), business, year, country, department, include_inactive)
         questions  = _read("questions.json")
         base_scores = _scores(filtered, question_id)
@@ -161,8 +164,10 @@ async def get_correlogram(
     country:          Optional[str] = Query(None),
     department:       Optional[str] = Query(None),
     include_inactive: str           = Query("No"),
+    user:             dict          = Depends(get_current_user),
 ):
     try:
+        business    = _resolve_business(user, business)
         filtered    = _filter(_read("responses.json"), business, year, country, department, include_inactive)
         questions   = _read("questions.json")
         base_scores = _scores(filtered, question_id)
@@ -224,8 +229,10 @@ async def get_network(
     country:          Optional[str] = Query(None),
     department:       Optional[str] = Query(None),
     include_inactive: str           = Query("No"),
+    user:             dict          = Depends(get_current_user),
 ):
     try:
+        business    = _resolve_business(user, business)
         filtered    = _filter(_read("responses.json"), business, year, country, department, include_inactive)
         questions   = _read("questions.json")
         base_scores = _scores(filtered, question_id)
@@ -282,8 +289,10 @@ async def get_insights(
     year:        Optional[str] = Query(None),
     country:     Optional[str] = Query(None),
     department:  Optional[str] = Query(None),
+    user:        dict          = Depends(get_current_user),
 ):
     try:
+        business    = _resolve_business(user, business)
         questions   = _read("questions.json")
         filtered    = _filter(_read("responses.json"), business, year, country, department)
         q_text      = next((q.get("text", "") for q in questions if q["id"] == question_id), question_id)
