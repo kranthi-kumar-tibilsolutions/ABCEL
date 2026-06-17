@@ -453,7 +453,7 @@ export default function StatisticalAnalysisPage() {
               variant="filter"
               className="fdd-full"
               value={selectedQId || ''}
-              options={questions.map(q => ({ value: q.id, label: `${q.id}. ${q.short_label || q.text || q.id}` }))}
+              options={questions.map(q => ({ value: q.id, label: `${q.id}. ${q.text || q.short_label || q.id}` }))}
               onChange={v => setSelectedQId(v)}
             />
           </div>
