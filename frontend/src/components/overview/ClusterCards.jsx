@@ -11,29 +11,29 @@ function InfoTip({ text }) {
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
       >
-        <circle cx="6.5" cy="6.5" r="6" fill="#EFF6FF" stroke="#BFDBFE" strokeWidth="1.2"/>
-        <circle cx="6.5" cy="4.2" r="0.7" fill="#3B82F6"/>
-        <rect x="5.9" y="5.8" width="1.2" height="3.2" rx="0.6" fill="#3B82F6"/>
+        <circle cx="6.5" cy="6.5" r="6" fill="var(--blue-light)" stroke="var(--blue-primary)" strokeWidth="1.2" strokeOpacity="0.4"/>
+        <circle cx="6.5" cy="4.2" r="0.7" fill="var(--blue-primary)"/>
+        <rect x="5.9" y="5.8" width="1.2" height="3.2" rx="0.6" fill="var(--blue-primary)"/>
       </svg>
       {show && (
         <span style={{
-          position: 'absolute', top: 'calc(100% + 8px)', left: '50%',
+          position: 'absolute', bottom: 'calc(100% + 8px)', left: '50%',
           transform: 'translateX(-50%)', zIndex: 1000,
-          background: '#fff', border: '1px solid #E2E8F0',
-          borderTop: '3px solid #3B82F6',
+          background: 'var(--bg-card)', border: '1px solid var(--border)',
+          borderBottom: '3px solid var(--blue-primary)',
           borderRadius: 8, padding: '10px 13px',
-          width: 220, fontSize: 11.5, color: '#374151',
+          width: 220, fontSize: 11.5, color: 'var(--text-primary)',
           lineHeight: 1.6, fontWeight: 400,
           boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
           pointerEvents: 'none',
         }}>
           {/* arrow */}
           <span style={{
-            position: 'absolute', top: -6, left: '50%', transform: 'translateX(-50%)',
+            position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)',
             width: 0, height: 0,
             borderLeft: '6px solid transparent',
             borderRight: '6px solid transparent',
-            borderBottom: '6px solid #3B82F6',
+            borderTop: '6px solid var(--blue-primary)',
           }}/>
           {text}
         </span>
