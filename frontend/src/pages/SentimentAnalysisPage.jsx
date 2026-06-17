@@ -287,7 +287,7 @@ function TrendIcon({ t }) {
 
 /* ── Page ────────────────────────────────────────────────────── */
 export default function SentimentAnalysisPage() {
-  const { rightPanelCollapsed, setBreadcrumb } = useContext(AppContext);
+  const { rightPanelCollapsed, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
   const compact = !rightPanelCollapsed; // right panel is open → use compact sizes
 
   useEffect(() => {
@@ -307,6 +307,16 @@ export default function SentimentAnalysisPage() {
         Math.abs(row.score) <= 0.10
       )
     : TOPIC_BREAKDOWN;
+
+  // Broadcast screen context
+  useEffect(() => {
+    setActiveScreenContext({
+      tab: 'sentiment_analysis',
+      period,
+      active_filter: activeSentiment,
+      visible_topics: filteredTopics,
+    });
+  }, [period, activeSentiment]);
 
   return (
     <div className="page-container">

@@ -60,7 +60,7 @@ function PaperPlaneIcon() {
 }
 
 export default function ChatWithData() {
-  const { dimension: ctxDimension, businesses, user } = useContext(AppContext);
+  const { dimension: ctxDimension, businesses, user, activeScreenContext } = useContext(AppContext);
   const [messages, setMessages] = useState([
     { role: 'assistant', content: "Hi! I'm your AI analyst. Ask me anything about employee engagement:" }
   ]);
@@ -91,11 +91,12 @@ export default function ChatWithData() {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
-          message:      msg,
-          history:      messages.filter(m => m.content && m.content.trim()).slice(-10).map(m => ({ role: m.role, content: m.content })),
-          dimension:    ctxDimension,
-          focusArea:    focusArea || null,
-          companyFilter: companyFilter || null,
+          message:        msg,
+          history:        messages.filter(m => m.content && m.content.trim()).slice(-10).map(m => ({ role: m.role, content: m.content })),
+          dimension:      ctxDimension,
+          focusArea:      focusArea || null,
+          companyFilter:  companyFilter || null,
+          active_context: activeScreenContext || null,
         }),
       });
 

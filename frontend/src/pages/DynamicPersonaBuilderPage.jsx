@@ -194,6 +194,7 @@ export default function DynamicPersonaBuilderPage() {
     dpbResetSignal, setDpbResetSignal,
     dpbFilters, setDpbFilters,
     setBreadcrumb, meta,
+    setActiveScreenContext,
   } = useContext(AppContext);
 
   const [personaName,   setPersonaName]   = useState('Custom Persona');
@@ -350,6 +351,20 @@ export default function DynamicPersonaBuilderPage() {
   const themes      = queryResult ? queryResult.themes.map(t => t.theme) : [];
   const personaN    = queryResult?.persona_n ?? 0;
   const comparisons = queryResult?.comparisons ?? [];
+
+  // Broadcast screen context to chatbot whenever persona state changes
+  useEffect(() => {
+    setActiveScreenContext({
+      tab: 'dynamic_persona_builder',
+      persona_name: personaName,
+      filters: dims,
+      persona_n: personaN,
+      persona_scores: queryResult ? Object.fromEntries(
+        (queryResult.themes || []).map(t => [t.theme, { persona: t.persona_score, overall: t.overall_score, delta: t.delta }])
+      ) : null,
+      comparisons: comparisons.slice(0, 5).map(c => ({ name: c.name, overall: c.overall })),
+    });
+  }, [personaName, dims, queryResult, personaN]);
 
   const personaScores = {};
   const overallScores = {};

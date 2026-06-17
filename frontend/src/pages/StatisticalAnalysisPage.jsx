@@ -298,7 +298,7 @@ const TILE_CONFIG = [
 
 /* ── page ─────────────────────────────────────────────────────── */
 export default function StatisticalAnalysisPage() {
-  const { setBreadcrumb, saFilters, saCache, setSaCache, meta, user } = useContext(AppContext);
+  const { setBreadcrumb, saFilters, saCache, setSaCache, meta, user, setActiveScreenContext } = useContext(AppContext);
 
   // Ref keeps the cache readable inside fetchQuestionData without adding it to deps
   const saCacheRef = useRef(saCache);
@@ -323,6 +323,18 @@ export default function StatisticalAnalysisPage() {
   const [topCorr,         setTopCorr]         = useState('Top 10');
   const [topNet,          setTopNet]          = useState('Top 15');
   const [loading,         setLoading]         = useState(false);
+
+  // Broadcast screen context to chatbot
+  useEffect(() => {
+    const selQ = questions.find(q => q.id === selectedQId);
+    setActiveScreenContext({
+      tab: 'statistical_analysis',
+      selected_question: selQ ? { id: selQ.id, text: selQ.text, category: selQ.category } : null,
+      top_correlations: correlations.slice(0, 5).map(c => ({ id: c.question_id, text: c.question_text, r: c.pearson_r, strength: c.strength, p: c.p_value })),
+      data_basis: dataBasis,
+      filters: saFilters,
+    });
+  }, [selectedQId, correlations, saFilters, dataBasis, questions]);
 
   // Fetch questions on mount; don't override selectedQId if already set from cache
   useEffect(() => {

@@ -240,11 +240,12 @@ class BusinessInsightRequest(BaseModel):
     business:     Optional[str] = None
 
 class ChatRequest(BaseModel):
-    message:       str
-    history:       List[dict] = []
-    dimension:     str = "Business Unit"
-    focusArea:     Optional[str] = None
-    companyFilter: Optional[str] = None
+    message:             str
+    history:             List[dict] = []
+    dimension:           str = "Business Unit"
+    focusArea:           Optional[str]  = None
+    companyFilter:       Optional[str]  = None
+    active_context:      Optional[dict] = None
 
 class SkillAnalysisRequest(BaseModel):
     skill:     Optional[str]       = None
@@ -362,29 +363,47 @@ Respond ONLY with valid JSON:
 
 @router.post("/chat")
 async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
+    import json as _json
     focus_line   = f"\nACTIVE FOCUS AREA: {req.focusArea} — prioritise answers about this theme." if req.focusArea else ""
     company_line = f"\nACTIVE COMPANY FILTER: {req.companyFilter} — answer only about this company unless explicitly asked otherwise." if req.companyFilter else ""
 
-    system_prompt = f"""You are an AI analyst assistant for ABG Vibes — Aditya Birla Group's employee engagement dashboard. You answer ONLY questions about the ABG Vibes survey, employee engagement, HR analytics, and the data below.{focus_line}{company_line}
+    # Build screen-context block when the frontend sends what's on screen
+    if req.active_context:
+        tab = req.active_context.get("tab", "unknown").replace("_", " ").title()
+        ctx_json = _json.dumps(req.active_context, indent=2)
+        screen_block = f"""
+ACTIVE SCREEN CONTEXT — THE USER IS CURRENTLY VIEWING THE "{tab}" TAB.
+THIS IS EXACTLY WHAT IS ON THEIR SCREEN RIGHT NOW:
+{ctx_json}
 
+ANSWER PRIORITY:
+1. If the question uses words like "this", "these results", "what I'm looking at", "this persona", "this analysis" → answer about the ACTIVE SCREEN CONTEXT above first, then use general ABG data to support.
+2. For any ABG business, score, category, or cohort question → use FULL ABG DATA below.
+3. For questions with no ABG data at all → answer from general HR knowledge and say "This is based on general HR best practice, not your ABG Vibes data."
+"""
+    else:
+        screen_block = ""
+
+    system_prompt = f"""You are an AI analyst for ABG Vibes — Aditya Birla Group's 2026 employee engagement dashboard. You are embedded inside their HR analytics platform.{focus_line}{company_line}
+{screen_block}
 STRICT SCOPE RULE: Only refuse if the question is CLEARLY about something with zero relation to HR, employees, or this survey — e.g. coding problems, recipes, general science, sports scores, jokes. DO NOT refuse if:
 - The question mentions a company name you don't recognise (it may be a business unit in the survey)
 - The question asks about a demographic group, cohort, persona, or score
 - The question is vague but could plausibly be about engagement data
 - The conversation history is about the survey
 When refusing, say exactly: "I can only help with questions about the ABG Vibes employee engagement survey. What would you like to know about the data?"
-If a company or BU name is not found in the data above, say "I don't have data for [name] in this dataset" — do NOT refuse the question entirely.
-Follow-up questions that refer to previous answers (e.g. "what generation is that?", "tell me more", "why is that?", "compare with X") are ALWAYS valid — treat them as survey questions even if they are short or lack context.
+If a company or BU name is not found in the data, say "I don't have data for [name] in this dataset" — do NOT refuse the question entirely.
+Follow-up questions that refer to previous answers (e.g. "what generation is that?", "tell me more", "why is that?", "compare with X") are ALWAYS valid.
 
-- Greetings or small talk → respond briefly and warmly (1 sentence), then offer to help with engagement data. Do NOT cite any numbers.
-- Specific questions about data → answer in 2-3 sentences, lead with the key insight and number, use **bold** for key figures.
+- Greetings → respond briefly and warmly (1 sentence), then offer to help. Do NOT cite numbers.
+- Data questions → lead with the key insight and number, use **bold** for key figures, 2-4 sentences max.
 - Never start a reply with "!" or similar punctuation.
-- "age group" or "age band" questions → use ONLY the AGE BAND BREAKDOWN scores (25-30, 30-35, etc.). NEVER use generation names (Gen Z, Traditionalist, etc.) as an answer to age group questions.
-- "generation" questions → use ONLY the GENERATION BREAKDOWN scores (Gen Z, Gen Y, Gen X, Baby Boomer).
-- Traditionalist is NOT an age group — it is a generation label with only 1 respondent and must never be cited.
-- Never say age group data is missing — it is always in the AGE BAND BREAKDOWN section above.
+- Never say you don't have access to data — always try to answer from context or general knowledge.
+- "age group"/"age band" questions → use ONLY AGE BAND BREAKDOWN scores (25-30, 30-35 etc.). Never use generation names for age group questions.
+- "generation" questions → use ONLY GENERATION BREAKDOWN scores (Gen Z, Gen Y, Gen X, Baby Boomer).
+- Traditionalist is a generation label with 1 respondent — never cite it.
 
-SURVEY DATA (use only when the user asks a data question):
+FULL ABG SURVEY DATA (use for any question about ABG businesses, scores, or cohorts):
 {_build_context(req.dimension, user)}"""
 
     messages = [
