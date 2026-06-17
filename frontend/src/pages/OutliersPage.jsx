@@ -1,6 +1,7 @@
 import { useContext, useMemo, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
-import Badge      from '../components/shared/Badge';
+import Badge from '../components/shared/Badge';
+import PaginatedTable from '../components/shared/PaginatedTable';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -121,24 +122,21 @@ export default function OutliersPage() {
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
               These units show high internal variation — engagement is split across employee groups
             </p>
-            <table className="data-table">
-              <thead>
-                <tr><th>Unit</th><th>Business</th><th>Score</th><th>Variance</th></tr>
-              </thead>
-              <tbody>
-                {highVariance.map((u, i) => {
-                  const sc = +(u.score??u.overall??0);
-                  return (
-                    <tr key={i} onClick={() => navigate('bu-detail', { business: u.business, unit: u.name })} style={{ cursor: 'pointer' }}>
-                      <td>{u.name}</td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{u.business}</td>
-                      <td style={{ color: scoreColor(sc), fontWeight: 700 }}>{sc.toFixed(2)}</td>
-                      <td style={{ color: '#7C3AED', fontWeight: 700 }}>{u.variance?.toFixed(2)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <PaginatedTable
+              pageSize={10}
+              headers={<><th>Unit</th><th>Business</th><th>Score</th><th>Variance</th></>}
+              rows={highVariance.map((u, i) => {
+                const sc = +(u.score??u.overall??0);
+                return (
+                  <tr key={i} onClick={() => navigate('bu-detail', { business: u.business, unit: u.name })} style={{ cursor: 'pointer' }}>
+                    <td>{u.name}</td>
+                    <td style={{ color: 'var(--text-muted)' }}>{u.business}</td>
+                    <td style={{ color: scoreColor(sc), fontWeight: 700 }}>{sc.toFixed(2)}</td>
+                    <td style={{ color: '#7C3AED', fontWeight: 700 }}>{u.variance?.toFixed(2)}</td>
+                  </tr>
+                );
+              })}
+            />
           </div>
         )}
       </div>

@@ -74,23 +74,24 @@ export default function AppHeader() {
           }} onClick={e => e.stopPropagation()}>
             {/* Header strip */}
             <div style={{
-              background: 'var(--header-gradient)',
-              padding: '20px 28px 20px',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+              background: 'linear-gradient(135deg, rgba(139,26,26,0.08) 0%, rgba(224,123,26,0.10) 100%)',
+              padding: '28px 28px 20px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+              borderBottom: '1px solid var(--border)',
             }}>
               <div style={{
-                width: 48, height: 48, borderRadius: '50%',
-                background: 'rgba(255,255,255,0.15)',
-                border: '1.5px solid rgba(255,255,255,0.3)',
+                width: 52, height: 52, borderRadius: '50%',
+                background: 'rgba(224,123,26,0.12)',
+                border: '1.5px solid var(--abg-orange)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <polyline points="16 17 21 12 16 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <line x1="21" y1="12" x2="9" y2="12" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="var(--abg-orange)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <polyline points="16 17 21 12 16 7" stroke="var(--abg-orange)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="21" y1="12" x2="9" y2="12" stroke="var(--abg-orange)" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
               </div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>Sign out?</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>Sign out?</div>
             </div>
             {/* Body */}
             <div style={{ padding: '20px 28px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -111,7 +112,7 @@ export default function AppHeader() {
                   onClick={() => { setShowLogoutConfirm(false); logout(); }}
                   style={{
                     flex: 1, padding: '9px 0', borderRadius: 8, border: 'none',
-                    background: 'var(--header-gradient)', color: '#fff',
+                    background: 'var(--abg-orange)', color: '#fff',
                     fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >Sign out</button>

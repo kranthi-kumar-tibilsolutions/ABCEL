@@ -1,7 +1,8 @@
 import { useState, useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import { apiFetch } from '../utils/api';
-import Skeleton   from '../components/shared/Skeleton';
+import Skeleton from '../components/shared/Skeleton';
+import PaginatedTable from '../components/shared/PaginatedTable';
 
 const SKILLS = [
   { id: 'leadership-effectiveness', label: 'Leadership Effectiveness' },
@@ -236,30 +237,25 @@ export default function InsightsStudio() {
           {result.priorityActions?.length > 0 && (
             <div className="chart-card">
               <div className="chart-title">Priority Actions</div>
-              <table className="data-table">
-                <thead>
-                  <tr><th style={{ width: 32 }}>#</th><th>Action</th><th>Owner</th><th>Timeline</th><th>Expected Impact</th></tr>
-                </thead>
-                <tbody>
-                  {result.priorityActions.map((a, i) => (
-                    <tr key={i}>
-                      <td style={{ fontWeight: 700, color: 'var(--blue-primary)' }}>{a.rank}</td>
-                      <td>{a.action}</td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{a.owner}</td>
-                      <td>
-                        <span style={{
-                          fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 9999,
-                          background: String(a.timeline).includes('30') ? '#FEF2F2' : String(a.timeline).includes('90') ? '#FFFBEB' : '#EFF6FF',
-                          color:      String(a.timeline).includes('30') ? '#DC2626' : String(a.timeline).includes('90') ? '#D97706' : '#2563EB',
-                        }}>
-                          {a.timeline}
-                        </span>
-                      </td>
-                      <td style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{a.expectedImpact}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <PaginatedTable
+                pageSize={10}
+                headers={<><th style={{ width: 32 }}>#</th><th>Action</th><th>Owner</th><th>Timeline</th><th>Expected Impact</th></>}
+                rows={result.priorityActions.map((a, i) => (
+                  <tr key={i}>
+                    <td style={{ fontWeight: 700, color: 'var(--blue-primary)' }}>{a.rank}</td>
+                    <td>{a.action}</td>
+                    <td style={{ color: 'var(--text-muted)' }}>{a.owner}</td>
+                    <td>
+                      <span style={{
+                        fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 9999,
+                        background: String(a.timeline).includes('30') ? '#FEF2F2' : String(a.timeline).includes('90') ? '#FFFBEB' : '#EFF6FF',
+                        color:      String(a.timeline).includes('30') ? '#DC2626' : String(a.timeline).includes('90') ? '#D97706' : '#2563EB',
+                      }}>{a.timeline}</span>
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)' }}>{a.expectedImpact}</td>
+                  </tr>
+                ))}
+              />
             </div>
           )}
 

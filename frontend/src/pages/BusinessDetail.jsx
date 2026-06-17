@@ -2,8 +2,9 @@ import { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../context/AppContext';
 import { apiFetch } from '../utils/api';
 import { Bar, Radar } from 'react-chartjs-2';
-import Badge    from '../components/shared/Badge';
+import Badge from '../components/shared/Badge';
 import Skeleton from '../components/shared/Skeleton';
+import PaginatedTable from '../components/shared/PaginatedTable';
 
 const CATEGORY_COLORS = {
   'Engagement Index':        '#F97316',
@@ -27,7 +28,6 @@ export default function BusinessDetail() {
   const { selectedBusiness, navigate, units, businesses, dimension, setBreadcrumb } = useContext(AppContext);
   const [insight,      setInsight]     = useState(null);
   const [loadInsight,  setLoadInsight] = useState(false);
-  const [showAllBUs,   setShowAllBUs]  = useState(false);
 
   const biz = businesses?.find(b => b.name === selectedBusiness);
   const bizUnits = units?.filter(u => u.business === selectedBusiness) ?? [];
@@ -253,48 +253,23 @@ export default function BusinessDetail() {
       {bizUnits.length > 0 && (
         <div style={{ marginTop: 24 }}>
           <h3 className="section-title">All Business Units</h3>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>#</th><th>Business Unit</th><th>Score</th><th>Band</th><th>Respondents</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bizUnits
-                .slice()
-                .sort((a,b) => (b.score??b.overall??0)-(a.score??a.overall??0))
-                .slice(0, showAllBUs ? undefined : 10)
-                .map((u, i) => (
-                  <tr
-                    key={u.name}
-                    onClick={() => navigate('bu-detail', { business: selectedBusiness, unit: u.name })}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <td>{i+1}</td>
-                    <td>{u.name}</td>
-                    <td style={{ color: scoreColor(+(u.score??u.overall??0)), fontWeight: 700 }}>
-                      {(+(u.score??u.overall??0)).toFixed(2)}
-                    </td>
-                    <td><Badge status={u.band} /></td>
-                    <td>{u.respondent_count?.toLocaleString() ?? '—'}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-          {bizUnits.length > 10 && (
-            <button
-              onClick={() => setShowAllBUs(v => !v)}
-              style={{
-                marginTop: 10, width: '100%', padding: '9px 0',
-                background: 'none', border: '1px solid var(--border)',
-                borderRadius: 8, fontSize: 12, fontWeight: 600,
-                color: 'var(--blue-primary)', cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
-            >
-              {showAllBUs ? `Show less ↑` : `View more (${bizUnits.length - 10} more) ↓`}
-            </button>
-          )}
+          <PaginatedTable
+            pageSize={10}
+            headers={<><th>#</th><th>Business Unit</th><th>Score</th><th>Band</th><th>Respondents</th></>}
+            rows={bizUnits
+              .slice()
+              .sort((a,b) => (b.score??b.overall??0)-(a.score??a.overall??0))
+              .map((u, i) => (
+                <tr key={u.name} onClick={() => navigate('bu-detail', { business: selectedBusiness, unit: u.name })} style={{ cursor: 'pointer' }}>
+                  <td>{i+1}</td>
+                  <td>{u.name}</td>
+                  <td style={{ color: scoreColor(+(u.score??u.overall??0)), fontWeight: 700 }}>{(+(u.score??u.overall??0)).toFixed(2)}</td>
+                  <td><Badge status={u.band} /></td>
+                  <td>{u.respondent_count?.toLocaleString() ?? '—'}</td>
+                </tr>
+              ))
+            }
+          />
         </div>
       )}
     </div>

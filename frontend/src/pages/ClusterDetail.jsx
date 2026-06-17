@@ -1,7 +1,8 @@
 import { useContext } from 'react';
 import { AppContext } from '../context/AppContext';
-import Badge      from '../components/shared/Badge';
+import Badge from '../components/shared/Badge';
 import Breadcrumb from '../components/shared/Breadcrumb';
+import PaginatedTable from '../components/shared/PaginatedTable';
 
 const CLUSTER_CONFIG = {
   thriving:  { label: 'Thriving',   color: '#16A34A', bg: '#F0FDF4' },
@@ -47,37 +48,27 @@ export default function ClusterDetail() {
               <Badge status={key} />
               <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{items.length} business units</span>
             </div>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>#</th><th>Business Unit</th><th>Business</th><th>Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items
-                  .slice()
-                  .sort((a,b) => (+(b.score??b.overall??0)) - (+(a.score??a.overall??0)))
-                  .map((item, i) => {
-                    const name    = item.name ?? item;
-                    const sc      = +(item.score ?? item.overall ?? 0);
-                    const bizName = item.business ?? '';
-                    return (
-                      <tr
-                        key={i}
-                        onClick={() => navigate('bu-detail', { business: bizName, unit: name })}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <td>{i+1}</td>
-                        <td>{name}</td>
-                        <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{bizName}</td>
-                        <td style={{ color: scoreColor(sc), fontWeight: 700 }}>
-                          {sc > 0 ? sc.toFixed(2) : '—'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
+            <PaginatedTable
+              pageSize={10}
+              headers={<><th>#</th><th>Business Unit</th><th>Business</th><th>Score</th></>}
+              rows={items
+                .slice()
+                .sort((a,b) => (+(b.score??b.overall??0)) - (+(a.score??a.overall??0)))
+                .map((item, i) => {
+                  const name    = item.name ?? item;
+                  const sc      = +(item.score ?? item.overall ?? 0);
+                  const bizName = item.business ?? '';
+                  return (
+                    <tr key={i} onClick={() => navigate('bu-detail', { business: bizName, unit: name })} style={{ cursor: 'pointer' }}>
+                      <td>{i+1}</td>
+                      <td>{name}</td>
+                      <td style={{ color: 'var(--text-muted)' }}>{bizName}</td>
+                      <td style={{ color: scoreColor(sc), fontWeight: 700 }}>{sc > 0 ? sc.toFixed(2) : '—'}</td>
+                    </tr>
+                  );
+                })
+              }
+            />
           </div>
         );
       })}

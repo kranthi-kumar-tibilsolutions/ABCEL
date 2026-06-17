@@ -143,7 +143,7 @@ const BOTTOM_NAV = [];
 
 export default function Sidebar() {
   const { page, navigate } = useContext(AppContext);
-  const [collapsed,  setCollapsed]  = useState(false);
+  const [collapsed,  setCollapsed]  = useState(true);
   const isChildActive = id => (NAV.find(n => n.id === id)?.children || []).some(c => c.id === page);
   const [openGroups, setOpenGroups] = useState(() => ({
     explore: isChildActive('explore'),

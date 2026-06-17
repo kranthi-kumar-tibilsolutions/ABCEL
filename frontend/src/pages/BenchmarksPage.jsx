@@ -2,6 +2,7 @@ import { useContext, useMemo, useState, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import { Bar } from 'react-chartjs-2';
 import BENCHMARKS from '../data/benchmarks.json';
+import PaginatedTable from '../components/shared/PaginatedTable';
 
 const TYPE_LABELS = { peer: 'Peer Conglomerate', industry: 'Industry', regional: 'Regional / Norm' };
 const TYPE_COLORS = { peer: '#7C3AED', industry: '#2563EB', regional: '#0891B2' };
@@ -162,44 +163,38 @@ export default function BenchmarksPage() {
       {/* Detailed comparison table */}
       <div className="chart-card">
         <div className="chart-title" style={{ marginBottom: 12 }}>Full Benchmark Comparison</div>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Organisation / Norm</th>
-              <th>Type</th>
-              <th>Region</th>
-              <th>Score</th>
-              <th>vs ABG</th>
-            </tr>
-          </thead>
-          <tbody>
-            {allExternal.sort((a,b) => b.score - a.score).map((b, i) => (
+        <PaginatedTable
+          pageSize={10}
+          headers={<>
+            <th>Organisation / Norm</th>
+            <th>Type</th>
+            <th>Region</th>
+            <th>Score</th>
+            <th>vs ABG</th>
+          </>}
+          rows={[
+            ...allExternal.slice().sort((a,b) => b.score - a.score).map((b, i) => (
               <tr key={i}>
                 <td style={{ fontWeight: 600 }}>{b.name}</td>
                 <td>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 9999,
-                    background: TYPE_COLORS[b.type] + '18', color: TYPE_COLORS[b.type],
-                  }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 9999, background: TYPE_COLORS[b.type] + '18', color: TYPE_COLORS[b.type] }}>
                     {TYPE_LABELS[b.type] ?? b.type}
                   </span>
                 </td>
-                <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {REGION_FLAGS[b.region] ?? ''} {b.region}
-                </td>
+                <td style={{ color: 'var(--text-muted)' }}>{REGION_FLAGS[b.region] ?? ''} {b.region}</td>
                 <td style={{ fontWeight: 700, color: scoreColor(b.score, groupAvg) }}>{b.score.toFixed(2)}</td>
                 <td><GapBar score={b.score} groupAvg={groupAvg} /></td>
               </tr>
-            ))}
-            <tr style={{ background: '#FFF7ED', fontWeight: 700 }}>
+            )),
+            <tr key="abg" style={{ fontWeight: 700 }}>
               <td>ABG Group</td>
               <td><span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 9999, background: '#FED7AA', color: '#C2410C' }}>Your Organisation</span></td>
-              <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>🇮🇳 India</td>
+              <td style={{ color: 'var(--text-muted)' }}>🇮🇳 India</td>
               <td style={{ fontWeight: 700, color: '#F97316' }}>{groupAvg.toFixed(2)}</td>
               <td><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>—</span></td>
-            </tr>
-          </tbody>
-        </table>
+            </tr>,
+          ]}
+        />
       </div>
 
       {/* Category-level benchmarks */}
@@ -207,43 +202,34 @@ export default function BenchmarksPage() {
         <div className="chart-card">
           <div className="chart-title" style={{ marginBottom: 4 }}>Category-Level Benchmark</div>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>ABG category scores vs India median and top-quartile norms</p>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>ABG Score</th>
-                <th>India Median</th>
-                <th>India Top Quartile</th>
-                <th>Global Avg</th>
-                <th>Position</th>
-              </tr>
-            </thead>
-            <tbody>
-              {catRows.map((r, i) => {
-                const topQ = r.india_top_quartile ?? 4.4;
-                const med  = r.india_median ?? 3.9;
-                const pos  = r.abgScore >= topQ ? 'Top Quartile'
-                           : r.abgScore >= med  ? 'Above Median'
-                           : 'Below Median';
-                const posColor = pos === 'Top Quartile' ? '#15803D' : pos === 'Above Median' ? '#2563EB' : '#DC2626';
-                const posBg    = pos === 'Top Quartile' ? '#F0FDF4'  : pos === 'Above Median' ? '#EFF6FF'  : '#FEF2F2';
-                return (
-                  <tr key={i}>
-                    <td style={{ fontWeight: 600 }}>{r.cat}</td>
-                    <td style={{ fontWeight: 700, color: '#F97316' }}>{r.abgScore.toFixed(2)}</td>
-                    <td style={{ color: 'var(--text-secondary)' }}>{r.india_median?.toFixed(2) ?? '—'}</td>
-                    <td style={{ color: 'var(--text-secondary)' }}>{r.india_top_quartile?.toFixed(2) ?? '—'}</td>
-                    <td style={{ color: 'var(--text-secondary)' }}>{r.global_avg?.toFixed(2) ?? '—'}</td>
-                    <td>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 9999, background: posBg, color: posColor }}>
-                        {pos}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <PaginatedTable
+            pageSize={10}
+            headers={<>
+              <th>Category</th>
+              <th>ABG Score</th>
+              <th>India Median</th>
+              <th>India Top Quartile</th>
+              <th>Global Avg</th>
+              <th>Position</th>
+            </>}
+            rows={catRows.map((r, i) => {
+              const topQ = r.india_top_quartile ?? 4.4;
+              const med  = r.india_median ?? 3.9;
+              const pos  = r.abgScore >= topQ ? 'Top Quartile' : r.abgScore >= med ? 'Above Median' : 'Below Median';
+              const posColor = pos === 'Top Quartile' ? '#15803D' : pos === 'Above Median' ? '#2563EB' : '#DC2626';
+              const posBg    = pos === 'Top Quartile' ? '#F0FDF4'  : pos === 'Above Median' ? '#EFF6FF'  : '#FEF2F2';
+              return (
+                <tr key={i}>
+                  <td style={{ fontWeight: 600 }}>{r.cat}</td>
+                  <td style={{ fontWeight: 700, color: '#F97316' }}>{r.abgScore.toFixed(2)}</td>
+                  <td style={{ color: 'var(--text-secondary)' }}>{r.india_median?.toFixed(2) ?? '—'}</td>
+                  <td style={{ color: 'var(--text-secondary)' }}>{r.india_top_quartile?.toFixed(2) ?? '—'}</td>
+                  <td style={{ color: 'var(--text-secondary)' }}>{r.global_avg?.toFixed(2) ?? '—'}</td>
+                  <td><span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 9999, background: posBg, color: posColor }}>{pos}</span></td>
+                </tr>
+              );
+            })}
+          />
         </div>
       )}
 
