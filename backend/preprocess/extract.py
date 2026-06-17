@@ -834,6 +834,7 @@ def extract_phase2_data(raw_df, decoded_df, xl, output_dir,
         json.dump(q_bu_scores, f, indent=2)
     print(f"  [Phase 2] question_bu_scores.json — {len(q_bu_scores)} questions × {len(bu_q_sums)} BUs")
 
+
     # Create empty Phase 2 files if they don't exist
     for fname, default in [
         ('hypotheses.json',     []),
