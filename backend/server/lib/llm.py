@@ -17,7 +17,7 @@ async def call_mistral(messages: list, max_tokens: int = 600, json_mode: bool = 
     if json_mode:
         body["response_format"] = {"type": "json_object"}
 
-    async with httpx.AsyncClient(timeout=60) as client:
+    async with httpx.AsyncClient(timeout=8) as client:
         return await client.post(
             "https://api.mistral.ai/v1/chat/completions",
             headers={
@@ -30,7 +30,7 @@ async def call_mistral(messages: list, max_tokens: int = 600, json_mode: bool = 
 
 # == callCerebras(messages, maxTokens) — exponential back-off on 429 ==
 async def call_cerebras(messages: list, max_tokens: int = 600) -> httpx.Response:
-    MAX_RETRIES = 4
+    MAX_RETRIES = 2
     async with httpx.AsyncClient(timeout=30) as client:
         for attempt in range(MAX_RETRIES + 1):
             if attempt > 0:
@@ -54,7 +54,7 @@ async def call_cerebras(messages: list, max_tokens: int = 600) -> httpx.Response
             if res.status_code != 429:
                 return res
 
-    raise RuntimeError("Cerebras rate-limited after 4 retries")
+    raise RuntimeError("Cerebras rate-limited after 2 retries")
 
 
 # == callLLM — Mistral primary, Cerebras fallback ==
