@@ -2,6 +2,7 @@ import { useState, useContext, useEffect } from 'react';
 import { AppContext } from '../../context/AppContext';
 import { apiFetch } from '../../utils/api';
 import Skeleton from '../shared/Skeleton';
+import InfoTip from '../shared/InfoTip';
 
 const CARD_CONFIG = {
   criticalWatchlist: {
@@ -154,7 +155,7 @@ export default function FocusAreas() {
     <div className="focus-areas-section">
       <div className="section-header">
         <div>
-          <h3 className="cluster-section-title">AI Recommended Focus Areas</h3>
+          <h3 className="cluster-section-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>AI Recommended Focus Areas<InfoTip tip="The AI analyses score gaps and trends to surface the most critical areas needing attention: the highest-risk unit, an emerging risk, and a top bright spot to leverage." /></h3>
           <p className="cluster-section-sub">Areas that need your attention based on impact and change</p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

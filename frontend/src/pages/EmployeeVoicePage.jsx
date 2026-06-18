@@ -1,5 +1,6 @@
 import { useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
+import InfoTip from '../components/shared/InfoTip';
 
 const MOCK_THEMES = [
   { theme: 'Work-Life Balance',     sentiment: 'mixed',    count: 1432, pct: 38, color: '#D97706' },
@@ -44,7 +45,7 @@ export default function EmployeeVoicePage() {
 
       {/* Theme bar chart */}
       <div className="chart-card" style={{ marginBottom: 16 }}>
-        <div className="chart-title">Top Themes from Free-Text Responses</div>
+        <div className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span>Top Themes from Free-Text Responses</span><InfoTip tip="The most frequently mentioned topics extracted from open-ended survey responses, coloured by overall sentiment (positive, mixed, or negative)." /></div>
         <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
           Based on {meta?.total_respondents?.toLocaleString() ?? '55,457'} respondents
           {cohort !== 'All Cohorts' && ` · ${cohort}`}
@@ -71,7 +72,7 @@ export default function EmployeeVoicePage() {
       </div>
 
       <div className="chart-card">
-        <div className="chart-title">Upload free-text data</div>
+        <div className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span>Upload free-text data</span><InfoTip tip="Include an open-ended question column in your Excel upload to enable NLP-powered theme extraction and sentiment analysis." /></div>
         <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
           To enable NLP-powered theme extraction and sentiment analysis, include a free-text response column in your Excel file.
           The system will automatically detect and process open-ended question columns.

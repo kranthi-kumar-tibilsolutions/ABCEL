@@ -1,6 +1,7 @@
 import { useContext, useMemo, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Badge      from '../components/shared/Badge';
+import InfoTip    from '../components/shared/InfoTip';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -44,7 +45,7 @@ export default function OutliersPage() {
       <div className="outliers-grid">
         {/* Top performers */}
         <div className="chart-card">
-          <div className="chart-title" style={{ color: '#16A34A' }}>Top Business Units</div>
+          <div className="chart-title" style={{ color: '#16A34A', display: 'flex', alignItems: 'center', gap: 6 }}><span>Top Business Units</span><InfoTip tip="The highest-scoring business units by overall engagement score in the current survey wave." /></div>
           {top5.map((u, i) => {
             const sc = +(u.score??u.overall??0);
             return (
@@ -62,7 +63,7 @@ export default function OutliersPage() {
 
         {/* Bottom performers */}
         <div className="chart-card">
-          <div className="chart-title" style={{ color: '#DC2626' }}>Critical Business Units</div>
+          <div className="chart-title" style={{ color: '#DC2626', display: 'flex', alignItems: 'center', gap: 6 }}><span>Critical Business Units</span><InfoTip tip="The bottom-ranked business units by overall engagement score — flagged for immediate HR attention and intervention." /></div>
           {bottom5.map((u, i) => {
             const sc = +(u.score??u.overall??0);
             return (
@@ -80,7 +81,7 @@ export default function OutliersPage() {
 
         {/* Top businesses */}
         <div className="chart-card">
-          <div className="chart-title" style={{ color: '#16A34A' }}>Thriving Businesses</div>
+          <div className="chart-title" style={{ color: '#16A34A', display: 'flex', alignItems: 'center', gap: 6 }}><span>Thriving Businesses</span><InfoTip tip="Top 3 businesses by overall engagement score, aggregated across all their business units." /></div>
           {topBiz.map((b, i) => {
             const sc = +(b.overall??b.score??0);
             return (
@@ -98,7 +99,7 @@ export default function OutliersPage() {
 
         {/* Bottom businesses */}
         <div className="chart-card">
-          <div className="chart-title" style={{ color: '#D97706' }}>At-Risk Businesses</div>
+          <div className="chart-title" style={{ color: '#D97706', display: 'flex', alignItems: 'center', gap: 6 }}><span>At-Risk Businesses</span><InfoTip tip="Bottom 3 businesses by overall engagement score — may require leadership attention and resource reallocation." /></div>
           {bottomBiz.map((b, i) => {
             const sc = +(b.overall??b.score??0);
             return (
@@ -117,7 +118,7 @@ export default function OutliersPage() {
         {/* High variance */}
         {highVariance.length > 0 && (
           <div className="chart-card" style={{ gridColumn: '1 / -1' }}>
-            <div className="chart-title" style={{ color: '#7C3AED' }}>High Variance — Polarised Units</div>
+            <div className="chart-title" style={{ color: '#7C3AED', display: 'flex', alignItems: 'center', gap: 6 }}><span>High Variance — Polarised Units</span><InfoTip tip="Business units with variance > 0.8 — engagement is split across employee groups, masking pockets of disengagement." /></div>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
               These units show high internal variation — engagement is split across employee groups
             </p>

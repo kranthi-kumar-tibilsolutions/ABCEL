@@ -28,6 +28,7 @@ import HypothesisTestingPage        from './pages/HypothesisTestingPage';
 import SentimentAnalysisPage       from './pages/SentimentAnalysisPage';
 import StatisticalAnalysisPage     from './pages/StatisticalAnalysisPage';
 import DynamicPersonaBuilderPage   from './pages/DynamicPersonaBuilderPage';
+import FocusSpotlightPage          from './pages/FocusSpotlightPage';
 import SettingsPage                from './pages/SettingsPage';
 
 function ComingSoon({ title }) {
@@ -64,6 +65,7 @@ const PAGE_MAP = {
   'statistical-analysis':     StatisticalAnalysisPage,
   'sentiment-analysis':       SentimentAnalysisPage,
   'dynamic-persona-builder':  DynamicPersonaBuilderPage,
+  'focus-spotlight':          FocusSpotlightPage,
   settings:                   SettingsPage,
 };
 

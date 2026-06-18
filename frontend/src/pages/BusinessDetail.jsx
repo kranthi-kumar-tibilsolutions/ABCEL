@@ -5,6 +5,7 @@ import { Bar, Radar } from 'react-chartjs-2';
 import Badge       from '../components/shared/Badge';
 import Breadcrumb  from '../components/shared/Breadcrumb';
 import Skeleton    from '../components/shared/Skeleton';
+import InfoTip     from '../components/shared/InfoTip';
 
 const CATEGORY_COLORS = {
   'Engagement':          '#F97316',
@@ -117,7 +118,7 @@ export default function BusinessDetail() {
         {/* Radar */}
         {catLabels.length > 2 && (
           <div className="chart-card">
-            <div className="chart-title">Category Profile</div>
+            <div className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span>Category Profile</span><InfoTip tip="Radar chart showing this business's score across each engagement category, making strengths and weaknesses immediately visible." /></div>
             <div className="chart-inner">
               <div style={{ height: 280 }}>
                 <Radar data={radarData} options={{
@@ -141,7 +142,7 @@ export default function BusinessDetail() {
         {/* BU bar */}
         {bizUnits.length > 0 && (
           <div className="chart-card">
-            <div className="chart-title">Business Units</div>
+            <div className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span>Business Units</span><InfoTip tip="Overall engagement scores for every business unit within this business, sorted from highest to lowest. Click a bar to drill into that unit's detail." /></div>
             <div className="chart-inner">
               <div style={{ height: Math.max(200, bizUnits.length * 26) }}>
                 <Bar data={barData} options={{
@@ -168,7 +169,7 @@ export default function BusinessDetail() {
       <div className="ai-summary-card" style={{ marginTop: 24 }}>
         <div className="ai-summary-header">
           <span className="ai-badge">AI</span>
-          <span>Business Intelligence</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>Business Intelligence<InfoTip tip="AI-generated narrative covering this business's key strengths, areas of concern, and recommended actions based on its category scores." /></span>
         </div>
         {loadInsight ? <Skeleton count={3} height={10} /> :
          insight ? (

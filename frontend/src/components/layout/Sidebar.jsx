@@ -31,6 +31,7 @@ const NAV = [
     ),
     children: [
       { id: 'dynamic-persona-builder', label: 'Dynamic Persona Builder' },
+      { id: 'focus-spotlight',         label: 'Focus Spotlight' },
     ],
   },
   {
