@@ -114,6 +114,8 @@ function DimSelect({ value, opts, color, onChange }) {
           position:'absolute', top:'calc(100% + 4px)', left:0, right:0, minWidth:140,
           background:'var(--bg-card)', border:'1px solid var(--border)',
           borderRadius:8, boxShadow:'0 8px 24px rgba(0,0,0,0.12)', zIndex:400, padding:4,
+          maxHeight:220, overflowY:'auto',
+          scrollbarWidth:'thin', scrollbarColor:'var(--border) transparent',
         }}>
           {opts.map(opt => (
             <button key={opt} onClick={() => { onChange(opt); setOpen(false); }} style={{
@@ -518,10 +520,8 @@ export default function DynamicPersonaBuilderPage() {
           {/* Suggested Personas — hidden once a persona has been applied */}
           {suggestions.length > 0 && !queryResult && (
             <div style={{ marginBottom:14 }}>
-              <div className="sa-filter-label" style={{ marginBottom:6 }}>
-                Suggested Personas
-                <span style={{ fontSize:9, fontWeight:400, color:'var(--text-muted)', marginLeft:6 }}>click to apply instantly</span>
-              </div>
+              <div className="sa-filter-label" style={{ marginBottom:4 }}>Suggested Personas</div>
+              <div style={{ fontSize:9, fontWeight:400, color:'var(--text-muted)', marginBottom:6 }}>click to apply instantly</div>
               <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
                 {suggestions.map(s => (
                   <button

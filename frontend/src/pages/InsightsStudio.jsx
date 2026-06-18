@@ -2,6 +2,7 @@ import { useState, useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import { apiFetch } from '../utils/api';
 import Skeleton   from '../components/shared/Skeleton';
+import InfoTip    from '../components/shared/InfoTip';
 
 const SKILLS = [
   { id: 'leadership-effectiveness', label: 'Leadership Effectiveness' },
@@ -97,7 +98,7 @@ export default function InsightsStudio() {
 
       {/* Config panel */}
       <div className="chart-card">
-        <div className="chart-title">Select Skills to Analyse</div>
+        <div className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span>Select Skills to Analyse</span><InfoTip tip="Choose one or more engagement skill areas; the AI agent will analyse how each performs across the selected dimension (Business Unit, Gender, Generation, etc.)." /></div>
         <div className="skill-pills">
           {SKILLS.map(s => (
             <button
@@ -205,7 +206,7 @@ export default function InsightsStudio() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {result.riskBUs?.length > 0 && (
               <div className="chart-card" style={{ borderTop: '3px solid #DC2626' }}>
-                <div className="chart-title" style={{ color: '#DC2626' }}>Risk BUs</div>
+                <div className="chart-title" style={{ color: '#DC2626', display: 'flex', alignItems: 'center', gap: 6 }}><span>Risk BUs</span><InfoTip tip="Business units scoring lowest on the selected skill — these require targeted intervention." /></div>
                 {result.riskBUs.map((bu, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#DC2626', flexShrink: 0 }} />
@@ -216,7 +217,7 @@ export default function InsightsStudio() {
             )}
             {result.brightSpotBUs?.length > 0 && (
               <div className="chart-card" style={{ borderTop: '3px solid #16A34A' }}>
-                <div className="chart-title" style={{ color: '#16A34A' }}>Bright Spots</div>
+                <div className="chart-title" style={{ color: '#16A34A', display: 'flex', alignItems: 'center', gap: 6 }}><span>Bright Spots</span><InfoTip tip="Business units excelling on the selected skill — models to learn from and replicate across the organisation." /></div>
                 {result.brightSpotBUs.map((bu, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#16A34A', flexShrink: 0 }} />
@@ -230,7 +231,7 @@ export default function InsightsStudio() {
           {/* Priority Actions table */}
           {result.priorityActions?.length > 0 && (
             <div className="chart-card">
-              <div className="chart-title">Priority Actions</div>
+              <div className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span>Priority Actions</span><InfoTip tip="AI-recommended actions ranked by expected impact, with suggested owner and delivery timeline." /></div>
               <table className="data-table">
                 <thead>
                   <tr><th style={{ width: 32 }}>#</th><th>Action</th><th>Owner</th><th>Timeline</th><th>Expected Impact</th></tr>

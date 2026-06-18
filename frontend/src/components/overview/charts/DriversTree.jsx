@@ -1,5 +1,6 @@
 import { useContext, useMemo } from 'react';
 import { AppContext } from '../../../context/AppContext';
+import InfoTip from '../../shared/InfoTip';
 
 const SVG_W = 192, SVG_H = 180;
 const BRANCH_CY  = [35, 90, 145];
@@ -78,9 +79,10 @@ export default function DriversTree() {
   return (
     <div className="dt-card">
       <div className="dt-header">
-        <div className="dt-title">
+        <div className="dt-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           DRIVERS OF ENGAGEMENT
           <span className="dt-title-sub"> (Decomposition Tree)</span>
+          <InfoTip tip="Decomposes the overall engagement score into its category drivers, showing which categories contribute most (positive) or drag the score down (negative)." />
         </div>
         <button className="dt-view-all" onClick={() => navigate && navigate('bu-explorer')}>
           View full drivers

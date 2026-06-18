@@ -2,6 +2,7 @@ import { useContext, useMemo, useState, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import { Bar } from 'react-chartjs-2';
 import BENCHMARKS from '../data/benchmarks.json';
+import InfoTip from '../components/shared/InfoTip';
 
 const TYPE_LABELS = { peer: 'Peer Conglomerate', industry: 'Industry', regional: 'Regional / Norm' };
 const TYPE_COLORS = { peer: '#7C3AED', industry: '#2563EB', regional: '#0891B2' };
@@ -151,7 +152,7 @@ export default function BenchmarksPage() {
 
       {/* Detailed comparison table */}
       <div className="chart-card">
-        <div className="chart-title" style={{ marginBottom: 12 }}>Full Benchmark Comparison</div>
+        <div className="chart-title" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><span>Full Benchmark Comparison</span><InfoTip tip="ABG Group's overall engagement score compared against all external peer, industry, and regional benchmarks, showing the gap (positive or negative)." /></div>
         <table className="data-table">
           <thead>
             <tr>
@@ -195,7 +196,7 @@ export default function BenchmarksPage() {
       {/* Category-level benchmarks */}
       {catRows.length > 0 && (
         <div className="chart-card">
-          <div className="chart-title" style={{ marginBottom: 4 }}>Category-Level Benchmark</div>
+          <div className="chart-title" style={{ marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}><span>Category-Level Benchmark</span><InfoTip tip="ABG's score for each engagement category compared against the India median, India top-quartile, and global average norms." /></div>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>ABG category scores vs India median and top-quartile norms</p>
           <table className="data-table">
             <thead>
@@ -238,7 +239,7 @@ export default function BenchmarksPage() {
       )}
 
       <div className="chart-card">
-        <div className="chart-title">About These Benchmarks</div>
+        <div className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span>About These Benchmarks</span><InfoTip tip="Data sources and methodology notes for all external benchmark scores used in this view." /></div>
         <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.7 }}>
           Benchmark data is sourced from Willis Towers Watson 2025 Employee Engagement Report, Korn Ferry 2024 Engagement Survey, Gallup State of the Global Workplace 2025, and Mercer 2024 Global Engagement Norms. All scores represent mean favourability on a 1–5 Likert scale. Industry and peer scores are aggregated from publicly available survey reports and anonymised proprietary databases. Comparisons are for strategic orientation; ensure your scoring methodology aligns before drawing direct conclusions.
         </p>

@@ -3,6 +3,7 @@ import { AppContext } from '../context/AppContext';
 import { Bar } from 'react-chartjs-2';
 import Badge      from '../components/shared/Badge';
 import Breadcrumb from '../components/shared/Breadcrumb';
+import InfoTip    from '../components/shared/InfoTip';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -68,7 +69,7 @@ export default function BUDetail() {
       {/* Category bar */}
       {cats.length > 0 && (
         <div className="chart-card" style={{ marginTop: 24 }}>
-          <div className="chart-title">Category Scores</div>
+          <div className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span>Category Scores</span><InfoTip tip="This business unit's mean score for each engagement category, showing where it is strong or needs improvement." /></div>
           <div style={{ height: 260 }}>
             <Bar data={catBarData} options={{
               responsive: true, maintainAspectRatio: false,
@@ -85,7 +86,7 @@ export default function BUDetail() {
       {/* Cohort breakdown */}
       {cohortDims.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <h3 className="section-title">Cohort Breakdown</h3>
+          <h3 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>Cohort Breakdown<InfoTip tip="Engagement scores segmented by demographic groups (gender, generation, tenure, job band) within this business unit, highlighting which cohorts need attention." /></h3>
           <div className="cohort-grid">
             {cohortDims.map(dim => {
               const groups = cohorts[dim] ?? [];

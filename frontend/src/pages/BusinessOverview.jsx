@@ -1,6 +1,7 @@
 import { useContext, useState, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Badge      from '../components/shared/Badge';
+import InfoTip    from '../components/shared/InfoTip';
 
 function scoreColor(s) {
   if (s >= 4.5) return '#15803D';
@@ -75,7 +76,7 @@ export default function BusinessOverview() {
     <div className="page-container">
       <div className="page-header">
         <div className="biz-sort-row">
-          <span className="biz-sort-label">Sort by</span>
+          <span className="biz-sort-label" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>Sort by<InfoTip tip="All businesses ranked by overall engagement score or response count. Click a card to view detailed category scores and business unit breakdown." /></span>
           {SORT_OPTIONS.map(opt => (
             <button
               key={opt.field}

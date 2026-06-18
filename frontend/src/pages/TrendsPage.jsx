@@ -1,6 +1,7 @@
 import { useContext, useMemo, useState, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import { Line, Bar } from 'react-chartjs-2';
+import InfoTip from '../components/shared/InfoTip';
 
 // Task 15 — wave labels instead of months
 const MOCK_WAVES = ['Vibes 2022', 'Vibes 2023', 'Vibes Q1 2024', 'Vibes Q2 2024', 'Vibes 2025', 'Vibes 2026'];
@@ -106,6 +107,7 @@ export default function TrendsPage() {
       <div className="chart-card" style={{ marginBottom: 16 }}>
         <div className="chart-title" style={{ display:'flex', alignItems:'center', gap:8 }}>
           Group Engagement Trend
+          <InfoTip tip="Overall engagement score trend across survey waves for the entire group. Click any data point to drill down into category scores for that wave." />
           <span style={{ fontSize:10.5, fontWeight:400, color:'var(--text-muted)' }}>
             · Click a point to drill down by category
           </span>
@@ -152,7 +154,7 @@ export default function TrendsPage() {
 
       {/* Top 5 businesses */}
       <div className="chart-card" style={{ marginBottom: 16 }}>
-        <div className="chart-title">Top 5 Businesses — Engagement Over Time</div>
+        <div className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span>Top 5 Businesses — Engagement Over Time</span><InfoTip tip="Engagement score trajectories for the five highest-scoring businesses across all survey waves." /></div>
         <div style={{ height: 320 }}>
           <Line
             data={lineData}
@@ -166,7 +168,7 @@ export default function TrendsPage() {
 
       {/* Category placeholders */}
       <div className="chart-card" style={{ marginTop: 8 }}>
-        <div className="chart-title" style={{ marginBottom: 8 }}>Category Trends</div>
+        <div className="chart-title" style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><span>Category Trends</span><InfoTip tip="Multi-wave score trends broken down by engagement category (Leadership, Wellbeing, etc.). Requires historical survey uploads to populate." /></div>
         <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
           Multi-wave category trend data requires historical survey uploads. Upload previous wave Excel files to enable this view.
         </p>

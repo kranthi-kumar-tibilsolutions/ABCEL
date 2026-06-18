@@ -1,5 +1,6 @@
 import { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
+import InfoTip from '../shared/InfoTip';
 
 const CLUSTER_CONFIG = {
   thriving: {
@@ -108,13 +109,9 @@ export default function ClusterCards() {
     <div className="cluster-section">
       <div className="section-header">
         <div>
-          <h3 className="cluster-section-title">
+          <h3 className="cluster-section-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             BU Health by Cluster
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" title="Business units grouped by engagement score and variance" style={{cursor:'default',flexShrink:0}}>
-              <circle cx="6.5" cy="6.5" r="6" stroke="#9CA3AF" strokeWidth="1.2"/>
-              <circle cx="6.5" cy="4.2" r="0.7" fill="#9CA3AF"/>
-              <rect x="5.9" y="5.8" width="1.2" height="3.2" rx="0.6" fill="#9CA3AF"/>
-            </svg>
+            <InfoTip tip="Business units classified by engagement score and variance: Thriving (high score, low variance), At Risk (low score), Polarised (high variance), and Critical (low score, high concern)." />
           </h3>
           <p className="cluster-section-sub">Understand variance and prioritise attention</p>
         </div>

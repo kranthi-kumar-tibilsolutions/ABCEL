@@ -1,6 +1,7 @@
 import { useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Papa from 'papaparse';
+import InfoTip from '../components/shared/InfoTip';
 
 export default function ReportsPage() {
   const { businesses, units, clusters, meta, setBreadcrumb } = useContext(AppContext);
@@ -136,7 +137,7 @@ export default function ReportsPage() {
       </div>
 
       <div className="chart-card" style={{ marginTop: 24 }}>
-        <div className="chart-title">Survey Metadata</div>
+        <div className="chart-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span>Survey Metadata</span><InfoTip tip="Key metadata from the uploaded survey file: total respondents, number of businesses and units, survey wave label, and group-level averages." /></div>
         {meta ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
             {Object.entries(meta).map(([k, v]) => (

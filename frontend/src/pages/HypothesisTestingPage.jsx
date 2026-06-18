@@ -1,6 +1,8 @@
 import { useState, useContext, useEffect, useCallback } from 'react';
 import { AppContext } from '../context/AppContext';
 import { apiFetch } from '../utils/api';
+import InfoTip from '../components/shared/InfoTip';
+import Skeleton from '../components/shared/Skeleton';
 
 /* ── Bell Curve (one-sample Z only) ──────────────────────────── */
 function BellCurve({ critZ = 1.645, testZ = 2.45 }) {
@@ -795,8 +797,10 @@ export default function HypothesisTestingPage() {
   const [parsed,    setParsed]    = useState(null);
   const [result,    setResult]    = useState(null);
   const [error,     setError]     = useState(null);
-  const [templates, setTemplates] = useState([]);
-  const [history,   setHistory]   = useState([]);
+  const [templates,         setTemplates]         = useState([]);
+  const [history,           setHistory]           = useState([]);
+  const [templatesLoading,  setTemplatesLoading]  = useState(true);
+  const [historyLoading,    setHistoryLoading]    = useState(true);
 
   // Broadcast screen context
   useEffect(() => {
@@ -819,14 +823,17 @@ export default function HypothesisTestingPage() {
       const res  = await apiFetch('/api/hypothesis/history?limit=20');
       const data = await res.json();
       setHistory(data.items || []);
-    } catch {}
+    } catch {} finally {
+      setHistoryLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     apiFetch('/api/hypothesis/templates')
       .then(r => r.json())
       .then(d => setTemplates(d.templates || []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setTemplatesLoading(false));
     loadHistory();
   }, [loadHistory]);
 
@@ -923,7 +930,7 @@ export default function HypothesisTestingPage() {
 
         {/* Left: Input */}
         <div className="ht-card">
-          <div className="ht-section-label">1. Enter Your Hypothesis</div>
+          <div className="ht-section-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>1. Enter Your Hypothesis<InfoTip tip="Type a plain-language hypothesis; the system automatically detects the test type (one-sample Z, two-sample Z, or Pearson correlation) and maps your words to survey variables." /></div>
           <div className="ht-section-sub">
             Write a natural-language hypothesis. The system detects the test type and maps variables automatically.
           </div>
@@ -983,9 +990,16 @@ export default function HypothesisTestingPage() {
 
         {/* Right: Templates */}
         <div className="ht-card">
-          <div className="ht-section-label">Try a Template</div>
+          <div className="ht-section-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>Try a Template<InfoTip tip="Pre-built example hypotheses covering common engagement comparisons — click any to load it into the input box." /></div>
           <div className="ht-templates-list">
-            {templates.map(t => (
+            {templatesLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                  <Skeleton width={14} height={14} variant="card" />
+                  <Skeleton width="80%" height={11} />
+                </div>
+              ))
+            ) : templates.map(t => (
               <button key={t.id} className="ht-template-row" onClick={() => useTemplate(t)}>
                 <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
                   <rect x="2" y="1" width="10" height="13" rx="1.5" stroke="#94A3B8" strokeWidth="1.2"/>
@@ -1001,6 +1015,39 @@ export default function HypothesisTestingPage() {
         </div>
       </div>
 
+      {/* ── Parsing skeleton ── */}
+      {stage === 'parsing' && (
+        <div className="ht-card" style={{ marginTop: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <div style={{ flex: 1 }}>
+              <Skeleton width="40%" height={13} />
+              <div style={{ marginTop: 6 }}><Skeleton width="55%" height={10} /></div>
+            </div>
+            <Skeleton width={100} height={24} variant="card" />
+          </div>
+          <Skeleton width="25%" height={9} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8, marginBottom: 14 }}>
+            {[1, 2].map(i => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '90px 1fr auto', gap: 10,
+                padding: '7px 10px', borderRadius: 6, background: '#F8FAFC', border: '1px solid var(--border)' }}>
+                <Skeleton width={60} height={18} variant="card" />
+                <div><Skeleton width="70%" height={12} /><div style={{ marginTop: 4 }}><Skeleton width="50%" height={10} /></div></div>
+                <Skeleton width={60} height={10} />
+              </div>
+            ))}
+          </div>
+          <div style={{ background: '#F8FAFC', borderRadius: 6, padding: '10px 12px',
+            border: '1px solid var(--border)', marginBottom: 14 }}>
+            <div style={{ marginBottom: 6 }}><Skeleton width="90%" height={11} /></div>
+            <Skeleton width="85%" height={11} />
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+            <Skeleton width={70} height={32} variant="card" />
+            <Skeleton width={120} height={32} variant="card" />
+          </div>
+        </div>
+      )}
+
       {/* ── Step 2: Confirmation card ── */}
       {(stage === 'confirm' || stage === 'running') && parsed && (
         <ConfirmCard
@@ -1011,13 +1058,39 @@ export default function HypothesisTestingPage() {
         />
       )}
 
+      {/* ── Running skeleton (result placeholder) ── */}
+      {stage === 'running' && (
+        <div style={{ marginTop: 16, borderRadius: 10, border: '1px solid var(--border)',
+          background: 'var(--card-bg)', padding: '14px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+            <Skeleton width={42} height={42} variant="circle" />
+            <div style={{ flex: 1 }}>
+              <Skeleton width="45%" height={14} />
+              <div style={{ marginTop: 6 }}><Skeleton width="70%" height={11} /></div>
+              <div style={{ marginTop: 5 }}><Skeleton width="55%" height={10} /></div>
+            </div>
+            <Skeleton width={100} height={30} variant="card" />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} style={{ borderRight: i < 3 ? '1px solid var(--border)' : 'none', paddingRight: i < 3 ? 16 : 0 }}>
+                <Skeleton width="60%" height={11} />
+                <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  {[1, 2, 3, 4].map(j => <Skeleton key={j} width={j % 2 === 0 ? '80%' : '65%'} height={10} />)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Step 3: Result ── */}
       {stage === 'done' && result && renderResult()}
 
       {/* ── Previous Hypotheses ── */}
       <div className="ht-history-card">
         <div className="ht-history-hdr">
-          <span className="ht-section-label" style={{ fontSize: 14 }}>Previous Hypotheses</span>
+          <span className="ht-section-label" style={{ fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 6 }}>Previous Hypotheses<InfoTip tip="A log of all hypotheses tested in this session, showing the outcome (Validated / Rejected), test type, and p-value for each." /></span>
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table className="ht-history-table">
@@ -1039,7 +1112,20 @@ export default function HypothesisTestingPage() {
               </tr>
             </thead>
             <tbody>
-              {history.length === 0 ? (
+              {historyLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <tr key={i}>
+                    <td><Skeleton width={28} height={10} /></td>
+                    <td><Skeleton width="85%" height={10} /></td>
+                    <td><Skeleton width={60} height={18} variant="card" /></td>
+                    <td><Skeleton width={70} height={10} /></td>
+                    <td><Skeleton width={36} height={10} /></td>
+                    <td><Skeleton width={60} height={10} /></td>
+                    <td></td>
+                    <td><Skeleton width={24} height={24} variant="card" /></td>
+                  </tr>
+                ))
+              ) : history.length === 0 ? (
                 <tr>
                   <td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)',
                     fontSize: 11, padding: '16px 0' }}>
