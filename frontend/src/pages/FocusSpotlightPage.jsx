@@ -17,6 +17,7 @@ const BAND_MAP = Object.fromEntries(BAND_CONFIG.map(b => [b.key, b]));
 const OUTLIER_TABS = [
   { key: 'much-lower',  label: 'Much Lower',  sub: '≤ −2 SD' },
   { key: 'lower',       label: 'Lower',        sub: '−2 to −1 SD' },
+  { key: 'typical',     label: 'Typical',      sub: 'Within ±1 SD' },
   { key: 'higher',      label: 'Higher',       sub: '+1 to +2 SD' },
   { key: 'much-higher', label: 'Much Higher',  sub: '≥ +2 SD' },
 ];
@@ -225,8 +226,17 @@ export default function FocusSpotlightPage() {
 
   // segments use 'band' (not 'sdBand') — already set by backend
   const outlierPersonas = useMemo(() => personas.filter(p => p.band !== 'typical'), [personas]);
-  const tabPersonas     = useMemo(() => outlierPersonas.filter(p => p.band === activeTab), [outlierPersonas, activeTab]);
+  const tabPersonas     = useMemo(() => personas.filter(p => p.band === activeTab), [personas, activeTab]);
   const displayed       = showAll ? tabPersonas : tabPersonas.slice(0, TABLE_LIMIT);
+
+  // Auto-switch to first tab that has data (outliers preferred, typical as fallback)
+  useEffect(() => {
+    if (!personas.length) return;
+    const preferredOrder = ['much-lower', 'lower', 'much-higher', 'higher', 'typical'];
+    for (const t of preferredOrder) {
+      if (personas.some(p => p.band === t)) { setActiveTab(t); setShowAll(false); return; }
+    }
+  }, [personas]);
 
   const keyInsights = useMemo(() => {
     if (!personas.length) return [];
@@ -426,7 +436,7 @@ export default function FocusSpotlightPage() {
         <div className="sa-card" style={{ minWidth: 0, overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
-              Personas Outside ±1 Standard Deviation
+              Persona Segments by Band
             </span>
             <InfoTip tip="Business units whose engagement score falls more than 1 standard deviation from the group mean — either significantly above or below average." />
           </div>
