@@ -42,9 +42,83 @@ function fmtP(p) {
   return p.toFixed(3);
 }
 
+/* ── Normal CDF ───────────────────────────────────────────────── */
+function normalCDF(x) {
+  const sign = x < 0 ? -1 : 1;
+  const ax = Math.abs(x) / Math.sqrt(2);
+  const t  = 1 / (1 + 0.3275911 * ax);
+  const y  = 1 - (((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-ax * ax));
+  return 0.5 * (1 + sign * y);
+}
+
+/* ── Inline fraction ──────────────────────────────────────────── */
+function Frac({ num, den }) {
+  return (
+    <span className="ht-frac">
+      <span className="ht-frac-num">{num}</span>
+      <span className="ht-frac-bar" />
+      <span className="ht-frac-den">{den}</span>
+    </span>
+  );
+}
+
 /* ── skeleton helper ──────────────────────────────────────────── */
 function Sk({ w='100%', h=12, r=4, sx={} }) {
   return <div className="skeleton" style={{ width:w, height:h, borderRadius:r, flexShrink:0, ...sx }}/>;
+}
+
+/* ── Pearson Underlying Working panel ────────────────────────── */
+function PearsonWorking({ r, n, pValue, loading }) {
+  if (loading) {
+    return (
+      <div style={{ display:'flex', gap:12 }}>
+        <Sk w="50%" h={60} r={6}/>
+        <Sk w="50%" h={60} r={6}/>
+      </div>
+    );
+  }
+  if (r === undefined || r === null) return null;
+
+  const rSafe  = Math.min(Math.abs(r), 0.9999);
+  const tStat  = n > 2 ? +(r * Math.sqrt((n - 2) / (1 - rSafe * rSafe))).toFixed(4) : 0;
+  const phi    = normalCDF(Math.abs(tStat));
+  const tail   = (1 - phi).toFixed(4);
+  const pStep  = (2 * (1 - phi)).toFixed(4);
+  const rColor = r > 0.01 ? '#16A34A' : r < -0.01 ? '#DC2626' : '#94A3B8';
+  const sig    = pValue !== null && pValue !== undefined && pValue < 0.05;
+  const rStr   = (r >= 0 ? '+' : '') + r.toFixed(4);
+
+  return (
+    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+      {/* Left: formula */}
+      <div className="ht-formula-wrap" style={{ margin:0, display:'flex', flexDirection:'column', justifyContent:'center', gap:6 }}>
+        <div className="ht-formula-line">
+          <span className="ht-f-var">r</span>
+          <span className="ht-f-eq">=</span>
+          <Frac num="Σ(xᵢ − x̄)(yᵢ − ȳ)" den="√[Σ(xᵢ−x̄)² · Σ(yᵢ−ȳ)²]" />
+        </div>
+        <div className="ht-formula-line">
+          <span className="ht-f-var" style={{ fontSize:10 }}>r</span>
+          <span className="ht-f-eq">=</span>
+          <span style={{ fontSize:10, color:'var(--text-muted)', fontFamily:'monospace' }}>{n} BU means</span>
+          <span className="ht-f-eq">=</span>
+          <span className="ht-f-result" style={{ color:rColor }}>{rStr}</span>
+        </div>
+      </div>
+      {/* Right: p-value derivation */}
+      <div className="ht-pz-block" style={{ margin:0 }}>
+        <div className="ht-pz-head">p-value Derivation</div>
+        <div style={{ fontSize:10, color:'var(--text-secondary)', fontFamily:'monospace', lineHeight:1.75 }}>
+          <div>t = r√(n−2) / √(1−r²) = <span style={{ color:'var(--text-primary)', fontWeight:600 }}>{tStat}</span></div>
+          <div>p = 2 × (1 − Φ(|{tStat}|))</div>
+          <div style={{ color:'var(--text-muted)' }}>{'  '}= 2 × (1 − {phi.toFixed(4)}) = 2 × {tail}</div>
+          <div style={{ fontWeight:700, color: sig ? '#16A34A' : '#F59E0B' }}>
+            {'  '}= {pStep}&nbsp;&nbsp;{sig ? '< 0.05 ✓' : '≥ 0.05'}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ── sub-components ───────────────────────────────────────────── */
@@ -572,6 +646,20 @@ export default function StatisticalAnalysisPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Pearson Underlying Working — standalone card */}
+      <div className="sa-card" style={{ padding:'10px 14px' }}>
+        <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8, display:'flex', alignItems:'center', gap:6 }}>
+          Pearson Correlation — Underlying Working
+          <InfoTip tip="Shows the Pearson r formula, the computed r value for the top correlated question pair, the t-statistic derivation (t = r√(n−2)/√(1−r²)), and the two-tailed p-value. Values based on business-unit level means." />
+        </div>
+        <PearsonWorking
+          r={correlations[0]?.pearson_r}
+          n={correlations[0]?.n_points ?? baseN}
+          pValue={correlations[0]?.p_value}
+          loading={loading}
+        />
       </div>
 
       {/* bottom grid */}
