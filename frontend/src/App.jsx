@@ -233,6 +233,8 @@ export default function App() {
     setSummaryData(null);
     setInsightsData(null);
     setFocusAreasData(null);
+    // Reset keep-alive cache so every page remounts with fresh data after a new upload
+    setVisitedPages(new Set());
     fetchData().then(() => setPage('overview'));
   }, [fetchData]);
 

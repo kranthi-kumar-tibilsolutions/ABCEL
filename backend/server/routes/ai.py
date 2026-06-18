@@ -764,18 +764,16 @@ TENURE (real totals):
 0-2 years: {real_totals.get('tenure_0_2', 0)} | 2-5 years: {real_totals.get('tenure_2_5', 0)} | 5-10 years: {real_totals.get('tenure_5_10', 0)}
 10-15 years: {real_totals.get('tenure_10_15', 0)} | 15-20 years: {real_totals.get('tenure_15_20', 0)} | 20-25 years: {real_totals.get('tenure_20_25', 0)} | 25+ years: {real_totals.get('tenure_25_plus', 0)}
 
-IMPORTANT — SAMPLE SIZE WARNING: The "n" values in the score sections below come from a 2,000-row sample used for score computation only. They are NOT the actual employee headcounts. For headcounts always use the GENDER / GENERATION / JOB LEVEL / TENURE real totals sections above.
-
-GENERATION SCORES (from sample — use n for score context only, not for headcount):
+GENERATION SCORES (full dataset — n values are real respondent counts):
 {_json.dumps(gen_data, indent=2)}
 
-GENDER SCORES (from sample — use n for score context only, not for headcount):
+GENDER SCORES (full dataset — n values are real respondent counts):
 {_json.dumps(gender_data, indent=2)}
 
-JOB LEVEL SCORES (from sample — use n for score context only, not for headcount):
+JOB LEVEL SCORES (full dataset — n values are real respondent counts):
 {_json.dumps(job_data, indent=2)}
 
-TENURE SCORES (from sample — use n for score context only, not for headcount):
+TENURE SCORES (full dataset — n values are real respondent counts):
 {_json.dumps(tenure_data, indent=2)}
 
 MANAGER vs INDIVIDUAL CONTRIBUTOR:
