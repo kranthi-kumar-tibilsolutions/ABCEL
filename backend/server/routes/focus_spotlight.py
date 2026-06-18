@@ -124,7 +124,8 @@ async def get_results(req: ResultsRequest, user: dict = Depends(get_current_user
     scope = {k: v for k, v in (req.scope or {}).items() if v and v != 'All'}
 
     # No filters at all → serve precomputed cache (fastest path)
-    if not business and active_filter == 'all' and not scope:
+    # 'active' treated same as 'all' — all rows have is_active=True so result is identical
+    if not business and active_filter in ('all', 'active') and not scope:
         cached = _load_precomputed()
         if cached:
             return cached

@@ -58,6 +58,14 @@ async def serve_spa(full_path: str):
         return FileResponse(str(index))
     return {"error": "Frontend not built. Run: cd frontend && npm run build"}
 
+@app.on_event("startup")
+async def _warm_response_cache():
+    try:
+        from lib.segment_engine import _load_responses
+        _load_responses()
+    except Exception:
+        pass
+
 # == Lines 26-30: app.listen(PORT) ==
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 3001))

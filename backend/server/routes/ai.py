@@ -11,6 +11,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from lib.llm import call_llm
+from lib.segment_engine import _load_responses as _load_responses_cached
 from routes.auth import data_company, get_current_user
 
 router   = APIRouter()
@@ -428,7 +429,7 @@ def _compute_full_chat_data(user=None):
     Returns (businesses, gen_data, gender_data, job_data, tenure_data, manager_data, biz_cohorts, biz_units)
     """
     businesses = _read("businesses.json") or []
-    responses  = _read("responses.json")  or []
+    responses  = _load_responses_cached() or []
     all_units  = _read("units.json")      or []
 
     # Fallback: build units from responses if units.json is missing or empty

@@ -34,12 +34,20 @@ MIN_N     = 30
 MAX_DEPTH = 2   # depth 1 = single dim, depth 2 = cross-dim pairs
 
 
+_RESP_CACHE: list = []
+_RESP_MTIME: float = 0.0
+
 def _load_responses() -> list:
+    global _RESP_CACHE, _RESP_MTIME
     fp = DATA_DIR / "responses.json"
     if not fp.exists():
         return []
     try:
-        return json.loads(fp.read_text(encoding="utf-8"))
+        mtime = fp.stat().st_mtime
+        if mtime != _RESP_MTIME:
+            _RESP_CACHE = json.loads(fp.read_text(encoding="utf-8"))
+            _RESP_MTIME = mtime
+        return _RESP_CACHE
     except Exception:
         return []
 
@@ -108,12 +116,12 @@ def compute_segments(
         rows = [r for r in rows if str(r.get('is_active', 'true')).lower() in ('false', '0', 'no')]
     # 'all' → no filter
 
-    # Optional extra filters
+    # Optional extra filters — use _get_dim_val so is_manager 'Yes'→'Manager' matches
     if filters:
         for k, v in filters.items():
             if k == 'business' or not v or v in ('All', ''):
                 continue
-            rows = [r for r in rows if _str_val(r.get(k)) == str(v).strip()]
+            rows = [r for r in rows if _get_dim_val(r, k) == str(v).strip()]
 
     # Extract rows with a valid overall score
     valid_rows = [
@@ -145,13 +153,15 @@ def compute_segments(
 
     for depth in range(1, max_depth + 1):
         for dim_combo in combinations(available_dims, depth):
-            # Group response rows by the dimension-value tuple
-            groups: dict[tuple, list] = {}
+            # Single pass: bucket scores AND row references together
+            groups:      dict[tuple, list] = {}
+            groups_rows: dict[tuple, list] = {}
             for r in valid_rows:
                 parts = tuple(_get_dim_val(r, d) for d in dim_combo)
                 if any(p == '' for p in parts):
                     continue
                 groups.setdefault(parts, []).append(float(r[SCORE_KEY]))
+                groups_rows.setdefault(parts, []).append(r)
 
             for vals, seg_scores_list in groups.items():
                 n = len(seg_scores_list)
@@ -165,15 +175,9 @@ def compute_segments(
                 # Descriptive z-score: how many population SDs from the mean
                 z_display = delta / group_std
 
-                # Only surface meaningful outliers
-                if abs(z_display) < 1.0:
-                    continue
-
                 # Statistical significance: one-sample z-test vs population mean
-                stat    = one_sample_z_test(seg_mean, group_mean, group_std, n)
-                p_val   = stat.get('p_two_tailed', 1.0)
-                if p_val >= 0.05:
-                    continue
+                stat  = one_sample_z_test(seg_mean, group_mean, group_std, n)
+                p_val = stat.get('p_two_tailed', 1.0)
 
                 # 95% CI for this segment's mean
                 seg_std = float(np.std(seg_arr, ddof=1)) if n > 1 else 0.0
@@ -186,11 +190,8 @@ def compute_segments(
                     continue
                 seen_ids.add(seg_id)
 
-                # Category means for this exact segment
-                seg_rows = [
-                    r for r in valid_rows
-                    if all(_get_dim_val(r, d) == v for d, v in dim_dict.items())
-                ]
+                # Category means — use already-bucketed rows, no second scan
+                seg_rows = groups_rows[vals]
                 cat_means: dict = {}
                 for ck in CAT_KEYS:
                     cat_vals = [float(r[ck]) for r in seg_rows

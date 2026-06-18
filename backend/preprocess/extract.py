@@ -718,10 +718,10 @@ def extract_phase2_data(raw_df, decoded_df, xl, output_dir,
                    and not any(_re.sub(r'\s+', '', ex) in _re.sub(r'\s+', '', str(c)).upper()
                                for ex in EXCLUDE_OPS)]
 
-    # Sample up to 2000 rows for performance
-    sample_n  = min(2000, len(decoded_df))
-    sample_df = decoded_df.sample(sample_n, random_state=42).reset_index(drop=True)
-    raw_sample = raw_df.loc[decoded_df.sample(sample_n, random_state=42).index].reset_index(drop=True)
+    # Use full dataset — no row cap
+    sample_n   = len(decoded_df)
+    sample_df  = decoded_df.reset_index(drop=True)
+    raw_sample = raw_df.reset_index(drop=True)
 
     responses = []
     for idx in range(len(sample_df)):
@@ -745,6 +745,8 @@ def extract_phase2_data(raw_df, decoded_df, xl, output_dir,
                 if pd.notna(val) and 1 <= val <= 5:
                     cat_vals.append(float(6 - val))
             key = cat.lower().replace(' & ', '_and_').replace(' ', '_')
+            if key == 'engagement_index':
+                key = 'engagement'
             theme_scores[key] = round(float(np.mean(cat_vals)), 2) if cat_vals else None
 
         all_theme_vals = [v for v in theme_scores.values() if v is not None]
