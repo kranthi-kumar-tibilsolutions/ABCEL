@@ -2,7 +2,6 @@ import { useContext, useState, useMemo, useEffect, useRef, useCallback } from 'r
 import { AppContext } from '../context/AppContext';
 import InfoTip from '../components/shared/InfoTip';
 import Dropdown from '../components/shared/Dropdown';
-import { apiFetch } from '../utils/api';
 
 /* ── band config ─────────────────────────────────────────────────── */
 const BAND_CONFIG = [
@@ -122,19 +121,27 @@ function EngagementScale({ mean, sd }) {
 
 /* ── main page ────────────────────────────────────────────────────── */
 export default function FocusSpotlightPage() {
-  const { units, setBreadcrumb, navigate } = useContext(AppContext);
+  const { units, setBreadcrumb, navigate, setActiveScreenContext } = useContext(AppContext);
 
   useEffect(() => {
     setBreadcrumb([
       { label: 'Persona Explorer' },
       { label: 'Focus Spotlight' },
     ]);
+    setActiveScreenContext({ tab: 'focus_spotlight', description: 'AI persona segmentation — statistical outliers across demographic dimensions for ABG Vibes 2026.' });
   }, []);
 
-  const [dims,        setDimsState]  = useState({});
-  const [dimensions,  setDimensions] = useState([]);
-  const [dimsLoading, setDimsLoading]= useState(true);
-  const [inactive,    setInactive]   = useState('No');
+  const [dims,     setDimsState] = useState({});
+  const [inactive, setInactive]  = useState('No');
+
+  const dimensions = useMemo(() => {
+    if (!units?.length) return [];
+    return [
+      { id: 'business', label: 'Business', values: [...new Set(units.map(u => u.business).filter(Boolean))].sort() },
+      { id: 'band',     label: 'Band',     values: [...new Set(units.map(u => u.band).filter(Boolean))].sort() },
+      { id: 'cluster',  label: 'Cluster',  values: [...new Set(units.map(u => u.cluster).filter(Boolean))].sort() },
+    ];
+  }, [units]);
   const [activeTab,    setActiveTab]    = useState('much-lower');
   const [showAll,      setShowAll]      = useState(false);
   const [canScrollLeft,  setCanScrollLeft]  = useState(false);
@@ -168,24 +175,18 @@ export default function FocusSpotlightPage() {
   };
 
   useEffect(() => {
-    apiFetch('/api/persona/dimensions')
-      .then(r => r.json())
-      .then(d => {
-        const list = d.dimensions || [];
-        setDimensions(list);
-        const defaults = {};
-        list.forEach(dim => { defaults[dim.id] = 'All'; });
-        setDimsState(defaults);
-      })
-      .catch(() => {})
-      .finally(() => setDimsLoading(false));
-  }, []);
+    const defaults = {};
+    dimensions.forEach(dim => { defaults[dim.id] = 'All'; });
+    setDimsState(defaults);
+  }, [dimensions]);
 
   const { personas, mean, sd, bandCounts, totalRespondents, minScore, maxScore } = useMemo(() => {
     if (!units?.length) return { personas:[], mean:0, sd:0, bandCounts:{}, totalRespondents:0, minScore:1, maxScore:5 };
 
     let filtered = units;
-    if (dims.business && dims.business !== 'All') filtered = filtered.filter(u => u.business === dims.business);
+    Object.entries(dims).forEach(([key, val]) => {
+      if (val && val !== 'All') filtered = filtered.filter(u => u[key] === val);
+    });
     if (inactive === 'No') filtered = filtered.filter(u => (u.respondent_count ?? 1) > 0);
 
     const scores = filtered.map(u => +(u.score ?? u.overall ?? 0)).filter(s => s > 0);
@@ -208,7 +209,7 @@ export default function FocusSpotlightPage() {
     personas.forEach(p => { bandCounts[p.sdBand] = (bandCounts[p.sdBand]||0)+1; });
 
     return { personas, mean, sd, bandCounts, totalRespondents, minScore, maxScore };
-  }, [units, dims, inactive]);
+  }, [units, dims, inactive, dimensions]);
 
   const outlierPersonas = useMemo(() => personas.filter(p => p.sdBand !== 'typical'), [personas]);
   const tabPersonas     = useMemo(() => outlierPersonas.filter(p => p.sdBand === activeTab), [outlierPersonas, activeTab]);
@@ -236,25 +237,17 @@ export default function FocusSpotlightPage() {
       {/* ── FILTER BAR ──────────────────────────────────────────── */}
       <div className="sa-card" style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: 20 }}>
-          {dimsLoading
-            ? [...Array(6)].map((_, i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div className="skeleton" style={{ height: 10, width: 70, borderRadius: 4 }} />
-                  <div className="skeleton" style={{ height: 32, width: 110, borderRadius: 6 }} />
-                </div>
-              ))
-            : dimensions.map(dim => (
-                <div key={dim.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{dim.label}</span>
-                  <Dropdown
-                    variant="filter"
-                    options={['All', ...dim.values]}
-                    value={dims[dim.id] || 'All'}
-                    onChange={v => setDim(dim.id, v)}
-                  />
-                </div>
-              ))
-          }
+          {dimensions.map(dim => (
+            <div key={dim.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{dim.label}</span>
+              <Dropdown
+                variant="filter"
+                options={['All', ...dim.values]}
+                value={dims[dim.id] || 'All'}
+                onChange={v => setDim(dim.id, v)}
+              />
+            </div>
+          ))}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Include Inactive</span>
             <Dropdown variant="filter" options={['No', 'Yes']} value={inactive} onChange={v => setInactive(v)} />

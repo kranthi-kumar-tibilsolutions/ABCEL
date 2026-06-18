@@ -49,7 +49,7 @@ export const AppContext = createContext({
   rightPanelCollapsed:    false,
   setRightPanelCollapsed: () => {},
 
-  // Page breadcrumb (set by individual pages, rendered in TopBar)
+  // Page breadcrumb (set by individual pages, rendered in TopBar).
   breadcrumb:    [],
   setBreadcrumb: () => {},
 

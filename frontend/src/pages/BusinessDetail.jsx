@@ -26,13 +26,17 @@ function scoreColor(s) {
 }
 
 export default function BusinessDetail() {
-  const { selectedBusiness, navigate, units, businesses, dimension } = useContext(AppContext);
+  const { selectedBusiness, navigate, units, businesses, dimension, setActiveScreenContext } = useContext(AppContext);
   const [insight,      setInsight]     = useState(null);
   const [loadInsight,  setLoadInsight] = useState(false);
   const [showAllBUs,   setShowAllBUs]  = useState(false);
 
   const biz = businesses?.find(b => b.name === selectedBusiness);
   const bizUnits = units?.filter(u => u.business === selectedBusiness) ?? [];
+
+  useEffect(() => {
+    setActiveScreenContext({ tab: 'business_detail', description: `Business detail view — ${selectedBusiness ?? 'unknown business'} engagement breakdown across categories and business units.` });
+  }, [selectedBusiness]);
 
   useEffect(() => {
     if (!selectedBusiness) return;

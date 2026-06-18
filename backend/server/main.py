@@ -29,8 +29,9 @@ from routes.ai          import router as ai_router
 from routes.sentiment   import router as sentiment_router
 from routes.statistical import router as statistical_router
 from routes.persona     import router as persona_router
-from routes.hypothesis  import router as hypothesis_router
-from routes.auth        import router as auth_router
+from routes.hypothesis       import router as hypothesis_router
+from routes.focus_spotlight  import router as focus_spotlight_router
+from routes.auth             import router as auth_router
 
 app.include_router(auth_router,        prefix="/api/auth")
 app.include_router(upload_router,      prefix="/api/upload")
@@ -39,7 +40,8 @@ app.include_router(ai_router,          prefix="/api")
 app.include_router(sentiment_router,   prefix="/api/sentiment")
 app.include_router(statistical_router, prefix="/api/statistical")
 app.include_router(persona_router,     prefix="/api/persona")
-app.include_router(hypothesis_router,  prefix="/api/hypothesis")
+app.include_router(hypothesis_router,       prefix="/api/hypothesis")
+app.include_router(focus_spotlight_router,  prefix="/api/focus-spotlight")
 
 # == Lines 20-24: serve React build (express.static + catch-all *) ==
 dist_path = Path(__file__).parent.parent.parent / "frontend" / "dist"

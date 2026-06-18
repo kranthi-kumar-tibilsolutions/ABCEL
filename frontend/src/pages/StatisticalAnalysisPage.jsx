@@ -2,17 +2,7 @@ import { useState, useContext, useMemo, useRef, useEffect, useCallback } from 'r
 import { AppContext } from '../context/AppContext';
 import Dropdown from '../components/shared/Dropdown';
 import { apiFetch } from '../utils/api';
-
-/* ── helpers ──────────────────────────────────────────────────── */
-function InfoIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
-      style={{ flexShrink:0, color:'var(--text-muted)', cursor:'default' }}>
-      <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/>
-      <path d="M6 5.5v3M6 3.5v.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-    </svg>
-  );
-}
+import InfoTip from '../components/shared/InfoTip';
 
 function corrBg(v) {
   const t = Math.max(-1, Math.min(1, v));
@@ -52,9 +42,83 @@ function fmtP(p) {
   return p.toFixed(3);
 }
 
+/* ── Normal CDF ───────────────────────────────────────────────── */
+function normalCDF(x) {
+  const sign = x < 0 ? -1 : 1;
+  const ax = Math.abs(x) / Math.sqrt(2);
+  const t  = 1 / (1 + 0.3275911 * ax);
+  const y  = 1 - (((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-ax * ax));
+  return 0.5 * (1 + sign * y);
+}
+
+/* ── Inline fraction ──────────────────────────────────────────── */
+function Frac({ num, den }) {
+  return (
+    <span className="ht-frac">
+      <span className="ht-frac-num">{num}</span>
+      <span className="ht-frac-bar" />
+      <span className="ht-frac-den">{den}</span>
+    </span>
+  );
+}
+
 /* ── skeleton helper ──────────────────────────────────────────── */
 function Sk({ w='100%', h=12, r=4, sx={} }) {
   return <div className="skeleton" style={{ width:w, height:h, borderRadius:r, flexShrink:0, ...sx }}/>;
+}
+
+/* ── Pearson Underlying Working panel ────────────────────────── */
+function PearsonWorking({ r, n, pValue, loading }) {
+  if (loading) {
+    return (
+      <div style={{ display:'flex', gap:12 }}>
+        <Sk w="50%" h={60} r={6}/>
+        <Sk w="50%" h={60} r={6}/>
+      </div>
+    );
+  }
+  if (r === undefined || r === null) return null;
+
+  const rSafe  = Math.min(Math.abs(r), 0.9999);
+  const tStat  = n > 2 ? +(r * Math.sqrt((n - 2) / (1 - rSafe * rSafe))).toFixed(4) : 0;
+  const phi    = normalCDF(Math.abs(tStat));
+  const tail   = (1 - phi).toFixed(4);
+  const pStep  = (2 * (1 - phi)).toFixed(4);
+  const rColor = r > 0.01 ? '#16A34A' : r < -0.01 ? '#DC2626' : '#94A3B8';
+  const sig    = pValue !== null && pValue !== undefined && pValue < 0.05;
+  const rStr   = (r >= 0 ? '+' : '') + r.toFixed(4);
+
+  return (
+    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+      {/* Left: formula */}
+      <div className="ht-formula-wrap" style={{ margin:0, display:'flex', flexDirection:'column', justifyContent:'center', gap:6 }}>
+        <div className="ht-formula-line">
+          <span className="ht-f-var">r</span>
+          <span className="ht-f-eq">=</span>
+          <Frac num="Σ(xᵢ − x̄)(yᵢ − ȳ)" den="√[Σ(xᵢ−x̄)² · Σ(yᵢ−ȳ)²]" />
+        </div>
+        <div className="ht-formula-line">
+          <span className="ht-f-var" style={{ fontSize:10 }}>r</span>
+          <span className="ht-f-eq">=</span>
+          <span style={{ fontSize:10, color:'var(--text-muted)', fontFamily:'monospace' }}>{n} BU means</span>
+          <span className="ht-f-eq">=</span>
+          <span className="ht-f-result" style={{ color:rColor }}>{rStr}</span>
+        </div>
+      </div>
+      {/* Right: p-value derivation */}
+      <div className="ht-pz-block" style={{ margin:0 }}>
+        <div className="ht-pz-head">p-value Derivation</div>
+        <div style={{ fontSize:10, color:'var(--text-secondary)', fontFamily:'monospace', lineHeight:1.75 }}>
+          <div>t = r√(n−2) / √(1−r²) = <span style={{ color:'var(--text-primary)', fontWeight:600 }}>{tStat}</span></div>
+          <div>p = 2 × (1 − Φ(|{tStat}|))</div>
+          <div style={{ color:'var(--text-muted)' }}>{'  '}= 2 × (1 − {phi.toFixed(4)}) = 2 × {tail}</div>
+          <div style={{ fontWeight:700, color: sig ? '#16A34A' : '#F59E0B' }}>
+            {'  '}= {pStep}&nbsp;&nbsp;{sig ? '< 0.05 ✓' : '≥ 0.05'}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ── sub-components ───────────────────────────────────────────── */
@@ -463,7 +527,7 @@ export default function StatisticalAnalysisPage() {
 
         {/* 1. Select a Question */}
         <div className="sa-card" style={{ display:'flex', flexDirection:'column' }}>
-          <div className="sa-card-title">1. Select a Question <InfoIcon /></div>
+          <div className="sa-card-title" style={{ display:'flex', alignItems:'center', gap:6 }}>1. Select a Question <InfoTip tip="Choose any survey question to see how it correlates with every other question, computed across business-unit averages." /></div>
           <div style={{ marginBottom:12 }}>
             <Dropdown
               variant="filter"
@@ -530,7 +594,7 @@ export default function StatisticalAnalysisPage() {
         <div className="sa-card" style={{ display:'flex', flexDirection:'column' }}>
 
           <div className="sa-card-title" style={{ marginBottom:8 }}>
-            Correlation Summary with Other Questions <InfoIcon />
+            Correlation Summary with Other Questions <InfoTip tip="Counts of how many other questions fall into each correlation strength band (Strong ≥0.5, Moderate 0.2–0.5, Weak/None, Negative ≤-0.2) with the selected question." />
           </div>
 
           {/* 4 summary tiles */}
@@ -584,6 +648,20 @@ export default function StatisticalAnalysisPage() {
         </div>
       </div>
 
+      {/* Pearson Underlying Working — standalone card */}
+      <div className="sa-card" style={{ padding:'10px 14px' }}>
+        <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8, display:'flex', alignItems:'center', gap:6 }}>
+          Pearson Correlation — Underlying Working
+          <InfoTip tip="Shows the Pearson r formula, the computed r value for the top correlated question pair, the t-statistic derivation (t = r√(n−2)/√(1−r²)), and the two-tailed p-value. Values based on business-unit level means." />
+        </div>
+        <PearsonWorking
+          r={correlations[0]?.pearson_r}
+          n={correlations[0]?.n_points ?? baseN}
+          pValue={correlations[0]?.p_value}
+          loading={loading}
+        />
+      </div>
+
       {/* bottom grid */}
       <div className="sta-bot-grid">
 
@@ -592,7 +670,7 @@ export default function StatisticalAnalysisPage() {
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:8, marginBottom:8 }}>
             <div className="sa-card-title" style={{ marginBottom:0, minWidth:0, overflow:'hidden' }}>
               <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>2. Correlations with All Questions</span>
-              <InfoIcon />
+              <InfoTip tip="Pearson correlation (r) measures the linear relationship between this question and every other. Positive r means both scores tend to move together; negative means they move in opposite directions." />
             </div>
             <button onClick={() => setExpanded(e => !e)} style={{
               fontSize:10, fontWeight:600, padding:'3px 8px',
@@ -718,7 +796,7 @@ export default function StatisticalAnalysisPage() {
         <div className="sa-card">
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
             <div className="sa-card-title" style={{ marginBottom:0 }}>
-              4. Relationship Network <InfoIcon />
+              4. Relationship Network <InfoTip tip="Force-directed graph showing the top N questions most correlated with the selected question. Line thickness reflects correlation strength." />
             </div>
             <Dropdown variant="filter" value={topNet}
               options={['Top 15','Top 25','Top 50']} onChange={setTopNet} menuAlign="right"/>
@@ -767,7 +845,7 @@ export default function StatisticalAnalysisPage() {
         <div className="sa-card" style={{ gridColumn:'1 / -1' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
             <div className="sa-card-title" style={{ marginBottom:0 }}>
-              3. Correlogram (Top {topCorrN} Related Questions) <InfoIcon />
+              3. Correlogram (Top {topCorrN} Related Questions) <InfoTip tip="Heatmap matrix of pairwise correlations between the selected question and its top related questions. Dark green = strong positive, dark red = strong negative." />
             </div>
             <Dropdown variant="filter" value={topCorr}
               options={['Top 10','Top 20','Top 30']} onChange={setTopCorr} menuAlign="right"/>

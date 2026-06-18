@@ -581,6 +581,31 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
     focus_line   = f"\nACTIVE FOCUS AREA: {req.focusArea} — prioritise answers about this theme." if req.focusArea else ""
     company_line = f"\nACTIVE COMPANY FILTER: {req.companyFilter} — answer only about this company unless explicitly asked otherwise." if req.companyFilter else ""
 
+    # Build a "PRIOR CONTEXT" pin from the last 2 exchange pairs so the model
+    # doesn't drop the active subject on short follow-up questions.
+    prior_context_block = ""
+    if req.history:
+        clean_hist = [m for m in req.history if m.get("content", "").strip()]
+        pairs = []
+        i = len(clean_hist) - 1
+        while i >= 1 and len(pairs) < 2:
+            if clean_hist[i]["role"] == "assistant" and clean_hist[i - 1]["role"] == "user":
+                u_text = clean_hist[i - 1]["content"].strip()
+                a_text = clean_hist[i]["content"].strip()[:300]
+                pairs.append(f'User: "{u_text}"\nYou: "{a_text}{"…" if len(clean_hist[i]["content"]) > 300 else ""}"')
+                i -= 2
+            else:
+                i -= 1
+        if pairs:
+            prior_context_block = (
+                "\n\n--- PRIOR CONTEXT (PIN THIS — read before answering) ---\n"
+                "The conversation so far was about:\n"
+                + "\n\n".join(reversed(pairs))
+                + "\n\nIf the current question is a follow-up (no company/topic named explicitly), "
+                "CONTINUE from this context. Do NOT switch to org-wide answers unless the user explicitly asks."
+                "\n--- END PRIOR CONTEXT ---"
+            )
+
     # Screen context block
     if req.active_context:
         tab = req.active_context.get("tab", "unknown").replace("_", " ").title()
@@ -678,6 +703,7 @@ Answer any question about any business, BU, or cohort freely.
     system_prompt = f"""You are ARIA — ABG's AI Analyst for the ABG Vibes 2026 Employee Engagement Survey.
 You are embedded inside the ABG analytics dashboard. You have complete knowledge of the survey data.
 You answer questions conversationally, like a senior HR consultant who knows this data inside out.
+{prior_context_block}
 
 {role_block}
 --- WHO YOU ARE ---
@@ -851,9 +877,33 @@ already established a topic.
 {company_line}
 """
 
+    # Inject a context-reminder as a system turn right before the user's message.
+    # This is the last thing Mistral reads before generating, so it reliably keeps
+    # the model on the active topic when follow-up questions don't name a subject.
+    context_reminder = []
+    if req.history:
+        clean_hist = [m for m in req.history if m.get("content", "").strip()]
+        for i in range(len(clean_hist) - 1, 0, -1):
+            if clean_hist[i]["role"] == "assistant" and clean_hist[i - 1]["role"] == "user":
+                prev_q = clean_hist[i - 1]["content"].strip()
+                prev_a = clean_hist[i]["content"].strip()[:350]
+                context_reminder = [{
+                    "role": "system",
+                    "content": (
+                        f"CONTEXT REMINDER (read this before answering the next message):\n"
+                        f"The user's last question was: \"{prev_q}\"\n"
+                        f"Your last answer was about: \"{prev_a}{'…' if len(clean_hist[i]['content']) > 350 else ''}\"\n"
+                        "RULE: If the user's next question does not explicitly name a different company, "
+                        "business unit, or topic, treat it as a follow-up to this same subject. "
+                        "Do NOT switch to org-wide data unless the user says so."
+                    ),
+                }]
+                break
+
     messages = [
         {"role": "system", "content": system_prompt},
         *req.history[-10:],
+        *context_reminder,
         {"role": "user", "content": req.message},
     ]
 

@@ -21,13 +21,14 @@ function catScoresForWave(waveIdx) {
 }
 
 export default function TrendsPage() {
-  const { businesses, meta, setBreadcrumb } = useContext(AppContext);
+  const { businesses, meta, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
 
   useEffect(() => {
     setBreadcrumb([
       { label: 'Overview', page: 'overview' },
       { label: 'Trends' },
     ]);
+    setActiveScreenContext({ tab: 'trends', description: 'Engagement trends over time across survey waves, businesses, and categories.' });
   }, []);
   const [drillWave, setDrillWave] = useState(null);
 

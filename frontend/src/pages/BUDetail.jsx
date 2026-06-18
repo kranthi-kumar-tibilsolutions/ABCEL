@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import { Bar } from 'react-chartjs-2';
 import Badge      from '../components/shared/Badge';
@@ -17,7 +17,11 @@ function scoreColor(s) {
 const CATEGORY_COLORS = ['#F97316','#2563EB','#16A34A','#7C3AED','#0891B2','#D97706'];
 
 export default function BUDetail() {
-  const { selectedBusiness, selectedBU, navigate, units, cohorts } = useContext(AppContext);
+  const { selectedBusiness, selectedBU, navigate, units, cohorts, setActiveScreenContext } = useContext(AppContext);
+
+  useEffect(() => {
+    setActiveScreenContext({ tab: 'bu_detail', description: `Business unit detail view — ${selectedBU ?? 'unknown unit'} (${selectedBusiness ?? 'unknown business'}).` });
+  }, [selectedBU, selectedBusiness]);
 
   const unit = units?.find(u => u.name === selectedBU && (!selectedBusiness || u.business === selectedBusiness));
 
