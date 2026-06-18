@@ -2,17 +2,7 @@ import { useState, useContext, useMemo, useRef, useEffect, useCallback } from 'r
 import { AppContext } from '../context/AppContext';
 import Dropdown from '../components/shared/Dropdown';
 import { apiFetch } from '../utils/api';
-
-/* ── helpers ──────────────────────────────────────────────────── */
-function InfoIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
-      style={{ flexShrink:0, color:'var(--text-muted)', cursor:'default' }}>
-      <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/>
-      <path d="M6 5.5v3M6 3.5v.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-    </svg>
-  );
-}
+import InfoTip from '../components/shared/InfoTip';
 
 function corrBg(v) {
   const t = Math.max(-1, Math.min(1, v));
@@ -463,7 +453,7 @@ export default function StatisticalAnalysisPage() {
 
         {/* 1. Select a Question */}
         <div className="sa-card" style={{ display:'flex', flexDirection:'column' }}>
-          <div className="sa-card-title">1. Select a Question <InfoIcon /></div>
+          <div className="sa-card-title" style={{ display:'flex', alignItems:'center', gap:6 }}>1. Select a Question <InfoTip tip="Choose any survey question to see how it correlates with every other question, computed across business-unit averages." /></div>
           <div style={{ marginBottom:12 }}>
             <Dropdown
               variant="filter"
@@ -530,7 +520,7 @@ export default function StatisticalAnalysisPage() {
         <div className="sa-card" style={{ display:'flex', flexDirection:'column' }}>
 
           <div className="sa-card-title" style={{ marginBottom:8 }}>
-            Correlation Summary with Other Questions <InfoIcon />
+            Correlation Summary with Other Questions <InfoTip tip="Counts of how many other questions fall into each correlation strength band (Strong ≥0.5, Moderate 0.2–0.5, Weak/None, Negative ≤-0.2) with the selected question." />
           </div>
 
           {/* 4 summary tiles */}
@@ -592,7 +582,7 @@ export default function StatisticalAnalysisPage() {
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:8, marginBottom:8 }}>
             <div className="sa-card-title" style={{ marginBottom:0, minWidth:0, overflow:'hidden' }}>
               <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>2. Correlations with All Questions</span>
-              <InfoIcon />
+              <InfoTip tip="Pearson correlation (r) measures the linear relationship between this question and every other. Positive r means both scores tend to move together; negative means they move in opposite directions." />
             </div>
             <button onClick={() => setExpanded(e => !e)} style={{
               fontSize:10, fontWeight:600, padding:'3px 8px',
@@ -718,7 +708,7 @@ export default function StatisticalAnalysisPage() {
         <div className="sa-card">
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
             <div className="sa-card-title" style={{ marginBottom:0 }}>
-              4. Relationship Network <InfoIcon />
+              4. Relationship Network <InfoTip tip="Force-directed graph showing the top N questions most correlated with the selected question. Line thickness reflects correlation strength." />
             </div>
             <Dropdown variant="filter" value={topNet}
               options={['Top 15','Top 25','Top 50']} onChange={setTopNet} menuAlign="right"/>
@@ -767,7 +757,7 @@ export default function StatisticalAnalysisPage() {
         <div className="sa-card" style={{ gridColumn:'1 / -1' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
             <div className="sa-card-title" style={{ marginBottom:0 }}>
-              3. Correlogram (Top {topCorrN} Related Questions) <InfoIcon />
+              3. Correlogram (Top {topCorrN} Related Questions) <InfoTip tip="Heatmap matrix of pairwise correlations between the selected question and its top related questions. Dark green = strong positive, dark red = strong negative." />
             </div>
             <Dropdown variant="filter" value={topCorr}
               options={['Top 10','Top 20','Top 30']} onChange={setTopCorr} menuAlign="right"/>
