@@ -19,6 +19,7 @@ const PAGE_TITLES = {
   reports:                    'Reports',
   benchmarks:                 'Benchmarks',
   'dynamic-persona-builder':  'Dynamic Persona Builder',
+  'focus-spotlight':          'Focus Spotlight',
   'statistical-analysis':     'Statistical Analysis',
   'sentiment-analysis':       'Sentiment Analysis',
   'hypothesis-testing':       'Hypothesis Testing',
@@ -36,6 +37,7 @@ export default function TopBar() {
     senFilters, setSenFilters,
     dpbFilters, setDpbFilters, setDpbResetSignal,
     dpbTopbarSlot,
+    fsFilters, setFsFilters,
   } = useContext(AppContext);
 
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -314,6 +316,40 @@ export default function TopBar() {
         >
           <RotateCcw size={13} />
         </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (page === 'focus-spotlight' && breadcrumb?.length) {
+    const bizOpts  = businesses ? ['All', ...businesses.map(b => b.name)] : ['All'];
+    const FS_FILTERS_CFG = [
+      { key: 'business_unit',    label: 'Business',  opts: bizOpts },
+      { key: 'location',         label: 'Location',  opts: ['All', 'India', 'APAC', 'LATAM', 'EMEA', 'Remote'] },
+      { key: 'tenure',           label: 'Tenure',    opts: ['All', '< 1 Year', '1–3 Years', '3–5 Years', '5+ Years'] },
+      { key: 'job_level',        label: 'Job Level', opts: ['All', 'Individual Contributor', 'Manager', 'Senior Manager', 'Director', 'VP'] },
+      { key: 'employment_type',  label: 'Emp. Type', opts: ['All', 'Full-time', 'Part-time', 'Contract'] },
+      { key: 'include_inactive', label: 'Inactive',  opts: ['No', 'Yes'] },
+    ];
+    const FS_DEFAULT = { business_unit: 'All', location: 'All', tenure: 'All', job_level: 'All', employment_type: 'All', include_inactive: 'No' };
+    return (
+      <div className="topbar" style={{ marginRight: rightPanelCollapsed ? 16 : 8, gap: 6, flexWrap: 'nowrap', overflow: 'hidden' }}>
+        <div style={{ flexShrink: 0 }}>{renderBreadcrumb()}</div>
+        <div style={{ flex: 1 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          {FS_FILTERS_CFG.map(f => (
+            <Dropdown
+              key={f.key}
+              variant="topbar"
+              label={f.label}
+              value={fsFilters[f.key]}
+              options={f.opts.map(o => ({ value: o, label: o }))}
+              onChange={v => setFsFilters(prev => ({ ...prev, [f.key]: v }))}
+            />
+          ))}
+          <button className="topbar-btn" onClick={() => setFsFilters(FS_DEFAULT)} title="Reset filters">
+            <RotateCcw size={13} />
+          </button>
         </div>
       </div>
     );

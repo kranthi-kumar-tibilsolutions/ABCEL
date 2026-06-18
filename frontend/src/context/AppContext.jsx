@@ -72,6 +72,10 @@ export const AppContext = createContext({
   // Sentiment Analysis filters (TopBar-hosted)
   senFilters:    {},
   setSenFilters: () => {},
+
+  // Focus Spotlight filters (TopBar-hosted)
+  fsFilters:    { business_unit: 'All', location: 'All', tenure: 'All', job_level: 'All', employment_type: 'All', include_inactive: 'No' },
+  setFsFilters: () => {},
 });
 
 export const useApp = () => useContext(AppContext);

@@ -212,7 +212,7 @@ export default function DynamicPersonaBuilderPage() {
   const [viewBy,        setViewBy]        = useState('Themes');
 
   useEffect(() => {
-    setBreadcrumb([{ label: 'Explore' }, { label: 'Dynamic Persona Builder' }]);
+    setBreadcrumb([{ label: 'Persona & Spotlight' }, { label: 'Dynamic Persona Builder' }]);
   }, []);
 
   // Fetch dimensions + top5 suggestions on mount

@@ -27,6 +27,7 @@ import HypothesisTestingPage        from './pages/HypothesisTestingPage';
 import SentimentAnalysisPage       from './pages/SentimentAnalysisPage';
 import StatisticalAnalysisPage     from './pages/StatisticalAnalysisPage';
 import DynamicPersonaBuilderPage   from './pages/DynamicPersonaBuilderPage';
+import FocusSpotlightPage          from './pages/FocusSpotlightPage';
 import SettingsPage                from './pages/SettingsPage';
 
 function ComingSoon({ title }) {
@@ -63,6 +64,7 @@ const PAGE_MAP = {
   'statistical-analysis':     StatisticalAnalysisPage,
   'sentiment-analysis':       SentimentAnalysisPage,
   'dynamic-persona-builder':  DynamicPersonaBuilderPage,
+  'focus-spotlight':          FocusSpotlightPage,
   settings:                   SettingsPage,
 };
 
@@ -100,6 +102,10 @@ export default function App() {
   const [senFilters, setSenFilters] = useState({
     survey: 'Q4 2024 Employee Survey', bu: 'All', dept: 'All',
     location: 'All', tenure: 'All', level: 'All', inactive: 'No',
+  });
+  const [fsFilters, setFsFilters] = useState({
+    business_unit: 'All', location: 'All', tenure: 'All',
+    job_level: 'All', employment_type: 'All', include_inactive: 'No',
   });
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(true);
   const [activeFilters,  setActiveFilters]  = useState({});
@@ -250,6 +256,7 @@ export default function App() {
     outliersTopN, setOutliersTopN,
     evFilters, setEvFilters,
     senFilters, setSenFilters,
+    fsFilters, setFsFilters,
     activeFilters, setActiveFilters,
     summaryData,    setSummaryData,
     insightsData,   setInsightsData,

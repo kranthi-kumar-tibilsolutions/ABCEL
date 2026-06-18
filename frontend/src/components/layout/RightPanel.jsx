@@ -1,6 +1,7 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useCallback, useRef } from 'react';
 import { AppContext } from '../../context/AppContext';
 import ChatWithData from '../chat/ChatWithData';
+import AiDrawer from '../chat/AiDrawer';
 
 const TABS = ['All Insights', 'Top Trends', 'Outliers & Alerts', 'Summary'];
 
@@ -40,6 +41,35 @@ export default function RightPanel() {
   const { insightsData, navigate, rightPanelCollapsed: collapsed, setRightPanelCollapsed: setCollapsed } = useContext(AppContext);
   const [activeTab, setActiveTab] = useState('All Insights');
   const [insightsExpanded, setInsightsExpanded] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerClosing, setDrawerClosing] = useState(false);
+  const chatPanelRef = useRef(null);
+  const [originRect, setOriginRect] = useState(null);
+
+  const handleExpand = useCallback(() => {
+    const el = chatPanelRef.current;
+    if (el) setOriginRect(el.getBoundingClientRect());
+    setDrawerOpen(true);
+  }, []);
+
+  // Reverse-FLIP on close: keep the drawer mounted and visible while it
+  // animates shrinking back toward the sidebar panel's position, then swap
+  // back to showing the real sidebar panel only once that finishes.
+  const closeDrawer = useCallback(() => {
+    setDrawerClosing(true);
+  }, []);
+
+  const handleCloseAnimDone = useCallback(() => {
+    setDrawerOpen(false);
+    setDrawerClosing(false);
+  }, []);
+
+  // Shared chat state — single source of truth for both the compact sidebar
+  // chat and the expanded drawer, so expanding/collapsing doesn't reset it.
+  const [chatMessages, setChatMessages] = useState([
+    { role: 'assistant', content: "Hi! I'm your AI analyst. Ask me anything about employee engagement:" }
+  ]);
+  const [chatLoading, setChatLoading] = useState(false);
 
   const trends   = insightsData?.topTrends || [];
   const outliers = insightsData?.outliers  || [];
@@ -127,7 +157,15 @@ export default function RightPanel() {
       </div>
 
       {/* Chat card */}
-      <ChatWithData />
+      {!(drawerOpen || drawerClosing) && (
+        <div ref={chatPanelRef}>
+          <ChatWithData
+            onExpand={handleExpand}
+            messages={chatMessages} setMessages={setChatMessages}
+            loading={chatLoading}   setLoading={setChatLoading}
+          />
+        </div>
+      )}
     </aside>
 
     {/* Floating AI toggle button */}
@@ -147,6 +185,14 @@ export default function RightPanel() {
         </svg>
       )}
     </button>
+
+    <AiDrawer
+      open={drawerOpen} closing={drawerClosing}
+      onClose={closeDrawer} onCloseAnimDone={handleCloseAnimDone}
+      originRect={originRect}
+      messages={chatMessages} setMessages={setChatMessages}
+      loading={chatLoading}   setLoading={setChatLoading}
+    />
     </>
   );
 }

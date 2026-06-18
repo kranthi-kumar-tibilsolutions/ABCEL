@@ -35,19 +35,112 @@ function AiChatIcon() {
   );
 }
 
+function renderInline(line) {
+  const parts = [];
+  const rx = /\*\*(.*?)\*\*/g;
+  let last = 0, m;
+  while ((m = rx.exec(line)) !== null) {
+    if (m.index > last) parts.push(line.slice(last, m.index));
+    parts.push(<strong key={m.index}>{m[1]}</strong>);
+    last = m.index + m[0].length;
+  }
+  if (last < line.length) parts.push(line.slice(last));
+  return parts;
+}
+
+function isTableRow(line) {
+  const t = line.trim();
+  return t.startsWith('|') && t.endsWith('|');
+}
+
+function isTableDivider(line) {
+  const t = line.trim();
+  return t.startsWith('|') && /^[\s:|-]+$/.test(t) && t.includes('-');
+}
+
+function parseTableCells(line) {
+  const t = line.trim().replace(/^\|/, '').replace(/\|$/, '');
+  return t.split('|').map(c => c.trim());
+}
+
 function renderMd(text) {
-  return text.split('\n').map((line, li, arr) => {
-    const parts = [];
-    const rx = /\*\*(.*?)\*\*/g;
-    let last = 0, m;
-    while ((m = rx.exec(line)) !== null) {
-      if (m.index > last) parts.push(line.slice(last, m.index));
-      parts.push(<strong key={m.index}>{m[1]}</strong>);
-      last = m.index + m[0].length;
+  const lines = text.split('\n');
+  const blocks = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Markdown table: header row, divider row, then body rows
+    if (isTableRow(line) && lines[i + 1] !== undefined && isTableDivider(lines[i + 1])) {
+      const headerCells = parseTableCells(line);
+      const bodyRows = [];
+      let j = i + 2;
+      while (j < lines.length && isTableRow(lines[j])) {
+        bodyRows.push(parseTableCells(lines[j]));
+        j++;
+      }
+      blocks.push(
+        <table key={i} className="chat-md-table">
+          <thead>
+            <tr>{headerCells.map((c, ci) => <th key={ci}>{renderInline(c)}</th>)}</tr>
+          </thead>
+          <tbody>
+            {bodyRows.map((row, ri) => (
+              <tr key={ri}>{row.map((c, ci) => <td key={ci}>{renderInline(c)}</td>)}</tr>
+            ))}
+          </tbody>
+        </table>
+      );
+      i = j;
+      continue;
     }
-    if (last < line.length) parts.push(line.slice(last));
-    return <span key={li}>{parts}{li < arr.length - 1 && <br />}</span>;
-  });
+
+    // Heading (### Text)
+    const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
+      blocks.push(<div key={i} className="chat-md-heading">{renderInline(headingMatch[2])}</div>);
+      i++;
+      continue;
+    }
+
+    // Horizontal rule
+    if (/^-{3,}$/.test(line.trim())) {
+      blocks.push(<hr key={i} className="chat-md-hr" />);
+      i++;
+      continue;
+    }
+
+    // Blank line — paragraph break
+    if (line.trim() === '') {
+      i++;
+      continue;
+    }
+
+    // Plain line(s) — collect consecutive plain lines into one paragraph with <br/>
+    const paraLines = [];
+    let k = i;
+    while (
+      k < lines.length &&
+      lines[k].trim() !== '' &&
+      !isTableRow(lines[k]) &&
+      !/^(#{1,6})\s+/.test(lines[k]) &&
+      !/^-{3,}$/.test(lines[k].trim())
+    ) {
+      paraLines.push(lines[k]);
+      k++;
+    }
+    blocks.push(
+      <p key={i} className="chat-md-p">
+        {paraLines.map((l, li) => (
+          <span key={li}>{renderInline(l)}{li < paraLines.length - 1 && <br />}</span>
+        ))}
+      </p>
+    );
+    i = k;
+  }
+
+  return blocks;
 }
 
 function PaperPlaneIcon() {
@@ -59,24 +152,34 @@ function PaperPlaneIcon() {
   );
 }
 
-export default function ChatWithData() {
+function ExpandIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2"/>
+      <path d="M15 13L8 6M8 6v5M8 6h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <rect x="13" y="13" width="5" height="5" rx="1" fill="currentColor"/>
+    </svg>
+  );
+}
+
+export default function ChatWithData({ onExpand, messages, setMessages, loading, setLoading }) {
   const { dimension: ctxDimension, businesses, user, activeScreenContext } = useContext(AppContext);
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hi! I'm your AI analyst. Ask me anything about employee engagement:" }
-  ]);
   const [input,   setInput]   = useState('');
-  const [loading, setLoading] = useState(false);
   const [focusArea,     setFocusArea]     = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
   const bottomRef = useRef(null);
+  const pendingTextRef = useRef('');
+  const flushTimerRef  = useRef(null);
 
   // Company users are already scoped to their own company server-side —
   // hide the company filter for them.
   const showCompanyFilter = user?.role !== 'company' && (businesses?.length ?? 0) > 1;
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    bottomRef.current?.scrollIntoView({ behavior: loading ? 'auto' : 'smooth' });
+  }, [messages, loading]);
+
+  useEffect(() => () => clearInterval(flushTimerRef.current), []);
 
   const sendMessage = async (text) => {
     const msg = text || input.trim();
@@ -104,6 +207,40 @@ export default function ChatWithData() {
       const decoder = new TextDecoder();
       let buffer = '';
 
+      // Typewriter effect: tokens land in a queue as fast as the network
+      // delivers them, but we drain the queue onto the screen at a
+      // human-readable pace instead of dumping whole chunks instantly.
+      // The drain rate scales with queue size so a long response (e.g. a
+      // markdown table) doesn't take many seconds of nonstop re-rendering —
+      // each tick re-parses the full message text via renderMd, so ticking
+      // too slowly for too long is what froze the tab.
+      pendingTextRef.current = '';
+      let streamDone = false;
+      const TICK_MS = 40;
+      const MIN_CHARS_PER_TICK = 2;
+
+      const drain = () => {
+        const pending = pendingTextRef.current;
+        if (!pending) {
+          if (streamDone) clearInterval(flushTimerRef.current);
+          return;
+        }
+        // Scale chars/tick so big backlogs (long tables, long answers)
+        // never take more than ~1.5s to drain, capping total re-renders.
+        const charsThisTick = Math.max(MIN_CHARS_PER_TICK, Math.ceil(pending.length / 35));
+        const chunk = pending.slice(0, charsThisTick);
+        pendingTextRef.current = pending.slice(charsThisTick);
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            ...updated[updated.length - 1],
+            content: updated[updated.length - 1].content + chunk,
+          };
+          return updated;
+        });
+      };
+      flushTimerRef.current = setInterval(drain, TICK_MS);
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -116,20 +253,14 @@ export default function ChatWithData() {
           if (!payload || payload === '[DONE]') continue;
           try {
             const { text: tok } = JSON.parse(payload);
-            if (tok) {
-              setMessages(prev => {
-                const updated = [...prev];
-                updated[updated.length - 1] = {
-                  ...updated[updated.length - 1],
-                  content: updated[updated.length - 1].content + tok,
-                };
-                return updated;
-              });
-            }
+            if (tok) pendingTextRef.current += tok;
           } catch {}
         }
       }
+      streamDone = true;
     } catch {
+      clearInterval(flushTimerRef.current);
+      pendingTextRef.current = '';
       setMessages(prev => {
         const updated = [...prev];
         updated[updated.length - 1] = { ...updated[updated.length - 1], content: 'Sorry, something went wrong. Please try again.' };
@@ -145,16 +276,29 @@ export default function ChatWithData() {
         <AiChatIcon />
         <span className="chat-title">CHAT WITH DATA</span>
         <span className="chat-beta">Beta</span>
-        <span className="chat-sub">Your AI analyst</span>
+        <span className="chat-sub" style={{ display: 'none' }}>Your AI analyst</span>
+        {onExpand && (
+          <button className="chat-expand-btn" onClick={onExpand} title="Expand chat" style={{ marginLeft: 'auto' }}>
+            <ExpandIcon />
+          </button>
+        )}
       </div>
 
 <div className="chat-messages">
         {messages.map((m, i) => (
           <div key={i} className={`chat-msg ${m.role}`}>
-            {m.role === 'assistant' && loading && i === messages.length - 1 && !m.content
-              ? <span className="chat-typing">●●●</span>
-              : renderMd(m.content || '')
-            }
+            <div className="chat-msg-bubble">
+              {m.role === 'assistant' && loading && i === messages.length - 1 && !m.content
+                ? (
+                  <span className="chat-typing">
+                    <span className="chat-typing-dot" />
+                    <span className="chat-typing-dot" />
+                    <span className="chat-typing-dot" />
+                  </span>
+                )
+                : renderMd(m.content || '')
+              }
+            </div>
           </div>
         ))}
         <div ref={bottomRef} />

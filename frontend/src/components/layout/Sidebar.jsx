@@ -107,7 +107,6 @@ const NAV = [
       </svg>
     ),
     children: [
-      { id: 'dynamic-persona-builder', label: 'Dynamic Persona Builder' },
       { id: 'bu-explorer',           label: 'BU Explorer' },
       { id: 'insights-studio',       label: 'Insights Studio' },
       { id: 'ai-insights',           label: 'AI Insights' },
@@ -117,6 +116,20 @@ const NAV = [
       { id: 'hypothesis-testing',    label: 'Hypothesis Testing' },
       { id: 'statistical-analysis',  label: 'Statistical Analysis' },
       { id: 'sentiment-analysis',    label: 'Sentiment Analysis' },
+    ],
+  },
+  {
+    id: 'persona-spotlight', label: 'Persona & Spotlight', collapsible: true,
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="6" cy="6" r="3.5" stroke="currentColor" strokeWidth="1.4"/>
+        <circle cx="11" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.4"/>
+        <path d="M8.5 3.5c1 .5 2 1.5 2 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+      </svg>
+    ),
+    children: [
+      { id: 'dynamic-persona-builder', label: 'Dynamic Persona Builder' },
+      { id: 'focus-spotlight',          label: 'Focus Spotlight' },
     ],
   },
   {
