@@ -1,5 +1,6 @@
 import { useContext, useState, useRef, useEffect } from 'react';
 import { AppContext } from '../../context/AppContext';
+import { getActiveContext, subscribeToContext } from '../../context/ActiveContextStore';
 import { apiFetch } from '../../utils/api';
 
 const SUGGESTED = [
@@ -8,6 +9,16 @@ const SUGGESTED = [
   'What drives engagement the most?',
   'Show BUs with high polarization',
 ];
+
+const TAB_LABELS = {
+  overview:                'Overview',
+  dynamic_persona_builder: 'Persona Builder',
+  statistical_analysis:    'Statistical Analysis',
+  hypothesis_testing:      'Hypothesis Testing',
+  sentiment_analysis:      'Sentiment Analysis',
+  bu_explorer:             'BU Explorer',
+  business_overview:       'Business Overview',
+};
 
 const FOCUS_AREAS = [
   'Engagement',
@@ -60,14 +71,19 @@ function PaperPlaneIcon() {
 }
 
 export default function ChatWithData() {
-  const { dimension: ctxDimension, businesses, user, activeScreenContext } = useContext(AppContext);
+  const { dimension: ctxDimension, businesses, user } = useContext(AppContext);
   const [messages, setMessages] = useState([
     { role: 'assistant', content: "Hi! I'm your AI analyst. Ask me anything about employee engagement:" }
   ]);
-  const [input,   setInput]   = useState('');
-  const [loading, setLoading] = useState(false);
-  const [focusArea,     setFocusArea]     = useState('');
+  const [input,       setInput]       = useState('');
+  const [loading,     setLoading]     = useState(false);
+  const [focusArea,   setFocusArea]   = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
+  const [currentTab,  setCurrentTab]  = useState(getActiveContext().tab ?? 'overview');
+
+  useEffect(() => {
+    return subscribeToContext(ctx => setCurrentTab(ctx.tab ?? 'overview'));
+  }, []);
   const bottomRef = useRef(null);
 
   // Company users are already scoped to their own company server-side —
@@ -96,7 +112,7 @@ export default function ChatWithData() {
           dimension:      ctxDimension,
           focusArea:      focusArea || null,
           companyFilter:  companyFilter || null,
-          active_context: activeScreenContext || null,
+          active_context: getActiveContext() || null,
         }),
       });
 
@@ -143,8 +159,15 @@ export default function ChatWithData() {
     <div className="chat-panel">
       <div className="chat-header">
         <AiChatIcon />
-        <span className="chat-title">CHAT WITH DATA</span>
-        <span className="chat-beta">Beta</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span className="chat-title">CHAT WITH DATA</span>
+            <span className="chat-beta">Beta</span>
+          </div>
+          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+            Analysing: {TAB_LABELS[currentTab] ?? 'Overview'}
+          </span>
+        </div>
         <span className="chat-sub">Your AI analyst</span>
       </div>
 

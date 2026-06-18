@@ -936,12 +936,35 @@ def parse_excel(excel_path, output_dir):
             clusters[key].append(u)
 
     group_avg = round(float(np.mean([b['overall'] for b in businesses])), 2) if businesses else 0
+
+    # Normalize raw category names from the Excel source to clean display names
+    _CAT_NAME_MAP = {
+        'Engagement':            'Engagement',
+        'Development & Career':  'Development and Career',
+        'Performance culture':   'Performance Culture',
+        'Performance Culture':   'Performance Culture',
+        'Manager Effectiveness': 'Manager Effectiveness',
+        'Leadership':            'Leadership',
+        'Onboarding':            'Onboarding',
+    }
+    _VALID_CATS = set(_CAT_NAME_MAP.values())
+
     cat_avgs  = {}
     if businesses:
         for cat in businesses[0]['categories']:
+            clean = _CAT_NAME_MAP.get(cat, cat)
+            if clean not in _VALID_CATS:
+                continue  # skip Uncategorized and other noise columns
             vals = [b['categories'].get(cat, 0) for b in businesses if b['categories'].get(cat)]
             if vals:
-                cat_avgs[cat] = round(float(np.mean(vals)), 2)
+                cat_avgs[clean] = round(float(np.mean(vals)), 2)
+
+    def _cohort_n(cohorts_dict, dimension, name):
+        return next((
+            c.get('respondent_count') or c.get('n') or 0
+            for c in cohorts_dict.get(dimension, [])
+            if c.get('name') == name
+        ), 0)
 
     meta = {
         "survey_name":         sys.argv[3] if len(sys.argv) > 3 and sys.argv[3].strip() else os.path.basename(excel_path).replace('.xlsx', '').replace('.xls', ''),
@@ -959,6 +982,24 @@ def parse_excel(excel_path, output_dir):
         "dimensions_detected": [k for k in dimensions if not k.startswith('_')],
         "sheets_found":        sheet_types,
         "parsed_at":           pd.Timestamp.now().isoformat(),
+        # Demographic totals — written here so ai.py can read them without hardcoding
+        "male":               _cohort_n(cohorts, 'gender',     'Male'),
+        "female":             _cohort_n(cohorts, 'gender',     'Female'),
+        "gen_y":              _cohort_n(cohorts, 'generation', 'Gen Y'),
+        "gen_x":              _cohort_n(cohorts, 'generation', 'Gen X'),
+        "gen_z":              _cohort_n(cohorts, 'generation', 'Gen Z'),
+        "dob_na":             _cohort_n(cohorts, 'generation', 'DOB not Available'),
+        "baby_boomer":        _cohort_n(cohorts, 'generation', 'Baby Boomer'),
+        "junior_management":  _cohort_n(cohorts, 'job_band',   'Junior Management'),
+        "middle_management":  _cohort_n(cohorts, 'job_band',   'Middle Management'),
+        "senior_management":  _cohort_n(cohorts, 'job_band',   'Senior Management'),
+        "tenure_0_2":         _cohort_n(cohorts, 'tenure',     '0-2'),
+        "tenure_2_5":         _cohort_n(cohorts, 'tenure',     '2-5'),
+        "tenure_5_10":        _cohort_n(cohorts, 'tenure',     '5-10'),
+        "tenure_10_15":       _cohort_n(cohorts, 'tenure',     '10-15'),
+        "tenure_15_20":       _cohort_n(cohorts, 'tenure',     '15-20'),
+        "tenure_20_25":       _cohort_n(cohorts, 'tenure',     '20-25'),
+        "tenure_25_plus":     _cohort_n(cohorts, 'tenure',     '>25 (Equal or more than 25)'),
     }
 
     with open(f"{output_dir}/businesses.json", 'w') as f: json.dump(businesses, f, indent=2)

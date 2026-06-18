@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import Lottie from 'lottie-react';
 import loaderAnim from './assets/loader.json';
 import { AppContext }      from './context/AppContext';
+import { setActiveContext } from './context/ActiveContextStore';
 import { getAuth, setAuth, apiFetch } from './utils/api';
 import AppHeader           from './components/layout/AppHeader';
 import Sidebar             from './components/layout/Sidebar';
@@ -100,6 +101,11 @@ export default function App() {
   const [saCache,              setSaCache]              = useState(null);
   const [activeScreenContext,  setActiveScreenContext]  = useState(null);
   const [dataLoaded,           setDataLoaded]           = useState(false);
+
+  // Keep the plain-JS store in sync so ChatWithData can read synchronously
+  useEffect(() => {
+    if (activeScreenContext) setActiveContext(activeScreenContext);
+  }, [activeScreenContext]);
 
   const navigate = useCallback((nextPage, params = {}) => {
     setNavHistory(prev => [...prev, page]);

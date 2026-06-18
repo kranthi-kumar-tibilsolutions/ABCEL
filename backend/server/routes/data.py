@@ -190,10 +190,10 @@ async def get_cohorts(user: dict = Depends(get_current_user)):
                   "performance_culture", "manager_effectiveness", "overall"]
 
     cat_map = {
-        "engagement":             "Engagement Index",
-        "development_and_career": "Development & Career",
+        "engagement":             "Engagement",
+        "development_and_career": "Development and Career",
         "leadership":             "Leadership",
-        "performance_culture":    "Performance culture",
+        "performance_culture":    "Performance Culture",
         "manager_effectiveness":  "Manager Effectiveness",
     }
 

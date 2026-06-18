@@ -20,6 +20,21 @@ _DATA    = _BACKEND / "data"
 
 # ── Data helper ───────────────────────────────────────────────────────────────
 
+def get_n(b: dict) -> int:
+    """Read respondent count from either 'respondent_count' or 'n' field."""
+    return b.get('respondent_count') or b.get('n') or 0
+
+
+THEME_KEYS = [
+    'engagement',
+    'leadership',
+    'performance_culture',
+    'development_and_career',
+    'manager_effectiveness',
+    'onboarding',
+]
+
+
 def _read(file: str):
     fp = _DATA / file
     if not fp.exists():
@@ -126,7 +141,7 @@ def _build_context(dimension: str = "Business Unit", user: Optional[dict] = None
 
     def _fmt(items, suffix=""):
         # exclude noise: n<30 and "DOB not Available"; sort highest first
-        valid = [c for c in (items or []) if (c.get("respondent_count") or 0) >= 30 and c.get("name") != "DOB not Available"]
+        valid = [c for c in (items or []) if get_n(c) >= 30 and c.get("name") != "DOB not Available"]
         valid.sort(key=lambda c: c.get("overall") or 0, reverse=True)
         return ", ".join(f"{c['name']}={c.get('overall')}{suffix} (n={c.get('respondent_count')})" for c in valid)
 
@@ -135,7 +150,7 @@ def _build_context(dimension: str = "Business Unit", user: Optional[dict] = None
     def _biz_line(b):
         cats = b.get("categories", {})
         cat_parts = ", ".join(f"{k}={v}" for k, v in cats.items() if v)
-        n = b.get("respondent_count", "")
+        n = get_n(b)
         n_str = f" n={n}" if n else ""
         return f"{b['name']}: {b['overall']} ({b.get('band','')}{n_str}) [{cat_parts}]"
 
@@ -158,7 +173,7 @@ def _build_context(dimension: str = "Business Unit", user: Optional[dict] = None
     cohort_lines = ""
     if cohort_by_biz:
         cohort_lines = "\n\nPER-BUSINESS COHORT DATA (generation overall scores):\n"
-        for bname, bc in list(cohort_by_biz.items())[:10]:  # limit tokens
+        for bname, bc in cohort_by_biz.items():
             gen = bc.get("generation", [])
             if gen:
                 gen_str = ", ".join(f"{g['name']}={g['overall']}(n={g.get('respondent_count','')})" for g in gen if g.get("overall"))
@@ -361,15 +376,64 @@ Respond ONLY with valid JSON:
 
 # ── CALL 4: Chat with Data — SSE Streaming ────────────────────────────────────
 
+def _build_units_from_responses(responses: list, businesses: list) -> list:
+    """
+    Fallback: build a units-like list from responses.json when units.json is missing.
+    Groups by business only (no sub-BU field in responses.json), so each company
+    becomes a single BU entry. Saves result to units.json for future requests.
+    """
+    from collections import defaultdict as _dd
+
+    biz_map = _dd(list)
+    for r in responses:
+        bname = r.get("business", "")
+        if bname:
+            biz_map[bname].append(r)
+
+    biz_lookup = {b["name"]: b for b in businesses}
+    units_out = []
+    for bname, rows in biz_map.items():
+        theme_scores = {}
+        for tk in THEME_KEYS:
+            vals = [r[tk] for r in rows if r.get(tk) and r[tk] > 0]
+            theme_scores[tk] = round(sum(vals) / len(vals), 2) if vals else None
+        score_vals = [v for v in theme_scores.values() if v]
+        overall = round(sum(score_vals) / len(score_vals), 2) if score_vals else None
+        biz_meta = biz_lookup.get(bname, {})
+        units_out.append({
+            "name":                     bname,
+            "business":                 bname,
+            "overall":                  overall or biz_meta.get("overall"),
+            "band":                     biz_meta.get("band"),
+            "categories":               {k: v for k, v in theme_scores.items() if v},
+            "respondent_count":         len(rows),
+            "cluster":                  biz_meta.get("cluster"),
+            "is_business_level_fallback": True,
+        })
+
+    # Persist so we don't recompute on every request
+    try:
+        fp = _DATA / "units.json"
+        fp.write_text(json.dumps(units_out, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+    return units_out
+
+
 def _compute_full_chat_data(user=None):
     """
-    Load businesses.json + responses.json and compute all demographic breakdowns
-    at request time so new uploads are always reflected.
-    Returns (businesses, gen_data, gender_data, job_data, tenure_data, manager_data, biz_cohorts)
+    Load businesses.json + responses.json + units.json and compute all demographic
+    breakdowns at request time so new uploads are always reflected.
+    If units.json is missing, builds it from responses.json as a fallback.
+    Returns (businesses, gen_data, gender_data, job_data, tenure_data, manager_data, biz_cohorts, biz_units)
     """
-    import json as _j
     businesses = _read("businesses.json") or []
     responses  = _read("responses.json")  or []
+    all_units  = _read("units.json")      or []
+
+    # Fallback: build units from responses if units.json is missing or empty
+    if not all_units and responses:
+        all_units = _build_units_from_responses(responses, businesses)
 
     # Scope to company for company-role users
     co = None
@@ -378,22 +442,32 @@ def _compute_full_chat_data(user=None):
         if co:
             responses  = [r for r in responses  if r.get("business") == co]
             businesses = [b for b in businesses if b["name"] == co]
+            all_units  = [u for u in all_units  if u.get("business") == co]
+
+    # Group units by business — sorted by score descending for easy LLM lookup
+    from collections import defaultdict as _dd
+    _biz_units_map = _dd(list)
+    for u in all_units:
+        bname = u.get("business") or ""
+        if bname:
+            _biz_units_map[bname].append({
+                "name":    u.get("name"),
+                "score":   u.get("overall"),
+                "n":       u.get("respondent_count"),
+                "cluster": u.get("cluster"),
+                "band":    u.get("band"),
+            })
+    biz_units = {bname: sorted(bus, key=lambda u: u.get("score") or 0, reverse=True)
+                 for bname, bus in _biz_units_map.items()}
 
     if not responses:
-        return businesses, [], [], [], [], [], {}
-
-    # Auto-detect theme keys (numeric fields that aren't metadata)
-    _skip = {'employee_id','business','age_group','generation','gender','job_level',
-             'tenure','country','is_manager','abglp','is_active','year','month','overall','scores'}
-    _sample = responses[0]
-    theme_keys = [k for k in _sample if k not in _skip
-                  and isinstance(_sample.get(k), (int, float)) and _sample.get(k) is not None]
+        return businesses, [], [], [], [], [], {}, biz_units, {}, {}
 
     def group_scores(rows, label):
         if len(rows) < 10:
             return None
         scores = {}
-        for tk in theme_keys:
+        for tk in THEME_KEYS:
             vals = [r[tk] for r in rows if r.get(tk) and r[tk] > 0]
             scores[tk] = round(sum(vals) / len(vals), 2) if vals else None
         all_vals = [v for v in scores.values() if v]
@@ -447,7 +521,52 @@ def _compute_full_chat_data(user=None):
             'by_tenure':     [g for g in (group_scores(_bfilt(biz_rows, 'tenure', t), t) for t in tenures) if g],
         }
 
-    return businesses, gen_data, gender_data, job_data, tenure_data, manager_data, biz_cohorts
+    # Real demographic totals — read from cohorts.json (always up to date after each upload)
+    _cohorts_raw = _read("cohorts.json") or {}
+    _meta_raw    = _read("meta.json")    or {}
+
+    def _cohort_n(dimension: str, name: str) -> int:
+        return next((get_n(c) for c in _cohorts_raw.get(dimension, [])
+                     if c.get("name") == name), 0)
+
+    real_totals = {
+        'total_respondents':  _meta_raw.get('total_respondents') or sum(get_n(b) for b in businesses),
+        'male':               _cohort_n('gender',     'Male'),
+        'female':             _cohort_n('gender',     'Female'),
+        'unknown':            _cohort_n('gender',     'Unknown'),
+        'gen_y':              _cohort_n('generation', 'Gen Y'),
+        'gen_x':              _cohort_n('generation', 'Gen X'),
+        'gen_z':              _cohort_n('generation', 'Gen Z'),
+        'dob_na':             _cohort_n('generation', 'DOB not Available'),
+        'baby_boomer':        _cohort_n('generation', 'Baby Boomer'),
+        'junior_management':  _cohort_n('job_band',   'Junior Management'),
+        'middle_management':  _cohort_n('job_band',   'Middle Management'),
+        'senior_management':  _cohort_n('job_band',   'Senior Management'),
+        'tenure_0_2':         _cohort_n('tenure',     '0-2'),
+        'tenure_2_5':         _cohort_n('tenure',     '2-5'),
+        'tenure_5_10':        _cohort_n('tenure',     '5-10'),
+        'tenure_10_15':       _cohort_n('tenure',     '10-15'),
+        'tenure_15_20':       _cohort_n('tenure',     '15-20'),
+        'tenure_20_25':       _cohort_n('tenure',     '20-25'),
+        'tenure_25_plus':     _cohort_n('tenure',     '>25 (Equal or more than 25)'),
+    }
+
+    # Sample individual records so the LLM can show real employee profiles
+    _DISPLAY_KEYS = ['business', 'generation', 'gender', 'job_level', 'tenure', 'is_manager',
+                     'engagement', 'leadership', 'performance_culture', 'development_and_career',
+                     'manager_effectiveness', 'onboarding', 'overall']
+    def _sample(key, val):
+        row = next((r for r in responses if r.get(key) == val), None)
+        return {k: row[k] for k in _DISPLAY_KEYS if k in row} if row else None
+
+    sample_rows = {
+        'Female': _sample('gender', 'Female'),
+        'Male':   _sample('gender', 'Male'),
+        'Gen Z':  _sample('generation', 'Gen Z'),
+        'Gen Y':  _sample('generation', 'Gen Y'),
+    }
+
+    return businesses, gen_data, gender_data, job_data, tenure_data, manager_data, biz_cohorts, biz_units, real_totals, sample_rows
 
 
 @router.post("/chat")
@@ -456,7 +575,8 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
 
     # Compute full data at request time so new uploads are always reflected
     (businesses, gen_data, gender_data, job_data,
-     tenure_data, manager_data, biz_cohorts) = _compute_full_chat_data(user)
+     tenure_data, manager_data, biz_cohorts, biz_units,
+     real_totals, sample_rows) = _compute_full_chat_data(user)
 
     focus_line   = f"\nACTIVE FOCUS AREA: {req.focusArea} — prioritise answers about this theme." if req.focusArea else ""
     company_line = f"\nACTIVE COMPANY FILTER: {req.companyFilter} — answer only about this company unless explicitly asked otherwise." if req.companyFilter else ""
@@ -474,59 +594,262 @@ When the user says "this persona", "this analysis", "these results", "what I'm l
     else:
         screen_block = ""
 
-    biz_json     = _json.dumps([{"name": b["name"], "overall": b.get("overall"), "band": b.get("band"),
-                                  "respondent_count": b.get("respondent_count"),
-                                  "categories": b.get("categories", {})} for b in businesses], indent=2)
-    cohort_json  = _json.dumps(biz_cohorts, indent=2)
+    # Fix 1 — weighted average by respondent count (large businesses carry more weight)
+    _total_n = sum(get_n(b) for b in businesses)
+    group_avg = round(
+        sum((b.get('overall') or 0) * get_n(b) for b in businesses) / _total_n, 2
+    ) if _total_n > 0 else 4.46
 
-    system_prompt = f"""You are an expert HR analytics AI analyst for Aditya Birla Group (ABG) Vibes 2026 Employee Engagement Survey, embedded inside their analytics dashboard.{focus_line}{company_line}
-{screen_block}
-=== COMPLETE ABG VIBES 2026 DATA ===
+    # Normalize raw category names before injecting into prompt
+    _CAT_MAP = {
+        'Engagement Index':   'Engagement',
+        'Development & Career': 'Development and Career',
+        'Performance culture':  'Performance Culture',
+    }
+    def _norm_cats(cats):
+        out = {}
+        for k, v in cats.items():
+            if k == 'Uncategorized':
+                continue
+            out[_CAT_MAP.get(k, k)] = v
+        return out
+
+    biz_json    = _json.dumps([{"name": b["name"], "overall": b.get("overall"), "band": b.get("band"),
+                                 "respondent_count": get_n(b),
+                                 "categories": _norm_cats(b.get("categories", {}))} for b in businesses], indent=2)
+    cohort_json = _json.dumps(biz_cohorts, indent=2)
+
+    # BUSINESS UNITS BY COMPANY — numbered list per company, sorted by score desc
+    bu_section_lines = []
+    _is_fallback = any(
+        u.get('is_business_level_fallback')
+        for bus in biz_units.values() for u in bus
+    )
+    for bname in sorted(biz_units.keys()):
+        bus = biz_units[bname]
+        bu_section_lines.append(f"\n{bname} ({len(bus)} BUs):")
+        for i, u in enumerate(bus, 1):
+            bu_section_lines.append(
+                f"  {i}. {u['name']} — score: {u['score']}, respondents: {u['n']}, cluster: {u['cluster'] or 'n/a'}"
+            )
+    bu_block = "\n".join(bu_section_lines)
+    total_bu_count = sum(len(v) for v in biz_units.values())
+    bu_count_note = (
+        f"{len(businesses)} businesses (BU-level detail not yet available — units.json missing)"
+        if _is_fallback else
+        f"{total_bu_count} BUs across {len(biz_units)} companies"
+    )
+
+    # Role-based access scope
+    user_role         = user.get("role", "group") if user else "group"
+    user_company_name = data_company(user) if user else None
+
+    if user_role == "company" and user_company_name:
+        role_block = f"""--- YOUR ACCESS SCOPE — READ THIS FIRST ---
+You are logged in as a representative of: {user_company_name}
+You ONLY have access to {user_company_name} data.
+STRICT RULES:
+- Answer ONLY about {user_company_name} and its business units
+- If asked about any other company say exactly:
+  "I can only show data for {user_company_name}. I do not have access to other companies."
+- If asked to compare {user_company_name} with another company say exactly:
+  "Comparison with other companies is not available in your access level."
+- Never reveal scores, BU names, or cohort data from any other company
+- The data sections below already contain only {user_company_name} data — do not reference businesses outside it
+CRITICAL COMPANY LOCK: If a user asks about a company or BU that does not appear anywhere in the data sections below, it means they are asking about a company they have no access to. Do NOT fuzzy-match it to {user_company_name} or suggest {user_company_name} as a substitute. Do NOT say "the closest match is {user_company_name}". Say exactly: "I can only show data for {user_company_name}. I do not have access to other companies."
+"""
+    else:
+        role_block = """--- YOUR ACCESS SCOPE ---
+You are logged in as a Group HR user.
+You have full access to all 22 businesses, all 415 BUs, and all cohort data.
+Answer any question about any business, BU, or cohort freely.
+"""
+
+    _tot = max(real_totals.get('total_respondents', 0), 1)
+    _strongest_score = next(
+        (b.get('categories', {}).get('Engagement') or b.get('categories', {}).get('engagement')
+         for b in businesses if b.get('categories')), '4.64'
+    )
+    _weakest_score = next(
+        (b.get('categories', {}).get('Performance Culture') or b.get('categories', {}).get('performance_culture')
+         for b in businesses if b.get('categories')), '4.32'
+    )
+
+    system_prompt = f"""You are ARIA — ABG's AI Analyst for the ABG Vibes 2026 Employee Engagement Survey.
+You are embedded inside the ABG analytics dashboard. You have complete knowledge of the survey data.
+You answer questions conversationally, like a senior HR consultant who knows this data inside out.
+
+{role_block}
+--- WHO YOU ARE ---
+- You know the ABG Vibes 2026 survey data completely
+- You answer about what the user is currently looking at on screen
+- You answer follow-up questions naturally — in and out of any topic
+- You never say "I don't have that data" if the data is loaded below
+- You never make up numbers — only use what is in the data sections below
+- You are concise but complete — answer the question directly, then add insight
+- When asked "what do you think" or "your opinion" — give a perspective as a senior HR analyst would, not just numbers
+
+--- CRITICAL SCALE RULE — NON-NEGOTIABLE ---
+All scores are on a 1 to 5 scale where 5 is the best possible score. Higher is always better. Never apply any formula to scores you see in this data.
+ABSOLUTE PROHIBITION: NEVER write "1.56" or "1.37" or any number produced by subtracting a score from 6. NEVER write "favourability = 6 − raw" or "6 minus" anywhere. NEVER compute a percentage from a score (e.g. do NOT write "92% favorable"). A score of 4.44 means 4.44 out of 5 — it is already the final favourability score. It is POSITIVE and near the top of the scale. Do not derive any other number from it. If you find yourself computing 6 − 4.44, stop immediately — that is wrong.
+
+--- WHAT THE USER IS LOOKING AT RIGHT NOW ---
+{screen_block if screen_block else "User is on the Overview tab."}
+
+Answer questions about this screen first when the user says things like:
+"explain this", "what does this mean", "why is this number", "what am I looking at"
+If active_context shows data_status "not_available" say exactly: "This tab does not have real data connected yet." Do not make up scores or analysis for it.
+
+--- COMPLETE SURVEY DATA ---
 
 GROUP SUMMARY:
-- Total respondents: {sum(b.get('respondent_count', 0) for b in businesses) or 55459}
-- Number of businesses: {len(businesses)}
-- Group overall score: {round(sum(b.get('overall',0) for b in businesses)/len(businesses),2) if businesses else 4.46} / 5.0
-- Scale: 1–5 where 5 is best (favourability = 6 − raw score)
+- Survey: ABG Vibes 2026
+- Total respondents: {real_totals.get('total_respondents', 0)}
+- Businesses: {len(businesses)} | Business Units: {total_bu_count}
+- Group overall score: {group_avg} / 5.0
+- Strongest category: Engagement ({_strongest_score})
+- Weakest category: Performance Culture ({_weakest_score})
 
-ALL BUSINESSES WITH SCORES AND CATEGORY BREAKDOWN:
+CATEGORY NAMES (use these exact names always):
+Engagement | Leadership | Performance Culture | Development and Career | Manager Effectiveness | Onboarding
+
+ALL 22 BUSINESSES (ranked highest to lowest):
 {biz_json}
 
-GENERATION BREAKDOWN (group level):
+BUSINESS UNITS BY COMPANY:
+{bu_block}
+
+GENDER (real totals from full dataset — never count sample rows):
+Male: {real_totals.get('male', 0)} ({round(real_totals.get('male', 0) / _tot * 100, 1)}%)
+Female: {real_totals.get('female', 0)} ({round(real_totals.get('female', 0) / _tot * 100, 1)}%)
+
+GENERATION (real totals):
+Gen Y: {real_totals.get('gen_y', 0)} ({round(real_totals.get('gen_y', 0) / _tot * 100, 1)}%)
+Gen X: {real_totals.get('gen_x', 0)} ({round(real_totals.get('gen_x', 0) / _tot * 100, 1)}%)
+Gen Z: {real_totals.get('gen_z', 0)} ({round(real_totals.get('gen_z', 0) / _tot * 100, 1)}%)
+
+JOB LEVEL (real totals):
+Junior Management: {real_totals.get('junior_management', 0)}
+Middle Management: {real_totals.get('middle_management', 0)}
+Senior Management: {real_totals.get('senior_management', 0)}
+
+TENURE (real totals):
+0-2 years: {real_totals.get('tenure_0_2', 0)} | 2-5 years: {real_totals.get('tenure_2_5', 0)} | 5-10 years: {real_totals.get('tenure_5_10', 0)}
+10-15 years: {real_totals.get('tenure_10_15', 0)} | 15-20 years: {real_totals.get('tenure_15_20', 0)} | 20-25 years: {real_totals.get('tenure_20_25', 0)} | 25+ years: {real_totals.get('tenure_25_plus', 0)}
+
+IMPORTANT — SAMPLE SIZE WARNING: The "n" values in the score sections below come from a 2,000-row sample used for score computation only. They are NOT the actual employee headcounts. For headcounts always use the GENDER / GENERATION / JOB LEVEL / TENURE real totals sections above.
+
+GENERATION SCORES (from sample — use n for score context only, not for headcount):
 {_json.dumps(gen_data, indent=2)}
 
-GENDER BREAKDOWN (group level):
+GENDER SCORES (from sample — use n for score context only, not for headcount):
 {_json.dumps(gender_data, indent=2)}
 
-JOB LEVEL BREAKDOWN (group level):
+JOB LEVEL SCORES (from sample — use n for score context only, not for headcount):
 {_json.dumps(job_data, indent=2)}
 
-TENURE BREAKDOWN (group level):
+TENURE SCORES (from sample — use n for score context only, not for headcount):
 {_json.dumps(tenure_data, indent=2)}
 
-MANAGER vs INDIVIDUAL CONTRIBUTOR (group level):
+MANAGER vs INDIVIDUAL CONTRIBUTOR:
 {_json.dumps(manager_data, indent=2)}
 
-PER-BUSINESS COHORT BREAKDOWNS (generation / gender / job level / tenure within each company):
+PER-BUSINESS COHORT BREAKDOWNS:
 {cohort_json}
 
-=== ANSWER RULES ===
+--- COMPANY NAME RULES ---
+"Novel Jewels" / "novel jewel" → Novel Jewels Ltd. (jewellery, 376 respondents, 1 BU)
+"Novelis" / "novelis" → Novelis (aluminium, 8,227 respondents, 42 BUs)
+These are completely different companies. Never confuse them.
+Always fuzzy-match company and BU names — typos should never cause "data not found".
 
-PRIORITY ORDER:
-1. If question is about what is on screen ("this persona", "these results", "what I'm looking at") → use active screen context above first
-2. If question is about any ABG business, score, cohort, or category → use the data above — never say you don't have it
-3. If question needs something genuinely not in this data → answer from general HR knowledge and say "Based on general HR knowledge, not your ABG Vibes data"
+ABBREVIATION MATCHING:
+Users often use abbreviations or short forms. Always match these:
+- "ABNAH" or "New Age" or "Hospitality" → Aditya Birla New Age Hospitality Pvt Ltd
+- "ABMCo" or "ABMC" or "Mgmt Co" → Aditya Birla Mgmt Co Pvt Ltd
+- "ABFRL" or "Fashion" or "Apparels" → Apparels
+- "FS" or "Financial" or "Fin Services" → Financial Services HO
+- "P&F" or "Pulp Fibre" or "Pulp" → Pulp and Fibre HO
+- "CFI" → CFI
+- "Century" → Century Group HO
+Never say "I don't have data for [abbreviation]". Always attempt to match it to the closest company in the dataset and confirm the match in your answer.
 
-BEHAVIOUR RULES:
-- Handle typos gracefully — "novel jewels", "novel jewel", "noveljewels" all mean Novel Jewels Ltd. Match fuzzy company names to the closest real name
-- Never make up scores — only use numbers from the data above
-- Never say you don't have access to data
-- If asked which cohort is least/most engaged in a business → compare by_generation and by_job_level scores in biz_cohorts for that business and find the lowest/highest overall
-- "new joiners" or "new employees" → means tenure 0-2 years in tenure breakdown
-- "female employees" → use gender breakdown female data
-- Keep answers to 3–5 sentences unless user asks for more detail
-- Lead with the direct answer and the number, then explain
-- Think like a McKinsey HR consultant — be direct, specific, and insightful"""
+--- INDIVIDUAL RECORDS ---
+There are NO open text comments in this dataset. Every response is a numeric Likert score 1-5.
+When asked to show a female / male / Gen Z / Gen Y employee response — use the exact sample rows below. Show them as a readable human profile (demographics first, then scores). Do NOT redirect to Sentiment Analysis.
+
+SAMPLE ROWS FROM responses.json (use these verbatim when asked to show an individual response):
+Female employee: {_json.dumps(sample_rows.get('Female'), indent=2)}
+Male employee: {_json.dumps(sample_rows.get('Male'), indent=2)}
+Gen Z employee: {_json.dumps(sample_rows.get('Gen Z'), indent=2)}
+Gen Y employee: {_json.dumps(sample_rows.get('Gen Y'), indent=2)}
+
+--- RESPONSE LENGTH AND FORMAT — MANDATORY ---
+- Default response length is 3 to 5 sentences. No more unless the user explicitly asks for a full breakdown, detailed analysis, or complete list.
+- Never use headers (###) for conversational answers. Headers are only for when the user says "give me a report" or "full breakdown" or "detailed analysis".
+- Never use emojis unless the user used one first.
+- Never use horizontal rules (---).
+- Tables are only for direct comparisons where the user asks to compare two or more things side by side. Not for every answer.
+- If the answer is a single number or fact — say it in one sentence then add one line of context. Done.
+- If the user asks a follow-up like "how to address it" or "what should we do" — give 2 to 3 concrete actions maximum. Not a 10-step plan.
+- After every answer offer ONE specific follow-up option, not a list of options.
+- Think like a colleague answering over Slack — clear, short, useful.
+
+--- ANSWER PRIORITY — READ THIS CAREFULLY ---
+
+CONTEXT CHAINING — MOST IMPORTANT RULE:
+Every follow-up question inherits ALL context from the entire conversation history.
+When a user asks a follow-up question that references "this", "they", "them", "that", "here", "these", "how many", "what about" — look at the FULL conversation history and identify:
+- What topic was being discussed (e.g. Ram's persona, Gen Z scores, a specific business)
+- What filters or dimensions were active (e.g. age group 25-30, ABMCo, female employees)
+- What the user is narrowing down or drilling into
+
+Then answer with ALL those filters still applied.
+
+Example:
+Message 1: "explain Ram's persona" → context is Ram, 25-30 age, ABMCo
+Message 2: "how many employees are in this age group" → answer about 25-30 age group Gen Y = 27,916
+Message 3: "how many in Aditya Birla Mgmt Co" → answer must be "how many 25-30 year old employees in ABMCo" — NOT total ABMCo headcount.
+
+The user is always drilling deeper into the same topic unless they explicitly change it.
+
+Use this exact decision order for every message:
+
+1. IS THIS A FOLLOW-UP TO THE PREVIOUS MESSAGE?
+   Look at the conversation history. If the question refers to something already discussed
+   ("what are the top 3", "why", "tell me more", "what about them", "and the bottom 3",
+   "compare that", "which one", "how does that compare") — answer from the conversation
+   history. The tab context is irrelevant for follow-up questions.
+   Example: user just asked about Gen Z lowest scores, then asks "what are the top 3"
+   → answer about Gen Z top 3 scores, NOT about whatever tab is open.
+
+2. IS THIS A TAB CONTEXT QUESTION?
+   Only use tab context if the question uses words like "explain this", "what am I looking at",
+   "what does this mean", "what is on this page", "what tab am I on", or "this" referring
+   to something on screen that has NOT already been discussed in conversation history.
+   Example: user opens statistical analysis tab and asks "explain what I am seeing"
+   → use tab context to explain the selected question and correlations.
+
+3. IS THIS A DATA QUESTION?
+   If neither follow-up nor tab context — answer from the retrieved data directly.
+   Example: "what is the score for Cement HO", "how many female employees"
+   → answer from businesses.json and cohorts data.
+
+4. AMBIGUOUS QUESTION?
+   If the question could mean either a follow-up or a tab context question — always
+   assume follow-up first. Check if the previous assistant message contains enough
+   context to answer. If yes, use it. If no, then use tab context.
+
+CRITICAL RULE: The tab context only wins when there is NO conversation history
+that is relevant to the question. A user who just had a 5-message conversation
+about Gen Z scores and then asks "what are the top 3" is asking about Gen Z —
+not about whatever tab happens to be open.
+Do not use tab context to override or redirect an answer when the conversation
+already established a topic.
+
+{focus_line}
+{company_line}
+"""
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -551,7 +874,7 @@ BEHAVIOUR RULES:
                         json={
                             "model":       "mistral-small-latest",
                             "messages":    messages,
-                            "max_tokens":  400,
+                            "max_tokens":  800,
                             "stream":      True,
                             "temperature": 0.3,
                         },
@@ -598,7 +921,7 @@ BEHAVIOUR RULES:
                         json={
                             "model":       os.getenv("CEREBRAS_MODEL", "llama3.1-70b"),
                             "messages":    messages,
-                            "max_tokens":  400,
+                            "max_tokens":  800,
                             "stream":      True,
                             "temperature": 0.3,
                         },
