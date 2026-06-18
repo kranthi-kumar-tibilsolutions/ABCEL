@@ -57,7 +57,13 @@ def _str_val(v) -> str:
     if v is None:
         return ''
     s = str(v).strip()
-    return '' if s.lower() in ('none', 'nan', 'n/a', '', 'null', 'false') else s
+    sl = s.lower()
+    if sl in ('none', 'nan', 'n/a', '', 'null', 'false'):
+        return ''
+    # Reject placeholder / data-quality values
+    if 'not available' in sl or 'not provided' in sl or 'unknown' == sl:
+        return ''
+    return s
 
 
 def _is_manager_label(v) -> str:
@@ -217,6 +223,24 @@ def compute_segments(
                     'band':           _band(z_display),
                     'category_means': cat_means,
                 })
+
+    # Re-compute z-scores relative to the distribution of SEGMENT MEANS, not
+    # individual scores.  This answers "which groups are unusual vs. other groups?"
+    # rather than "which groups deviate by a full individual-score SD?" — the latter
+    # never shows outliers when the dataset is uniformly scored (SD ≈ 0.17).
+    if segments:
+        seg_mean_arr = np.array([s['mean'] for s in segments])
+        seg_dist_mean = float(np.mean(seg_mean_arr))
+        seg_dist_std  = float(np.std(seg_mean_arr, ddof=1)) if len(seg_mean_arr) > 1 else 1e-9
+        if seg_dist_std < 1e-9:
+            seg_dist_std = 1e-9
+
+        for s in segments:
+            z = (s['mean'] - seg_dist_mean) / seg_dist_std
+            s['z_score']       = round(z, 2)
+            s['z_abs']         = round(abs(z), 2)
+            s['std_dev_label'] = f'{abs(round(z, 2))} SD'
+            s['band']          = _band(z)
 
     # Rank by absolute z-score (strongest outliers first)
     segments.sort(key=lambda s: s['z_abs'], reverse=True)
