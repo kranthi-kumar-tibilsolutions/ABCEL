@@ -162,31 +162,40 @@ export default function FocusSpotlightPage() {
   }, [checkScroll]);
   const TABLE_LIMIT = 5;
 
+  // Static filter definitions — always shown regardless of API success
+  const FILTER_DEFS = [
+    { key: 'business',   label: 'Business'   },
+    { key: 'gender',     label: 'Gender'     },
+    { key: 'generation', label: 'Generation' },
+    { key: 'tenure',     label: 'Tenure'     },
+    { key: 'job_level',  label: 'Job Level'  },
+    { key: 'is_manager', label: 'Manager'    },
+  ];
+
   const setDim      = (k, v) => setDimsState(d => ({ ...d, [k]: v }));
   const resetFilters = () => {
-    const defaults = { business: 'All' };
-    Object.keys(filterData.dimensions || {}).forEach(k => { defaults[k] = 'All'; });
+    const defaults = {};
+    FILTER_DEFS.forEach(f => { defaults[f.key] = 'All'; });
     setDimsState(defaults);
     setInactive('No');
   };
 
-  // Fetch filter options once on mount
+  // Fetch filter VALUE options from API (just populates dropdowns — filters are always visible)
   useEffect(() => {
+    const defaults = {};
+    FILTER_DEFS.forEach(f => { defaults[f.key] = 'All'; });
+    setDimsState(defaults);
+
     apiFetch('/api/focus-spotlight/filters')
       .then(r => r.json())
-      .then(d => {
-        setFilterData(d);
-        const defaults = { business: 'All' };
-        Object.keys(d.dimensions || {}).forEach(k => { defaults[k] = 'All'; });
-        setDimsState(defaults);
-      })
+      .then(d => setFilterData(d))
       .catch(() => {})
       .finally(() => setDimsLoading(false));
   }, []);
 
-  // Fetch results whenever filters change
+  // Fetch results whenever filters change (runs as soon as dims state is set)
   useEffect(() => {
-    if (dimsLoading) return;
+    if (!Object.keys(dims).length) return;
     const { business: bizVal, ...scopeDims } = dims;
     const scope = Object.fromEntries(
       Object.entries(scopeDims).filter(([, v]) => v && v !== 'All')
@@ -241,43 +250,27 @@ export default function FocusSpotlightPage() {
       {/* ── FILTER BAR ──────────────────────────────────────────── */}
       <div className="sa-card" style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: 20 }}>
-          {dimsLoading
-            ? [...Array(6)].map((_, i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div className="skeleton" style={{ height: 10, width: 70, borderRadius: 4 }} />
-                  <div className="skeleton" style={{ height: 32, width: 110, borderRadius: 6 }} />
-                </div>
-              ))
-            : <>
-                {/* Business filter */}
-                {filterData.businesses.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Business</span>
-                    <Dropdown
-                      variant="filter"
-                      options={['All', ...filterData.businesses]}
-                      value={dims.business || 'All'}
-                      onChange={v => setDim('business', v)}
-                    />
-                  </div>
-                )}
-                {/* Demographic dimension filters */}
-                {Object.entries(filterData.dimensions).map(([key, values]) => {
-                  const LABELS = { gender: 'Gender', generation: 'Generation', tenure: 'Tenure', job_level: 'Job Level', is_manager: 'Manager' };
-                  return (
-                    <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{LABELS[key] || key}</span>
-                      <Dropdown
-                        variant="filter"
-                        options={['All', ...values]}
-                        value={dims[key] || 'All'}
-                        onChange={v => setDim(key, v)}
-                      />
-                    </div>
-                  );
-                })}
-              </>
-          }
+          {FILTER_DEFS.map(({ key, label }) => {
+            // Get options from API response if available, else show All only
+            let options = ['All'];
+            if (key === 'business') {
+              options = ['All', ...(filterData.businesses || [])];
+            } else {
+              const apiVals = (filterData.dimensions || {})[key] || [];
+              options = ['All', ...apiVals];
+            }
+            return (
+              <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{label}</span>
+                <Dropdown
+                  variant="filter"
+                  options={options}
+                  value={dims[key] || 'All'}
+                  onChange={v => setDim(key, v)}
+                />
+              </div>
+            );
+          })}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Include Inactive</span>
             <Dropdown variant="filter" options={['No', 'Yes']} value={inactive} onChange={v => setInactive(v)} />
