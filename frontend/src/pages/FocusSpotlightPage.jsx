@@ -131,7 +131,7 @@ export default function FocusSpotlightPage() {
   }, []);
 
   const [filters, setFilters] = useState({
-    business: 'All', department: 'All', location: 'All',
+    business: 'All', band: 'All', cluster: 'All',
     tenure: 'All', level: 'All', employment: 'All', inactive: 'No',
   });
   const [activeTab,    setActiveTab]    = useState('much-lower');
@@ -159,7 +159,7 @@ export default function FocusSpotlightPage() {
   const TABLE_LIMIT = 5;
 
   const setFilter    = (k, v) => setFilters(f => ({ ...f, [k]: v }));
-  const resetFilters = () => setFilters({ business:'All', department:'All', location:'All', tenure:'All', level:'All', employment:'All', inactive:'No' });
+  const resetFilters = () => setFilters({ business:'All', band:'All', cluster:'All', tenure:'All', level:'All', employment:'All', inactive:'No' });
 
   const businessOptions = useMemo(() => {
     const biz = [...new Set((units||[]).map(u=>u.business).filter(Boolean))].sort();
@@ -171,6 +171,8 @@ export default function FocusSpotlightPage() {
 
     let filtered = units;
     if (filters.business !== 'All') filtered = filtered.filter(u => u.business === filters.business);
+    if (filters.band    !== 'All')  filtered = filtered.filter(u => u.band    === filters.band);
+    if (filters.cluster !== 'All')  filtered = filtered.filter(u => u.cluster === filters.cluster);
     if (filters.inactive === 'No')  filtered = filtered.filter(u => (u.respondent_count ?? 1) > 0);
 
     const scores = filtered.map(u => +(u.score ?? u.overall ?? 0)).filter(s => s > 0);
@@ -222,13 +224,10 @@ export default function FocusSpotlightPage() {
       <div className="sa-card" style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: 20 }}>
           {[
-            { key: 'business',   label: 'Business Unit',   opts: businessOptions },
-            { key: 'department', label: 'Department',      opts: ['All'] },
-            { key: 'location',   label: 'Location',        opts: ['All'] },
-            { key: 'tenure',     label: 'Tenure',          opts: ['All', '< 1 Year', '1–3 Years', '3–5 Years', '5+ Years'] },
-            { key: 'level',      label: 'Job Level',       opts: ['All', 'Junior', 'Mid', 'Senior', 'Lead', 'Manager'] },
-            { key: 'employment', label: 'Employment Type', opts: ['All', 'Full-time', 'Part-time', 'Contract'] },
-            { key: 'inactive',   label: 'Include Inactive',opts: ['No', 'Yes'] },
+            { key: 'business', label: 'Business Unit', opts: businessOptions },
+            { key: 'band',    label: 'Score Band',   opts: ['All', 'strong', 'healthy', 'watch', 'concern'] },
+            { key: 'cluster', label: 'Cluster',      opts: ['All', 'thriving', 'atrisk', 'polarised', 'critical'] },
+            { key: 'inactive', label: 'Include Inactive', opts: ['No', 'Yes'] },
           ].map(({ key, label, opts }) => (
             <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{label}</span>
