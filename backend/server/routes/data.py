@@ -33,14 +33,14 @@ def _is_company(user: dict) -> bool:
 
 # == GET /api/status ==
 @router.get("/status")
-async def get_status():
+def get_status():
     ready = (_DATA / "businesses.json").exists()
     return {"ready": ready}
 
 
 # == GET /api/meta ==
 @router.get("/meta")
-async def get_meta(user: dict = Depends(get_current_user)):
+def get_meta(user: dict = Depends(get_current_user)):
     data = _read("meta.json")
     if data is None:
         raise HTTPException(status_code=404, detail="No data loaded")
@@ -98,7 +98,7 @@ async def get_meta(user: dict = Depends(get_current_user)):
 
 # == GET /api/businesses ==
 @router.get("/businesses")
-async def get_businesses(user: dict = Depends(get_current_user)):
+def get_businesses(user: dict = Depends(get_current_user)):
     data = _read("businesses.json")
     if data is None:
         raise HTTPException(status_code=404, detail="No data loaded")
@@ -112,7 +112,7 @@ async def get_businesses(user: dict = Depends(get_current_user)):
 
 # == GET /api/units ==
 @router.get("/units")
-async def get_units(
+def get_units(
     business: Optional[str] = Query(None),
     cluster:  Optional[str] = Query(None),
     limit:    Optional[int] = Query(None),
@@ -141,7 +141,7 @@ async def get_units(
 
 # == GET /api/clusters ==
 @router.get("/clusters")
-async def get_clusters(user: dict = Depends(get_current_user)):
+def get_clusters(user: dict = Depends(get_current_user)):
     data = _read("clusters.json")
     if data is None:
         raise HTTPException(status_code=404, detail="No data loaded")
@@ -161,7 +161,7 @@ async def get_clusters(user: dict = Depends(get_current_user)):
 
 # == GET /api/cohorts ==
 @router.get("/cohorts")
-async def get_cohorts(user: dict = Depends(get_current_user)):
+def get_cohorts(user: dict = Depends(get_current_user)):
     data = _read("cohorts.json")
     if data is None:
         return {"gender": [], "generation": [], "tenure": [], "job_band": []}
@@ -240,7 +240,7 @@ async def get_cohorts(user: dict = Depends(get_current_user)):
 
 # == POST /api/load-sample ==
 @router.post("/load-sample")
-async def load_sample():
+def load_sample():
     copied = 0
     _DATA.mkdir(parents=True, exist_ok=True)
     for file in _FILES:
@@ -256,7 +256,7 @@ async def load_sample():
 
 # == POST /api/reset ==
 @router.post("/reset")
-async def reset():
+def reset():
     for file in _FILES:
         fp = _DATA / file
         if fp.exists():

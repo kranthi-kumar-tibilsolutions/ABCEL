@@ -60,9 +60,12 @@ async def serve_spa(full_path: str):
 
 @app.on_event("startup")
 async def _warm_response_cache():
+    """Load 77MB responses.json into memory in a thread so the event loop stays free."""
+    import asyncio
+    loop = asyncio.get_event_loop()
     try:
         from lib.segment_engine import _load_responses
-        _load_responses()
+        await loop.run_in_executor(None, _load_responses)
     except Exception:
         pass
 

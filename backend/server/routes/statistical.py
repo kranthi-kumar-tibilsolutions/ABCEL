@@ -100,7 +100,7 @@ def _scores(responses: list, q_id: str) -> list:
 # ── GET /api/statistical/questions ────────────────────────────────────────────
 
 @router.get("/questions")
-async def get_questions():
+def get_questions():
     try:
         return {"questions": _read("questions.json")}
     except Exception as err:
@@ -110,7 +110,7 @@ async def get_questions():
 # ── GET /api/statistical/correlations/{question_id} ───────────────────────────
 
 @router.get("/correlations/{question_id}")
-async def get_correlations(
+def get_correlations(
     question_id:      str,
     business:         Optional[str] = Query(None),
     year:             Optional[str] = Query(None),
@@ -198,7 +198,7 @@ async def get_correlations(
 # ── GET /api/statistical/correlogram/{question_id} ────────────────────────────
 
 @router.get("/correlogram/{question_id}")
-async def get_correlogram(
+def get_correlogram(
     question_id:      str,
     top:              int           = Query(20),
     business:         Optional[str] = Query(None),
@@ -255,7 +255,7 @@ async def get_correlogram(
 # ── GET /api/statistical/network/{question_id} ────────────────────────────────
 
 @router.get("/network/{question_id}")
-async def get_network(
+def get_network(
     question_id:      str,
     top:              int           = Query(25),
     business:         Optional[str] = Query(None),

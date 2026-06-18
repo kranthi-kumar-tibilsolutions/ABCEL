@@ -141,7 +141,7 @@ class SaveRequest(BaseModel):
 # ── POST /api/persona/query ───────────────────────────────────────────────────
 
 @router.post("/query")
-async def persona_query(req: QueryRequest):
+def persona_query(req: QueryRequest):
     try:
         units = _load_responses_cached()
 
@@ -249,7 +249,7 @@ async def persona_query(req: QueryRequest):
 # ── GET /api/persona/dimensions ───────────────────────────────────────────────
 
 @router.get("/dimensions")
-async def get_dimensions():
+def get_dimensions():
     try:
         units = _load_responses_cached()
         dimensions = [
@@ -268,7 +268,7 @@ async def get_dimensions():
 # ── GET /api/persona/top5 ─────────────────────────────────────────────────────
 
 @router.get("/top5")
-async def get_top5():
+def get_top5():
     try:
         units       = _load_responses_cached()
         suggestions = []
@@ -369,7 +369,7 @@ async def save_persona(req: SaveRequest):
 # ── GET /api/persona/cohorts ──────────────────────────────────────────────────
 
 @router.get("/cohorts")
-async def get_cohorts():
+def get_cohorts():
     try:
         saved_path = _DATA / "saved_personas.json"
         saved: list = []
