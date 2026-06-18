@@ -270,18 +270,25 @@ def get_dimensions():
 @router.get("/top5")
 def get_top5():
     try:
-        units       = _load_responses_cached()
+        units = _load_responses_cached()
         suggestions = []
 
+        # Compute overall once — was being recomputed inside every loop iteration
+        overall_scores = _compute_group_scores(units, THEMES)
+
         for dim in DIMS:
-            values = list(set(u.get(dim) for u in units if u.get(dim)))
-            for val in values:
-                group = [u for u in units if u.get(dim) == val]
+            # Pre-group all values in one O(n) pass instead of one O(n) scan per value
+            groups: dict = {}
+            for u in units:
+                v = u.get(dim)
+                if v:
+                    groups.setdefault(v, []).append(u)
+
+            for val, group in groups.items():
                 if len(group) < 30:
                     continue
 
-                group_scores   = _compute_group_scores(group, THEMES)
-                overall_scores = _compute_group_scores(units, THEMES)
+                group_scores = _compute_group_scores(group, THEMES)
 
                 max_delta = 0.0
                 max_theme = ""
