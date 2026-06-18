@@ -103,11 +103,24 @@ export default function App() {
   const [saCache,              setSaCache]              = useState(null);
   const [activeScreenContext,  setActiveScreenContext]  = useState(null);
   const [dataLoaded,           setDataLoaded]           = useState(false);
+  const [visitedPages,         setVisitedPages]         = useState(() => new Set(['overview']));
 
   // Keep the plain-JS store in sync so ChatWithData can read synchronously
   useEffect(() => {
     if (activeScreenContext) setActiveContext(activeScreenContext);
   }, [activeScreenContext]);
+
+  // Track visited pages so we can keep them mounted (avoid re-fetching on tab switch)
+  useEffect(() => {
+    if (page && page !== 'upload') {
+      setVisitedPages(prev => {
+        if (prev.has(page)) return prev;
+        const next = new Set(prev);
+        next.add(page);
+        return next;
+      });
+    }
+  }, [page]);
 
   const navigate = useCallback((nextPage, params = {}) => {
     setNavHistory(prev => [...prev, page]);
@@ -250,6 +263,7 @@ export default function App() {
     activeScreenContext, setActiveScreenContext,
   };
 
+  // kept for upload branch below; keep-alive renders the rest
   const PageComponent = PAGE_MAP[page] ?? Overview;
 
   if (!authChecked) return null;
@@ -288,7 +302,14 @@ export default function App() {
             <TopBar />
             <div className="content-with-panel">
               <div className="content">
-                <PageComponent />
+                {Object.entries(PAGE_MAP)
+                  .filter(([key]) => key !== 'upload' && visitedPages.has(key))
+                  .map(([key, Comp]) => (
+                    <div key={key} style={key === page ? undefined : { display: 'none' }}>
+                      <Comp />
+                    </div>
+                  ))
+                }
               </div>
               <RightPanel />
             </div>
