@@ -9,7 +9,7 @@ from pydantic          import BaseModel
 import httpx
 
 from routes.auth        import data_company, get_current_user
-from lib.segment_engine import compute_segments, precompute_and_save
+from lib.segment_engine import compute_segments, precompute_and_save, _load_responses as _load_responses_cached
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -55,10 +55,9 @@ async def get_filters(user: dict = Depends(get_current_user)):
     has_active = has_inactive = False
     dim_values: dict = {}   # { dimension: [sorted unique values] }
 
-    resp_fp = _DATA / "responses.json"
-    if resp_fp.exists():
+    if True:
         try:
-            rows = json.loads(resp_fp.read_text(encoding="utf-8"))
+            rows = _load_responses_cached()
 
             # Collect unique values per dimension
             DIM_FIELDS = {

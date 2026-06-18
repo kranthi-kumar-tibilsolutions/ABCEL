@@ -7,6 +7,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from routes.auth import data_company, get_current_user
+from lib.segment_engine import _load_responses as _load_responses_cached
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -178,7 +179,7 @@ async def get_cohorts(user: dict = Depends(get_current_user)):
         return data
 
     try:
-        responses = json.loads(responses_file.read_text(encoding="utf-8"))
+        responses = _load_responses_cached()
     except Exception:
         return data
 

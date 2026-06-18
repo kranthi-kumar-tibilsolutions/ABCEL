@@ -15,6 +15,7 @@ from lib.stats import (
     mean, std_dev,
 )
 from lib.llm import call_llm_json
+from lib.segment_engine import _load_responses as _load_responses_cached
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -435,7 +436,7 @@ async def run_test(req: TestRequest):
     Accepts pre-parsed params from /parse; falls back to LLM re-parse if not provided.
     """
     try:
-        responses = _read("responses.json")
+        responses = _load_responses_cached()
         q_bu      = _read_dict("question_bu_scores.json")
 
         try:

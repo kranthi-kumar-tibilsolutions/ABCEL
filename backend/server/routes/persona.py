@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from lib.stats import std_dev, two_sample_z_test, significance_badge
 from lib.llm   import call_llm_json
+from lib.segment_engine import _load_responses as _load_responses_cached
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -142,7 +143,7 @@ class SaveRequest(BaseModel):
 @router.post("/query")
 async def persona_query(req: QueryRequest):
     try:
-        units = _read("responses.json")
+        units = _load_responses_cached()
 
         # Apply top-level survey filters first (20.6)
         sf = req.survey_filters
@@ -250,7 +251,7 @@ async def persona_query(req: QueryRequest):
 @router.get("/dimensions")
 async def get_dimensions():
     try:
-        units = _read("responses.json")
+        units = _load_responses_cached()
         dimensions = [
             {
                 "id":     dim,
@@ -269,7 +270,7 @@ async def get_dimensions():
 @router.get("/top5")
 async def get_top5():
     try:
-        units       = _read("responses.json")
+        units       = _load_responses_cached()
         suggestions = []
 
         for dim in DIMS:
