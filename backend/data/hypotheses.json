@@ -1,5 +1,48 @@
 [
   {
+    "id": "H-1781865365826",
+    "hypothesis": "People Managers have higher trust in Leadership than Individual Contributors.",
+    "result": "inconclusive",
+    "test_type": "two_sample_z",
+    "p_value": 0.2478,
+    "filters_applied": {},
+    "date_tested": "Jun 19, 2026",
+    "params": {
+      "hypothesis_type": "group_comparison",
+      "parseable": true,
+      "parse_error": null,
+      "group_a": {
+        "field": "is_manager",
+        "value": "Yes",
+        "label": "People Managers",
+        "confidence": 0.98
+      },
+      "group_b": {
+        "field": "is_manager",
+        "value": "No",
+        "label": "Individual Contributors",
+        "confidence": 0.98
+      },
+      "outcome": {
+        "source": "theme",
+        "field": "leadership",
+        "question_id": null,
+        "label": "Leadership Score",
+        "confidence": 0.99
+      },
+      "x_var": null,
+      "y_var": null,
+      "group": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "People Managers do not have higher trust in Leadership than Individual Contributors (Leadership scores are equal or lower for People Managers).",
+      "h1": "People Managers have higher trust in Leadership than Individual Contributors (Leadership scores are higher for People Managers).",
+      "test_recommended": "two_sample_t",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
     "id": "H-1781854328999",
     "hypothesis": "Employees with higher Career Development scores tend to have higher Engagement scores.",
     "result": "inconclusive",

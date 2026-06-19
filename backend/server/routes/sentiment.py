@@ -211,17 +211,17 @@ async def validate_statistical():
         questions  = _read("questions.json")
 
         base_scores = [
-            r.get("scores", {}).get(BASE_QUESTION)
+            (r.get("scores") or {}).get(BASE_QUESTION)
             for r in responses
-            if r.get("scores", {}).get(BASE_QUESTION) is not None
+            if (r.get("scores") or {}).get(BASE_QUESTION) is not None
         ]
 
         computed_stats = []
         for driver, op_id in CATEGORY_REPS.items():
             other_scores = [
-                r.get("scores", {}).get(op_id)
+                (r.get("scores") or {}).get(op_id)
                 for r in responses
-                if r.get("scores", {}).get(op_id) is not None
+                if (r.get("scores") or {}).get(op_id) is not None
             ]
             n         = min(len(base_scores), len(other_scores))
             r_val     = pearson_r(base_scores[:n], other_scores[:n]) if n >= 10 else 0

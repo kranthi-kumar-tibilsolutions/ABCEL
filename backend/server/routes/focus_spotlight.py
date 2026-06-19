@@ -14,6 +14,13 @@ from lib.segment_engine import compute_segments, precompute_and_save
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
 _DATA    = _BACKEND / "data"
+_SAMPLE  = _DATA / "sample"
+
+
+def _resolve_data_file(filename: str) -> Path:
+    """Prefer the real uploaded data dir, fall back to the bundled sample data."""
+    primary = _DATA / filename
+    return primary if primary.exists() else (_SAMPLE / filename)
 
 
 def _load_precomputed() -> dict | None:
@@ -43,7 +50,7 @@ class InsightRequest(BaseModel):
 @router.get("/filters")
 def get_filters(user: dict = Depends(get_current_user)):
     """Available filter values + what the data actually contains."""
-    fp = _DATA / "businesses.json"
+    fp = _resolve_data_file("businesses.json")
     businesses = json.loads(fp.read_text(encoding="utf-8")) if fp.exists() else []
     biz_names  = sorted({b.get("name", "") for b in businesses if b.get("name")})
 
@@ -55,7 +62,7 @@ def get_filters(user: dict = Depends(get_current_user)):
     has_active = has_inactive = False
     dim_values: dict = {}   # { dimension: [sorted unique values] }
 
-    resp_fp = _DATA / "responses.json"
+    resp_fp = _resolve_data_file("responses.json")
     if resp_fp.exists():
         try:
             rows = json.loads(resp_fp.read_text(encoding="utf-8"))

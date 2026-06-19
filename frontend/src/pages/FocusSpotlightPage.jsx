@@ -262,12 +262,16 @@ export default function FocusSpotlightPage() {
             return (
               <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{label}</span>
-                <Dropdown
-                  variant="filter"
-                  options={options}
-                  value={dims[key] || 'All'}
-                  onChange={v => setDim(key, v)}
-                />
+                {dimsLoading ? (
+                  <div className="skeleton" style={{ height: 32, width: 110, borderRadius: 6 }} />
+                ) : (
+                  <Dropdown
+                    variant="filter"
+                    options={options}
+                    value={dims[key] || 'All'}
+                    onChange={v => setDim(key, v)}
+                  />
+                )}
               </div>
             );
           })}

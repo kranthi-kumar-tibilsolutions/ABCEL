@@ -18,7 +18,8 @@ import numpy as np
 
 from lib.stats import one_sample_z_test
 
-DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+DATA_DIR   = Path(__file__).resolve().parent.parent.parent / "data"
+SAMPLE_DIR = DATA_DIR / "sample"
 
 # Dimensions to segment on (order = priority)
 SEGMENT_DIMS = ['gender', 'generation', 'tenure', 'job_level', 'is_manager']
@@ -35,13 +36,15 @@ MAX_DEPTH = 2   # depth 1 = single dim, depth 2 = cross-dim pairs
 
 
 def _load_responses() -> list:
-    fp = DATA_DIR / "responses.json"
-    if not fp.exists():
-        return []
-    try:
-        return json.loads(fp.read_text(encoding="utf-8"))
-    except Exception:
-        return []
+    for base in (DATA_DIR, SAMPLE_DIR):
+        fp = base / "responses.json"
+        if not fp.exists():
+            continue
+        try:
+            return json.loads(fp.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return []
 
 
 def _str_val(v) -> str:

@@ -41,8 +41,8 @@ def _resolve_business(user: dict, requested: str | None) -> str | None:
 
 def _bu_corr_vectors(q_bu: dict, q_id_a: str, q_id_b: str, business: str | None = None):
     """Return aligned (xs, ys) using business-unit level question means (group_hr view)."""
-    a_scores = q_bu.get(q_id_a, {})
-    b_scores = q_bu.get(q_id_b, {})
+    a_scores = q_bu.get(q_id_a) or {}
+    b_scores = q_bu.get(q_id_b) or {}
     if business and business != "All":
         a_scores = {k: v for k, v in a_scores.items() if k == business}
         b_scores = {k: v for k, v in b_scores.items() if k == business}
@@ -59,7 +59,7 @@ def _cohort_means(responses: list, q_id: str, min_n: int = 5) -> dict:
         job = row.get("job_level", "")
         if not gen or not job or gen in ("Unknown", "nan") or job in ("Unknown", "nan"):
             continue
-        v = row.get("scores", {}).get(q_id)
+        v = (row.get("scores") or {}).get(q_id)
         if v is not None:
             groups[f"{gen}|{job}"].append(v)
     return {k: sum(vs) / len(vs) for k, vs in groups.items() if len(vs) >= min_n}
@@ -92,7 +92,7 @@ def _filter(responses: list, business, year, country, department,
 def _scores(responses: list, q_id: str) -> list:
     return [
         v for r in responses
-        if (v := r.get("scores", {}).get(q_id)) is not None
+        if (v := (r.get("scores") or {}).get(q_id)) is not None
     ]
 
 
@@ -177,7 +177,7 @@ def get_correlations(
         data_basis = (
             f"Computed across generation × job-level cohorts within {business}"
             if use_cohort
-            else f"Computed across all {len(q_bu.get(question_id, {}))} business unit averages"
+            else f"Computed across all {len(q_bu.get(question_id) or {})} business unit averages"
         )
 
         return {

@@ -172,19 +172,24 @@ def get_cohorts(user: dict = Depends(get_current_user)):
     if not co:
         return data
 
-    # Recompute cohort breakdowns from raw responses filtered to this company
+    # Recompute cohort breakdowns from raw responses filtered to this company.
+    # Never fall back to the unscoped group-wide `data` here — that would
+    # leak other companies' cohort breakdowns to a company-scoped user.
+    empty = {"gender": [], "generation": [], "tenure": [], "job_band": []}
     responses_file = _DATA / "responses.json"
     if not responses_file.exists():
-        return data
+        responses_file = _SAMPLE / "responses.json"
+    if not responses_file.exists():
+        return empty
 
     try:
         responses = json.loads(responses_file.read_text(encoding="utf-8"))
     except Exception:
-        return data
+        return empty
 
     company_rows = [r for r in responses if r.get("business") == co]
     if not company_rows:
-        return data
+        return empty
 
     score_keys = ["engagement", "development_and_career", "leadership",
                   "performance_culture", "manager_effectiveness", "overall"]

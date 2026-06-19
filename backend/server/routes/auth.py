@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -81,5 +81,20 @@ async def login(req: LoginRequest):
 
 
 @router.get("/me")
-async def me():
-    raise HTTPException(status_code=401, detail="Not authenticated")
+async def me(authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        token = authorization.split(" ", 1)[1]
+        decoded = json.loads(base64.b64decode(token).decode())
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    users = _load_users()
+    user = next(
+        (u for u in users if u["email"].lower() == decoded.get("email", "").lower()),
+        None,
+    )
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return {"user": _public_user(user)}

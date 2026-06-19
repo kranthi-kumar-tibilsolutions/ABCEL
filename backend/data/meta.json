@@ -1,5 +1,5 @@
 {
-  "survey_name": "Demo Data Vibes 2026 to send",
+  "survey_name": "ABG Vibes 2026",
   "total_businesses": 22,
   "total_units": 415,
   "total_respondents": 55457,
@@ -8,13 +8,15 @@
   "top_score": 4.46,
   "lowest_business": "Seamex",
   "lowest_score": 4.42,
-  "strongest_category": "Leadership",
-  "weakest_category": "Performance Culture",
+  "strongest_category": "Engagement Index",
+  "weakest_category": "Performance culture",
   "category_averages": {
-    "Development and Career": 4.38,
+    "Engagement Index": 4.63,
+    "Development & Career": 4.38,
     "Leadership": 4.49,
-    "Performance Culture": 4.32,
-    "Manager Effectiveness": 4.41
+    "Performance culture": 4.32,
+    "Manager Effectiveness": 4.41,
+    "Uncategorized": 4.4
   },
   "dimensions_detected": [
     "business_unit",
@@ -23,10 +25,7 @@
     "generation",
     "gender",
     "job_band",
-    "tenure",
-    "abglp",
-    "country",
-    "is_manager"
+    "tenure"
   ],
   "sheets_found": {
     "CQ9": "cq_lookup",
@@ -68,22 +67,5 @@
     "Data": "raw_data",
     "Category and Items": "metadata"
   },
-  "parsed_at": "2026-06-19T01:38:00.773674",
-  "male": 46934,
-  "female": 8511,
-  "gen_y": 27916,
-  "gen_x": 11134,
-  "gen_z": 7315,
-  "dob_na": 8980,
-  "baby_boomer": 111,
-  "junior_management": 38772,
-  "middle_management": 6663,
-  "senior_management": 924,
-  "tenure_0_2": 15247,
-  "tenure_2_5": 14377,
-  "tenure_5_10": 6706,
-  "tenure_10_15": 7662,
-  "tenure_15_20": 5619,
-  "tenure_20_25": 1714,
-  "tenure_25_plus": 4128
+  "parsed_at": "2026-06-13T19:32:32.201682"
 }
