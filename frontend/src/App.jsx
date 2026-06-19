@@ -159,10 +159,11 @@ export default function App() {
       setDataLoaded(true);
 
       // Auto-fetch right-panel insights (non-blocking)
+      const FALLBACK = { topTrends: [], outliers: [], summary: '' };
       apiFetch('/api/insights', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
         .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d && !d.error) setInsightsData(d); })
-        .catch(() => {});
+        .then(d => setInsightsData((d && !d.error) ? d : FALLBACK))
+        .catch(() => setInsightsData(FALLBACK));
     } catch (e) {
       console.error('Failed to fetch data', e);
     }

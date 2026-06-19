@@ -41,6 +41,7 @@ export default function RightPanel() {
   const [activeTab, setActiveTab] = useState('All Insights');
   const [insightsExpanded, setInsightsExpanded] = useState(false);
 
+  const loading  = insightsData === null;
   const trends   = insightsData?.topTrends || [];
   const outliers = insightsData?.outliers  || [];
   const summary  = insightsData?.summary   || '';
@@ -81,10 +82,10 @@ export default function RightPanel() {
             {activeTab === 'All Insights' && (
               <div className="rp-section">
                 <div className="rp-section-title">Top Trends</div>
-                {trends.length === 0 ? <SkeletonLines /> : trends.map((t, i) => <TrendItem key={i} item={t} />)}
+                {loading ? <SkeletonLines /> : trends.length > 0 ? trends.map((t, i) => <TrendItem key={i} item={t} />) : <span className="rp-empty">No trends available</span>}
 
                 <div className="rp-section-title" style={{ marginTop: 10 }}>Outliers Detected</div>
-                {outliers.length === 0 ? <SkeletonLines /> : outliers.map((o, i) => <OutlierItem key={i} item={o} />)}
+                {loading ? <SkeletonLines /> : outliers.length > 0 ? outliers.map((o, i) => <OutlierItem key={i} item={o} />) : <span className="rp-empty">No outliers available</span>}
 
                 <button className="rp-view-all" onClick={() => navigate('ai-insights')}>
                   View all Insights <ArrowLink />
@@ -95,20 +96,20 @@ export default function RightPanel() {
             {activeTab === 'Top Trends' && (
               <div className="rp-section">
                 <div className="rp-section-title">Top Trends</div>
-                {trends.length === 0 ? <SkeletonLines /> : trends.map((t, i) => <TrendItem key={i} item={t} />)}
+                {loading ? <SkeletonLines /> : trends.length > 0 ? trends.map((t, i) => <TrendItem key={i} item={t} />) : <span className="rp-empty">No trends available</span>}
               </div>
             )}
 
             {activeTab === 'Outliers & Alerts' && (
               <div className="rp-section">
                 <div className="rp-section-title">Outliers Detected</div>
-                {outliers.length === 0 ? <SkeletonLines /> : outliers.map((o, i) => <OutlierItem key={i} item={o} />)}
+                {loading ? <SkeletonLines /> : outliers.length > 0 ? outliers.map((o, i) => <OutlierItem key={i} item={o} />) : <span className="rp-empty">No outliers available</span>}
               </div>
             )}
 
             {activeTab === 'Summary' && (
               <div className="rp-section">
-                {summary ? <p className="rp-summary-text">{summary}</p> : <SkeletonLines />}
+                {loading ? <SkeletonLines /> : summary ? <p className="rp-summary-text">{summary}</p> : <span className="rp-empty">No summary available</span>}
               </div>
             )}
           </div>
