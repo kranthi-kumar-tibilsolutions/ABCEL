@@ -56,6 +56,16 @@ THEME_LABELS = {
     "onboarding":              "Onboarding",
     "overall":                 "Overall",
 }
+THEME_KEYWORDS = {
+    "engagement":             ["engagement", "engaged"],
+    "leadership":             ["leadership", "leader", "trust in leadership"],
+    "performance_culture":    ["performance culture", "performance"],
+    "development_and_career": ["career development", "career growth", "development", "career"],
+    "manager_effectiveness":  ["manager effectiveness", "manager", "management effectiveness"],
+    "onboarding":             ["onboarding", "new hire"],
+    "overall":                ["overall score", "overall engagement", "overall"],
+}
+
 DEMOGRAPHIC_FIELDS = {
     "generation":  ["Gen Z", "Gen Y", "Gen X", "Baby Boomer"],
     "gender":      ["Male", "Female"],
@@ -80,6 +90,23 @@ def _bu_theme_means(responses: list, field: str) -> dict:
         if bu and v and float(v) > 0:
             bu_data[bu].append(float(v))
     return {bu: round(mean(vs), 4) for bu, vs in bu_data.items() if vs}
+
+
+def _infer_theme_from_text(text: str) -> Optional[dict]:
+    """
+    Backstop for when the LLM fails to populate outcome/x_var/y_var:
+    scan the raw hypothesis text for a known theme keyword and build the
+    same {source, field, label, confidence} shape the LLM would return.
+    """
+    lowered = text.lower()
+    for field, keywords in THEME_KEYWORDS.items():
+        for kw in sorted(keywords, key=len, reverse=True):
+            if kw in lowered:
+                return {
+                    "source": "theme", "field": field, "question_id": None,
+                    "label": THEME_LABELS.get(field, field), "confidence": 0.5,
+                }
+    return None
 
 
 def _scores_for_var(var: dict, responses: list, q_bu: dict) -> dict:
@@ -119,8 +146,8 @@ def _get_scores(responses: list, field: str) -> list:
 # ── Test runners ──────────────────────────────────────────────────────────────
 
 def _run_pearson(parsed: dict, responses: list, q_bu: dict) -> dict:
-    x_var = parsed.get("x_var", {})
-    y_var = parsed.get("y_var", {})
+    x_var = parsed.get("x_var") or {}
+    y_var = parsed.get("y_var") or {}
 
     x_scores = _scores_for_var(x_var, responses, q_bu)
     y_scores = _scores_for_var(y_var, responses, q_bu)
@@ -166,10 +193,17 @@ def _run_pearson(parsed: dict, responses: list, q_bu: dict) -> dict:
     }
 
 
-def _run_two_sample_z(parsed: dict, responses: list) -> dict:
-    ga      = parsed.get("group_a", {})
-    gb      = parsed.get("group_b", {})
-    outcome = parsed.get("outcome", {})
+def _run_two_sample_z(parsed: dict, responses: list, hypothesis_text: str = "") -> dict:
+    ga      = parsed.get("group_a") or {}
+    gb      = parsed.get("group_b") or {}
+    # The LLM sometimes puts the outcome mapping under "y_var" or "x_var"
+    # (the relationship-test fields) instead of "outcome", or omits it
+    # entirely — fall back to whichever is populated, then to a keyword
+    # match against the original hypothesis text as a last resort.
+    outcome = (
+        parsed.get("outcome") or parsed.get("y_var") or parsed.get("x_var")
+        or _infer_theme_from_text(hypothesis_text) or {}
+    )
 
     a_field, a_val = ga.get("field"), ga.get("value")
     b_field, b_val = gb.get("field"), gb.get("value")
@@ -245,9 +279,12 @@ def _run_two_sample_z(parsed: dict, responses: list) -> dict:
     }
 
 
-def _run_one_sample_z(parsed: dict, responses: list, group_avg: float) -> dict:
-    group   = parsed.get("group", {})
-    outcome = parsed.get("outcome", {})
+def _run_one_sample_z(parsed: dict, responses: list, group_avg: float, hypothesis_text: str = "") -> dict:
+    group   = parsed.get("group") or {}
+    outcome = (
+        parsed.get("outcome") or parsed.get("y_var") or parsed.get("x_var")
+        or _infer_theme_from_text(hypothesis_text) or {}
+    )
 
     g_field = group.get("field")
     g_val   = group.get("value")
@@ -379,34 +416,46 @@ Hypothesis types:
 For variables: prefer theme scores when the concept maps clearly to one.
 For individual questions: only use when the concept maps better to a specific question.
 
-Return ONLY a valid JSON object (no markdown):
-{{
-  "hypothesis_type": "group_comparison|relationship|one_sample|unsupported",
-  "parseable": true,
-  "parse_error": null,
+Return ONLY a valid JSON object (no markdown). The shape depends on hypothesis_type
+— follow the EXACT example for whichever type you detect:
 
+If hypothesis_type == "group_comparison" (e.g. "Managers trust leadership more than ICs"):
+{{
+  "hypothesis_type": "group_comparison", "parseable": true, "parse_error": null,
   "group_a": {{"field": "is_manager", "value": "Yes", "label": "People Managers", "confidence": 0.96}},
   "group_b": {{"field": "is_manager", "value": "No", "label": "Individual Contributors", "confidence": 0.94}},
-
-  "x_var": {{"source": "theme", "field": "development_and_career", "question_id": null, "label": "Career Development Score", "confidence": 0.91}},
-  "y_var": {{"source": "theme", "field": "engagement", "question_id": null, "label": "Engagement Score", "confidence": 0.99}},
-
-  "group": {{"field": "generation", "value": "Gen Z", "label": "Gen Z employees", "confidence": 0.98}},
-  "outcome": {{"source": "theme", "field": "engagement", "question_id": null, "label": "Engagement Score", "confidence": 0.97}},
-  "baseline": "group_average",
-  "baseline_value": {group_avg},
-
-  "h0": "null hypothesis as a complete sentence",
-  "h1": "alternative hypothesis as a complete sentence",
-  "test_recommended": "two_sample_z|pearson_correlation|one_sample_z",
-  "direction": "greater|less|two_tailed"
+  "outcome": {{"source": "theme", "field": "leadership", "question_id": null, "label": "Leadership Score", "confidence": 0.97}},
+  "x_var": null, "y_var": null, "group": null, "baseline": null, "baseline_value": null,
+  "h0": "...", "h1": "...", "test_recommended": "two_sample_z", "direction": "greater|less|two_tailed"
 }}
 
-RULES:
-- For group_comparison: always set group_a, group_b, outcome. Set test_recommended=two_sample_z.
-- For relationship: always set x_var, y_var. Set test_recommended=pearson_correlation.
-- For one_sample: always set group, outcome, baseline_value. Set test_recommended=one_sample_z.
-- Only fill the fields relevant to the hypothesis type; set others to null.
+If hypothesis_type == "relationship" (e.g. "Higher recognition leads to higher engagement"):
+{{
+  "hypothesis_type": "relationship", "parseable": true, "parse_error": null,
+  "x_var": {{"source": "theme", "field": "development_and_career", "question_id": null, "label": "Career Development Score", "confidence": 0.91}},
+  "y_var": {{"source": "theme", "field": "engagement", "question_id": null, "label": "Engagement Score", "confidence": 0.99}},
+  "group_a": null, "group_b": null, "group": null, "outcome": null, "baseline": null, "baseline_value": null,
+  "h0": "...", "h1": "...", "test_recommended": "pearson_correlation", "direction": "greater|less|two_tailed"
+}}
+
+If hypothesis_type == "one_sample" (e.g. "Gen Z has higher onboarding score than company average"):
+{{
+  "hypothesis_type": "one_sample", "parseable": true, "parse_error": null,
+  "group": {{"field": "generation", "value": "Gen Z", "label": "Gen Z employees", "confidence": 0.98}},
+  "outcome": {{"source": "theme", "field": "onboarding", "question_id": null, "label": "Onboarding Score", "confidence": 0.97}},
+  "baseline": "group_average", "baseline_value": {group_avg},
+  "group_a": null, "group_b": null, "x_var": null, "y_var": null,
+  "h0": "...", "h1": "...", "test_recommended": "one_sample_z", "direction": "greater|less|two_tailed"
+}}
+
+RULES (critical — read carefully):
+- For group_comparison: group_a, group_b, AND outcome are ALL REQUIRED — never leave outcome null.
+  outcome is the metric/theme being compared (e.g. "trust in Leadership" → field="leadership").
+  Every group_comparison hypothesis is comparing some metric between two groups — that metric
+  is always the outcome, never x_var/y_var.
+- For relationship: x_var AND y_var are BOTH REQUIRED — never leave either null.
+- For one_sample: group, outcome, AND baseline_value are ALL REQUIRED.
+- Set every field not relevant to the detected type to null — do not omit keys.
 - confidence must be 0.0–1.0 (how certain you are in the mapping).
 - If unsupported, set parseable=false and explain in parse_error."""
 
@@ -458,9 +507,9 @@ async def run_test(req: TestRequest):
         if h_type == "relationship":
             result = _run_pearson(parsed, responses, q_bu)
         elif h_type == "group_comparison":
-            result = _run_two_sample_z(parsed, responses)
+            result = _run_two_sample_z(parsed, responses, req.hypothesis_text)
         else:
-            result = _run_one_sample_z(parsed, responses, group_avg)
+            result = _run_one_sample_z(parsed, responses, group_avg, req.hypothesis_text)
 
         if "error" in result:
             return {"success": False, "error": result["error"]}
@@ -528,7 +577,7 @@ Return ONLY JSON: {{"interpretation": "<sentence(s)>"}}"""
 # ── GET /api/hypothesis/templates ─────────────────────────────────────────────
 
 @router.get("/templates")
-async def get_templates():
+def get_templates():
     return {
         "templates": [
             {
@@ -563,7 +612,7 @@ async def get_templates():
 # ── GET /api/hypothesis/history ───────────────────────────────────────────────
 
 @router.get("/history")
-async def get_history(limit: int = Query(20), offset: int = Query(0)):
+def get_history(limit: int = Query(20), offset: int = Query(0)):
     try:
         history: list = []
         try:
@@ -578,7 +627,7 @@ async def get_history(limit: int = Query(20), offset: int = Query(0)):
 # ── GET /api/hypothesis/history/{id} ─────────────────────────────────────────
 
 @router.get("/history/{item_id}")
-async def get_history_item(item_id: str):
+def get_history_item(item_id: str):
     try:
         history: list = []
         try:
@@ -598,7 +647,7 @@ async def get_history_item(item_id: str):
 # ── DELETE /api/hypothesis/history/{id} ──────────────────────────────────────
 
 @router.delete("/history/{item_id}")
-async def delete_history_item(item_id: str):
+def delete_history_item(item_id: str):
     try:
         history_path = _DATA / "hypotheses.json"
         history: list = []

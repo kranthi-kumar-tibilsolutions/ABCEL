@@ -122,34 +122,23 @@ function EngagementScale({ mean, sd }) {
 
 /* ── main page ────────────────────────────────────────────────────── */
 export default function FocusSpotlightPage() {
-  const { units, setBreadcrumb, navigate } = useContext(AppContext);
-
-  const [dims,        setDimsState]  = useState({});
-  const [dimensions,  setDimensions] = useState([]);
-  const [dimsLoading, setDimsLoading]= useState(true);
-  const [inactive,    setInactive]   = useState('No');
-  const [activeTab,    setActiveTab]    = useState('much-lower');
+  const { setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
 
   useEffect(() => {
     setBreadcrumb([
       { label: 'Persona Explorer' },
       { label: 'Focus Spotlight' },
     ]);
+    setActiveScreenContext({ tab: 'focus_spotlight', description: 'AI persona segmentation — statistical outliers across demographic dimensions for ABG Vibes 2026.' });
   }, []);
 
-  useEffect(() => {
-    apiFetch('/api/persona/dimensions')
-      .then(r => r.json())
-      .then(d => {
-        const list = d.dimensions || [];
-        setDimensions(list);
-        const defaults = {};
-        list.forEach(dim => { defaults[dim.id] = 'All'; });
-        setDimsState(defaults);
-      })
-      .catch(() => {})
-      .finally(() => setDimsLoading(false));
-  }, []);
+  const [dims,           setDimsState]    = useState({});
+  const [inactive,       setInactive]     = useState('No');
+  const [filterData,     setFilterData]   = useState({ businesses: [], dimensions: {}, has_active: false, has_inactive: false });
+  const [dimsLoading,    setDimsLoading]  = useState(true);
+  const [data,           setData]         = useState(null);
+  const [resultsLoading, setResultsLoading] = useState(false);
+  const [activeTab,    setActiveTab]    = useState('much-lower');
   const [showAll,      setShowAll]      = useState(false);
   const [canScrollLeft,  setCanScrollLeft]  = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -173,61 +162,86 @@ export default function FocusSpotlightPage() {
   }, [checkScroll]);
   const TABLE_LIMIT = 5;
 
+  // Static filter definitions — always shown regardless of API success
+  const FILTER_DEFS = [
+    { key: 'business',   label: 'Business'   },
+    { key: 'gender',     label: 'Gender'     },
+    { key: 'generation', label: 'Generation' },
+    { key: 'tenure',     label: 'Tenure'     },
+    { key: 'job_level',  label: 'Job Level'  },
+    { key: 'is_manager', label: 'Manager'    },
+  ];
+
   const setDim      = (k, v) => setDimsState(d => ({ ...d, [k]: v }));
   const resetFilters = () => {
     const defaults = {};
-    dimensions.forEach(dim => { defaults[dim.id] = 'All'; });
+    FILTER_DEFS.forEach(f => { defaults[f.key] = 'All'; });
     setDimsState(defaults);
     setInactive('No');
   };
 
-  const { personas, mean, sd, bandCounts, totalRespondents, minScore, maxScore } = useMemo(() => {
-    if (!units?.length) return { personas:[], mean:0, sd:0, bandCounts:{}, totalRespondents:0, minScore:1, maxScore:5 };
+  // Fetch filter VALUE options from API (just populates dropdowns — filters are always visible)
+  useEffect(() => {
+    const defaults = {};
+    FILTER_DEFS.forEach(f => { defaults[f.key] = 'All'; });
+    setDimsState(defaults);
 
-    let filtered = units;
-    if (dims.business && dims.business !== 'All') filtered = filtered.filter(u => u.business === dims.business);
-    if (inactive === 'No') filtered = filtered.filter(u => (u.respondent_count ?? 1) > 0);
+    apiFetch('/api/focus-spotlight/filters')
+      .then(r => r.json())
+      .then(d => setFilterData(d))
+      .catch(() => {})
+      .finally(() => setDimsLoading(false));
+  }, []);
 
-    const scores = filtered.map(u => +(u.score ?? u.overall ?? 0)).filter(s => s > 0);
-    if (!scores.length) return { personas:[], mean:0, sd:0, bandCounts:{}, totalRespondents:0, minScore:1, maxScore:5 };
+  // Fetch results whenever filters change (runs as soon as dims state is set)
+  useEffect(() => {
+    if (!Object.keys(dims).length) return;
+    const { business: bizVal, ...scopeDims } = dims;
+    const scope = Object.fromEntries(
+      Object.entries(scopeDims).filter(([, v]) => v && v !== 'All')
+    );
+    setResultsLoading(true);
+    apiFetch('/api/focus-spotlight/results', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        business:      bizVal && bizVal !== 'All' ? bizVal : null,
+        scope:         Object.keys(scope).length > 0 ? scope : null,
+        active_filter: inactive === 'No' ? 'active' : 'all',
+      }),
+    })
+      .then(r => r.json())
+      .then(d => setData(d))
+      .catch(() => setData(null))
+      .finally(() => setResultsLoading(false));
+  }, [dims, inactive, dimsLoading]);
 
-    const mean     = scores.reduce((a,x) => a+x, 0) / scores.length;
-    const variance = scores.reduce((a,x) => a+(x-mean)**2, 0) / scores.length;
-    const sd       = Math.sqrt(variance) || 0.01;
-    const minScore = Math.max(1, Math.min(...scores) - 0.3);
-    const maxScore = Math.min(5, Math.max(...scores) + 0.3);
-    const totalRespondents = filtered.reduce((a,u) => a+(u.respondent_count??0), 0);
+  // Derive display values from API response
+  const personas        = useMemo(() => data?.segments        || [], [data]);
+  const mean            = data?.summary?.group_mean           || 0;
+  const sd              = data?.summary?.group_std            || 0;
+  const bandCounts      = data?.summary?.band_counts          || {};
+  const totalRespondents = data?.summary?.total_respondents   || 0;
 
-    const personas = filtered.map(u => {
-      const score  = +(u.score ?? u.overall ?? 0);
-      const zScore = (score - mean) / sd;
-      return { ...u, score, zScore, sdBand: getBand(zScore), vsMean: score - mean };
-    }).sort((a,b) => a.score - b.score);
-
-    const bandCounts = {};
-    personas.forEach(p => { bandCounts[p.sdBand] = (bandCounts[p.sdBand]||0)+1; });
-
-    return { personas, mean, sd, bandCounts, totalRespondents, minScore, maxScore };
-  }, [units, dims, inactive]);
-
-  const outlierPersonas = useMemo(() => personas.filter(p => p.sdBand !== 'typical'), [personas]);
-  const tabPersonas     = useMemo(() => outlierPersonas.filter(p => p.sdBand === activeTab), [outlierPersonas, activeTab]);
+  // segments use 'band' (not 'sdBand') — already set by backend
+  const outlierPersonas = useMemo(() => personas.filter(p => p.band !== 'typical'), [personas]);
+  const tabPersonas     = useMemo(() => outlierPersonas.filter(p => p.band === activeTab), [outlierPersonas, activeTab]);
   const displayed       = showAll ? tabPersonas : tabPersonas.slice(0, TABLE_LIMIT);
 
   const keyInsights = useMemo(() => {
     if (!personas.length) return [];
     const out = [];
-    const ml = personas.filter(p=>p.sdBand==='much-lower');
-    const mh = personas.filter(p=>p.sdBand==='much-higher');
-    const lo = personas.filter(p=>p.sdBand==='lower');
+    const ml = personas.filter(p => p.band === 'much-lower');
+    const mh = personas.filter(p => p.band === 'much-higher');
+    const lo = personas.filter(p => p.band === 'lower');
     if (ml.length) out.push(`${ml.length} persona${ml.length>1?'s are':' is'} ≥ 2 SD below the mean — priority areas for intervention.`);
     if (mh.length) out.push(`${mh.length} persona${mh.length>1?'s stand':' stands'} out as exceptional performers, more than 2 SD above average.`);
     if (lo.length) out.push(`${lo.length} persona${lo.length>1?'s fall':' falls'} in the Lower band, warranting focused HR attention.`);
-    if (sd < 0.3)  out.push(`Engagement scores are tightly clustered (SD = ${sd.toFixed(2)}), suggesting consistent experience across units.`);
-    else if (sd>0.6) out.push(`High score dispersion (SD = ${sd.toFixed(2)}) indicates significant variation in employee experience.`);
+    if (sd > 0 && sd < 0.3)  out.push(`Engagement scores are tightly clustered (SD = ${sd.toFixed(2)}), suggesting consistent experience.`);
+    else if (sd > 0.6) out.push(`High score dispersion (SD = ${sd.toFixed(2)}) indicates significant variation in employee experience.`);
     const t = bandCounts['typical'] ?? 0;
-    if (t) out.push(`${t} persona${t>1?'s sit':' sits'} within the typical band (±1 SD), near the group average of ${mean.toFixed(2)}.`);
-    return out.slice(0,5);
+    if (t) out.push(`${t} segment${t>1?'s sit':' sits'} within the typical band (±1 SD), near the group average of ${mean.toFixed(2)}.`);
+    return out.slice(0, 5);
   }, [personas, bandCounts, mean, sd]);
 
   return (
@@ -236,26 +250,27 @@ export default function FocusSpotlightPage() {
       {/* ── FILTER BAR ──────────────────────────────────────────── */}
       <div className="sa-card" style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: 20 }}>
-          {dimsLoading
-            ? [...Array(6)].map((_, i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div className="skeleton" style={{ height: 10, width: 70, borderRadius: 4 }} />
-                  <div className="skeleton" style={{ height: 32, width: 110, borderRadius: 6 }} />
-                </div>
-              ))
-            : dimensions.map(dim => (
-                <div key={dim.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{dim.label}</span>
-                  <Dropdown
-                    variant="filter"
-                    options={['All', ...dim.values]}
-                    value={dims[dim.id] || 'All'}
-                    onChange={v => setDim(dim.id, v)}
-                  />
-                </div>
-              ))
-          }
-          {/* Include Inactive — always shown */}
+          {FILTER_DEFS.map(({ key, label }) => {
+            // Get options from API response if available, else show All only
+            let options = ['All'];
+            if (key === 'business') {
+              options = ['All', ...(filterData.businesses || [])];
+            } else {
+              const apiVals = (filterData.dimensions || {})[key] || [];
+              options = ['All', ...apiVals];
+            }
+            return (
+              <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{label}</span>
+                <Dropdown
+                  variant="filter"
+                  options={options}
+                  value={dims[key] || 'All'}
+                  onChange={v => setDim(key, v)}
+                />
+              </div>
+            );
+          })}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Include Inactive</span>
             <Dropdown variant="filter" options={['No', 'Yes']} value={inactive} onChange={v => setInactive(v)} />
@@ -293,7 +308,9 @@ export default function FocusSpotlightPage() {
               How Focus Spotlight Works
             </div>
             <div style={{ fontSize: 9.5, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-              {`Evaluating ${personas.length || ''} persona combinations to identify those significantly different from the org mean.`}
+              {resultsLoading
+                ? 'Analysing demographic segments…'
+                : `${personas.length || 'No'} demographic segment${personas.length !== 1 ? 's' : ''} identified as statistical outliers from the mean.`}
             </div>
           </div>
         </div>
@@ -306,21 +323,21 @@ export default function FocusSpotlightPage() {
           {[
             {
               val: personas.length,
-              label: 'Total Personas',
+              label: 'Total Segments',
               color: '#6366F1',
-              tip: 'Total number of business units included in this analysis after applying the current filters. Each unit is treated as a distinct persona.',
+              tip: 'Statistically significant demographic segments (gender, generation, tenure, job level, manager status) that deviate more than ±1 SD from the group mean.',
             },
             {
               val: totalRespondents.toLocaleString(),
               label: 'Total Respondents',
               color: '#16A34A',
-              tip: 'Sum of all survey respondents across the filtered business units. Only units with at least one respondent are included.',
+              tip: 'Number of survey respondents included in this analysis after applying the current filters.',
             },
             {
               val: mean > 0 ? mean.toFixed(2) : '—',
               label: 'Engagement Mean',
               color: '#F97316',
-              tip: `The arithmetic mean of overall engagement scores across all filtered units (scale 1–5). Current SD = ${sd.toFixed(2)}, indicating ${sd < 0.3 ? 'tight clustering' : sd > 0.6 ? 'high dispersion' : 'moderate spread'} across units.`,
+              tip: `Mean engagement score across the filtered respondents (scale 1–5). SD = ${sd > 0 ? sd.toFixed(2) : '—'}, indicating ${sd < 0.3 ? 'tight clustering' : sd > 0.6 ? 'high dispersion' : 'moderate spread'}.`,
             },
           ].map((kpi, i, arr) => (
             <div key={i} style={{
@@ -437,7 +454,7 @@ export default function FocusSpotlightPage() {
             <div ref={tabScrollRef} style={{ display: 'flex', borderBottom: '1px solid var(--border)', gap: 0, overflowX: 'auto', scrollbarWidth: 'none', paddingLeft: canScrollLeft ? 24 : 0, paddingRight: canScrollRight ? 24 : 0 }}>
             {OUTLIER_TABS.map(tab => {
               const cfg   = BAND_MAP[tab.key];
-              const count = outlierPersonas.filter(p => p.sdBand === tab.key).length;
+              const count = outlierPersonas.filter(p => p.band === tab.key).length;
               const isActive = activeTab === tab.key;
               return (
                 <button
@@ -482,9 +499,13 @@ export default function FocusSpotlightPage() {
           </div>
 
           {/* table */}
-          {tabPersonas.length === 0 ? (
+          {resultsLoading ? (
             <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: 13 }}>
-              No personas in this band.
+              Analysing segments…
+            </div>
+          ) : tabPersonas.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: 13 }}>
+              No segments in this band.
             </div>
           ) : (
             <>
@@ -492,29 +513,29 @@ export default function FocusSpotlightPage() {
               <table className="data-table" style={{ fontSize: 11.5, minWidth: 480 }}>
                 <thead>
                   <tr>
-                    <th>Persona (Combination)</th>
+                    <th>Segment</th>
                     <th>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        Overall Engagement
-                        <InfoTip tip="Mean engagement score (1–5 scale) for this business unit, computed from all survey respondents within the unit." />
+                        Engagement Score
+                        <InfoTip tip="Mean engagement score (1–5) for this demographic segment, computed from all matching survey responses." />
                       </div>
                     </th>
                     <th>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         vs Mean
-                        <InfoTip tip={`Difference between this unit's score and the group mean of ${mean.toFixed(2)}. Negative = below average; positive = above average.`} />
+                        <InfoTip tip={`Difference between this segment's score and the group mean of ${mean.toFixed(2)}. Negative = below average; positive = above average.`} />
                       </div>
                     </th>
                     <th>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         Std Dev
-                        <InfoTip tip="Z-score: how many standard deviations this unit's score is from the group mean. Units beyond ±1 SD are flagged as outliers." />
+                        <InfoTip tip="Z-score: how many standard deviations this segment's score is from the group mean. Segments beyond ±1 SD are flagged as outliers." />
                       </div>
                     </th>
                     <th>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         Respondents
-                        <InfoTip tip="Number of employees who completed the survey in this business unit. Low respondent counts may affect score reliability." />
+                        <InfoTip tip="Number of employees in this demographic segment who completed the survey. Segments with fewer than 30 respondents are excluded." />
                       </div>
                     </th>
                     <th>Action</th>
@@ -522,28 +543,32 @@ export default function FocusSpotlightPage() {
                 </thead>
                 <tbody>
                   {displayed.map((p, i) => {
-                    const cfg   = BAND_MAP[p.sdBand];
-                    const vsPos = p.vsMean >= 0;
+                    const cfg   = BAND_MAP[p.band];
+                    const vsPos = p.delta >= 0;
+                    const dimLabel = Object.entries(p.dimensions || {})
+                      .map(([k, v]) => `${k.replace('_',' ')}: ${v}`)
+                      .join(' · ');
                     return (
-                      <tr key={i} style={{ cursor: 'pointer' }}
-                        onClick={() => navigate('bu-detail', { business: p.business, unit: p.name })}>
+                      <tr key={p.id || i}>
                         <td>
-                          <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>{p.name}</div>
-                          <div style={{ fontSize: 10.5, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                            • {p.business}
-                          </div>
+                          <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>{p.label}</div>
+                          {dimLabel && (
+                            <div style={{ fontSize: 10.5, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                              {dimLabel}
+                            </div>
+                          )}
                         </td>
-                        <td style={{ fontWeight: 700, color: cfg.color, fontSize: 14 }}>
-                          {p.score.toFixed(2)}
+                        <td style={{ fontWeight: 700, color: cfg?.color, fontSize: 14 }}>
+                          {(+p.mean).toFixed(2)}
                         </td>
                         <td style={{ fontWeight: 600, color: vsPos ? '#16A34A' : '#DC2626' }}>
-                          {vsPos ? '+' : ''}{p.vsMean.toFixed(2)}
+                          {p.vs_mean}
                         </td>
                         <td style={{ color: 'var(--text-muted)' }}>
-                          {p.zScore.toFixed(2)} SD
+                          {(+p.z_score).toFixed(2)} SD
                         </td>
-                        <td>{p.respondent_count ?? '—'}</td>
-                        <td onClick={e => e.stopPropagation()}>
+                        <td>{p.n ?? '—'}</td>
+                        <td>
                           <button style={{
                             background: 'none', border: '1px solid var(--border)',
                             borderRadius: 6, cursor: 'pointer',

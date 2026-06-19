@@ -137,6 +137,13 @@ async def upload_file(file: UploadFile = File(None)):
             yield "data: [DONE]\n\n"
             return
 
+        # Precompute Focus Spotlight segments from the freshly extracted responses.json
+        try:
+            from lib.segment_engine import precompute_and_save
+            precompute_and_save()
+        except Exception:
+            pass   # non-fatal — spotlight will recompute on first request
+
         # == JS: JSON.parse(fs.readFileSync(meta.json)) ==
         try:
             meta = json.loads((_DATA / "meta.json").read_text(encoding="utf-8"))

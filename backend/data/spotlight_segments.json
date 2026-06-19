@@ -1,0 +1,4457 @@
+{
+  "summary": {
+    "total_segments": 165,
+    "total_respondents": 55457,
+    "group_mean": 4.44,
+    "group_std": 0.1652,
+    "band_counts": {
+      "much-lower": 5,
+      "lower": 5,
+      "typical": 136,
+      "higher": 14,
+      "much-higher": 5
+    }
+  },
+  "thresholds": {
+    "mean": 4.44,
+    "std": 0.1652,
+    "much_lower_max": 4.11,
+    "lower_max": 4.28,
+    "higher_min": 4.61,
+    "much_higher_min": 4.77
+  },
+  "segments": [
+    {
+      "id": "tenure:5-10__job_level:Senior Management",
+      "label": "5-10 \u00b7 Senior Management",
+      "dimensions": {
+        "tenure": "5-10",
+        "job_level": "Senior Management"
+      },
+      "depth": 2,
+      "n": 137,
+      "mean": 4.51,
+      "delta": 0.06,
+      "vs_mean": "+0.06",
+      "z_score": 4.7,
+      "z_abs": 4.7,
+      "std_dev_label": "4.7 SD",
+      "p_value": 0.0,
+      "ci_lower": 4.476,
+      "ci_upper": 4.535,
+      "band": "much-higher",
+      "category_means": {
+        "engagement": 4.66,
+        "leadership": 4.57,
+        "performance_culture": 4.34,
+        "development_and_career": 4.45,
+        "manager_effectiveness": 4.48
+      }
+    },
+    {
+      "id": "tenure:5-10__job_level:Top Management",
+      "label": "5-10 \u00b7 Top Management",
+      "dimensions": {
+        "tenure": "5-10",
+        "job_level": "Top Management"
+      },
+      "depth": 2,
+      "n": 34,
+      "mean": 4.38,
+      "delta": -0.07,
+      "vs_mean": "-0.07",
+      "z_score": -4.19,
+      "z_abs": 4.19,
+      "std_dev_label": "4.19 SD",
+      "p_value": 0.0218,
+      "ci_lower": 4.311,
+      "ci_upper": 4.442,
+      "band": "much-lower",
+      "category_means": {
+        "engagement": 4.51,
+        "leadership": 4.46,
+        "performance_culture": 4.24,
+        "development_and_career": 4.35,
+        "manager_effectiveness": 4.35
+      }
+    },
+    {
+      "id": "tenure:2-5__job_level:Top Management",
+      "label": "2-5 \u00b7 Top Management",
+      "dimensions": {
+        "tenure": "2-5",
+        "job_level": "Top Management"
+      },
+      "depth": 2,
+      "n": 38,
+      "mean": 4.39,
+      "delta": -0.05,
+      "vs_mean": "-0.05",
+      "z_score": -3.51,
+      "z_abs": 3.51,
+      "std_dev_label": "3.51 SD",
+      "p_value": 0.0762,
+      "ci_lower": 4.332,
+      "ci_upper": 4.456,
+      "band": "much-lower",
+      "category_means": {
+        "engagement": 4.57,
+        "leadership": 4.45,
+        "performance_culture": 4.3,
+        "development_and_career": 4.35,
+        "manager_effectiveness": 4.39
+      }
+    },
+    {
+      "id": "tenure:>25 (Equal or more than 25)__job_level:Staff",
+      "label": ">25 (Equal or more than 25) \u00b7 Staff",
+      "dimensions": {
+        "tenure": ">25 (Equal or more than 25)",
+        "job_level": "Staff"
+      },
+      "depth": 2,
+      "n": 62,
+      "mean": 4.49,
+      "delta": 0.05,
+      "vs_mean": "+0.05",
+      "z_score": 3.33,
+      "z_abs": 3.33,
+      "std_dev_label": "3.33 SD",
+      "p_value": 0.0303,
+      "ci_lower": 4.45,
+      "ci_upper": 4.524,
+      "band": "much-higher",
+      "category_means": {
+        "engagement": 4.66,
+        "leadership": 4.55,
+        "performance_culture": 4.37,
+        "development_and_career": 4.44,
+        "manager_effectiveness": 4.44
+      }
+    },
+    {
+      "id": "job_level:Senior Management__is_manager:Non-Manager",
+      "label": "Senior Management \u00b7 Non-Manager",
+      "dimensions": {
+        "job_level": "Senior Management",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 184,
+      "mean": 4.49,
+      "delta": 0.05,
+      "vs_mean": "+0.05",
+      "z_score": 3.33,
+      "z_abs": 3.33,
+      "std_dev_label": "3.33 SD",
+      "p_value": 0.0001,
+      "ci_lower": 4.451,
+      "ci_upper": 4.526,
+      "band": "much-higher",
+      "category_means": {
+        "engagement": 4.66,
+        "leadership": 4.45,
+        "performance_culture": 4.32,
+        "development_and_career": 4.46,
+        "manager_effectiveness": 4.52
+      }
+    },
+    {
+      "id": "gender:Female__job_level:Senior Management",
+      "label": "Female \u00b7 Senior Management",
+      "dimensions": {
+        "gender": "Female",
+        "job_level": "Senior Management"
+      },
+      "depth": 2,
+      "n": 75,
+      "mean": 4.48,
+      "delta": 0.04,
+      "vs_mean": "+0.04",
+      "z_score": 2.65,
+      "z_abs": 2.65,
+      "std_dev_label": "2.65 SD",
+      "p_value": 0.0504,
+      "ci_lower": 4.439,
+      "ci_upper": 4.519,
+      "band": "much-higher",
+      "category_means": {
+        "engagement": 4.66,
+        "leadership": 4.52,
+        "performance_culture": 4.32,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:>25 (Equal or more than 25)__job_level:Senior Management",
+      "label": ">25 (Equal or more than 25) \u00b7 Senior Management",
+      "dimensions": {
+        "tenure": ">25 (Equal or more than 25)",
+        "job_level": "Senior Management"
+      },
+      "depth": 2,
+      "n": 170,
+      "mean": 4.48,
+      "delta": 0.03,
+      "vs_mean": "+0.03",
+      "z_score": 2.65,
+      "z_abs": 2.65,
+      "std_dev_label": "2.65 SD",
+      "p_value": 0.0068,
+      "ci_lower": 4.448,
+      "ci_upper": 4.504,
+      "band": "much-higher",
+      "category_means": {
+        "engagement": 4.67,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.4,
+        "manager_effectiveness": 4.43
+      }
+    },
+    {
+      "id": "generation:Gen Z__job_level:Staff",
+      "label": "Gen Z \u00b7 Staff",
+      "dimensions": {
+        "generation": "Gen Z",
+        "job_level": "Staff"
+      },
+      "depth": 2,
+      "n": 36,
+      "mean": 4.41,
+      "delta": -0.03,
+      "vs_mean": "-0.03",
+      "z_score": -2.14,
+      "z_abs": 2.14,
+      "std_dev_label": "2.14 SD",
+      "p_value": 0.2572,
+      "ci_lower": 4.367,
+      "ci_upper": 4.454,
+      "band": "much-lower",
+      "category_means": {
+        "engagement": 4.6,
+        "leadership": 4.48,
+        "performance_culture": 4.28,
+        "development_and_career": 4.43,
+        "manager_effectiveness": 4.4
+      }
+    },
+    {
+      "id": "generation:Baby Boomer__job_level:Junior Management",
+      "label": "Baby Boomer \u00b7 Junior Management",
+      "dimensions": {
+        "generation": "Baby Boomer",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 40,
+      "mean": 4.41,
+      "delta": -0.04,
+      "vs_mean": "-0.04",
+      "z_score": -2.14,
+      "z_abs": 2.14,
+      "std_dev_label": "2.14 SD",
+      "p_value": 0.1744,
+      "ci_lower": 4.356,
+      "ci_upper": 4.456,
+      "band": "much-lower",
+      "category_means": {
+        "engagement": 4.61,
+        "leadership": 4.55,
+        "performance_culture": 4.27,
+        "development_and_career": 4.19,
+        "manager_effectiveness": 4.43
+      }
+    },
+    {
+      "id": "tenure:10-15__job_level:Non Management",
+      "label": "10-15 \u00b7 Non Management",
+      "dimensions": {
+        "tenure": "10-15",
+        "job_level": "Non Management"
+      },
+      "depth": 2,
+      "n": 51,
+      "mean": 4.41,
+      "delta": -0.03,
+      "vs_mean": "-0.03",
+      "z_score": -2.14,
+      "z_abs": 2.14,
+      "std_dev_label": "2.14 SD",
+      "p_value": 0.205,
+      "ci_lower": 4.341,
+      "ci_upper": 4.483,
+      "band": "much-lower",
+      "category_means": {
+        "engagement": 4.59,
+        "leadership": 4.34,
+        "performance_culture": 4.34,
+        "development_and_career": 4.29,
+        "manager_effectiveness": 4.47
+      }
+    },
+    {
+      "id": "generation:Gen X__job_level:Staff",
+      "label": "Gen X \u00b7 Staff",
+      "dimensions": {
+        "generation": "Gen X",
+        "job_level": "Staff"
+      },
+      "depth": 2,
+      "n": 168,
+      "mean": 4.47,
+      "delta": 0.03,
+      "vs_mean": "+0.03",
+      "z_score": 1.97,
+      "z_abs": 1.97,
+      "std_dev_label": "1.97 SD",
+      "p_value": 0.0153,
+      "ci_lower": 4.452,
+      "ci_upper": 4.493,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.61,
+        "leadership": 4.54,
+        "performance_culture": 4.35,
+        "development_and_career": 4.51,
+        "manager_effectiveness": 4.45
+      }
+    },
+    {
+      "id": "tenure:10-15__job_level:Staff",
+      "label": "10-15 \u00b7 Staff",
+      "dimensions": {
+        "tenure": "10-15",
+        "job_level": "Staff"
+      },
+      "depth": 2,
+      "n": 115,
+      "mean": 4.47,
+      "delta": 0.03,
+      "vs_mean": "+0.03",
+      "z_score": 1.97,
+      "z_abs": 1.97,
+      "std_dev_label": "1.97 SD",
+      "p_value": 0.0602,
+      "ci_lower": 4.434,
+      "ci_upper": 4.507,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.68,
+        "leadership": 4.46,
+        "performance_culture": 4.3,
+        "development_and_career": 4.43,
+        "manager_effectiveness": 4.5
+      }
+    },
+    {
+      "id": "tenure:15-20__job_level:Top Management",
+      "label": "15-20 \u00b7 Top Management",
+      "dimensions": {
+        "tenure": "15-20",
+        "job_level": "Top Management"
+      },
+      "depth": 2,
+      "n": 39,
+      "mean": 4.47,
+      "delta": 0.02,
+      "vs_mean": "+0.02",
+      "z_score": 1.97,
+      "z_abs": 1.97,
+      "std_dev_label": "1.97 SD",
+      "p_value": 0.3713,
+      "ci_lower": 4.415,
+      "ci_upper": 4.515,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.65,
+        "leadership": 4.51,
+        "performance_culture": 4.34,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.37
+      }
+    },
+    {
+      "id": "tenure:20-25__job_level:Staff",
+      "label": "20-25 \u00b7 Staff",
+      "dimensions": {
+        "tenure": "20-25",
+        "job_level": "Staff"
+      },
+      "depth": 2,
+      "n": 38,
+      "mean": 4.47,
+      "delta": 0.03,
+      "vs_mean": "+0.03",
+      "z_score": 1.97,
+      "z_abs": 1.97,
+      "std_dev_label": "1.97 SD",
+      "p_value": 0.2785,
+      "ci_lower": 4.429,
+      "ci_upper": 4.512,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.61,
+        "leadership": 4.54,
+        "performance_culture": 4.33,
+        "development_and_career": 4.6,
+        "manager_effectiveness": 4.4
+      }
+    },
+    {
+      "id": "generation:Gen X__job_level:Job Band NA",
+      "label": "Gen X \u00b7 Job Band NA",
+      "dimensions": {
+        "generation": "Gen X",
+        "job_level": "Job Band NA"
+      },
+      "depth": 2,
+      "n": 74,
+      "mean": 4.42,
+      "delta": -0.02,
+      "vs_mean": "-0.02",
+      "z_score": -1.46,
+      "z_abs": 1.46,
+      "std_dev_label": "1.46 SD",
+      "p_value": 0.2819,
+      "ci_lower": 4.388,
+      "ci_upper": 4.454,
+      "band": "lower",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.42,
+        "performance_culture": 4.32,
+        "development_and_career": 4.44,
+        "manager_effectiveness": 4.39
+      }
+    },
+    {
+      "id": "generation:Baby Boomer__is_manager:Non-Manager",
+      "label": "Baby Boomer \u00b7 Non-Manager",
+      "dimensions": {
+        "generation": "Baby Boomer",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 50,
+      "mean": 4.42,
+      "delta": -0.02,
+      "vs_mean": "-0.02",
+      "z_score": -1.46,
+      "z_abs": 1.46,
+      "std_dev_label": "1.46 SD",
+      "p_value": 0.3068,
+      "ci_lower": 4.372,
+      "ci_upper": 4.463,
+      "band": "lower",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.55,
+        "performance_culture": 4.29,
+        "development_and_career": 4.2,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:20-25__job_level:Top Management",
+      "label": "20-25 \u00b7 Top Management",
+      "dimensions": {
+        "tenure": "20-25",
+        "job_level": "Top Management"
+      },
+      "depth": 2,
+      "n": 31,
+      "mean": 4.42,
+      "delta": -0.02,
+      "vs_mean": "-0.02",
+      "z_score": -1.46,
+      "z_abs": 1.46,
+      "std_dev_label": "1.46 SD",
+      "p_value": 0.4826,
+      "ci_lower": 4.349,
+      "ci_upper": 4.492,
+      "band": "lower",
+      "category_means": {
+        "engagement": 4.56,
+        "leadership": 4.45,
+        "performance_culture": 4.29,
+        "development_and_career": 4.29,
+        "manager_effectiveness": 4.51
+      }
+    },
+    {
+      "id": "tenure:5-10__job_level:Job Band NA",
+      "label": "5-10 \u00b7 Job Band NA",
+      "dimensions": {
+        "tenure": "5-10",
+        "job_level": "Job Band NA"
+      },
+      "depth": 2,
+      "n": 43,
+      "mean": 4.42,
+      "delta": -0.02,
+      "vs_mean": "-0.02",
+      "z_score": -1.46,
+      "z_abs": 1.46,
+      "std_dev_label": "1.46 SD",
+      "p_value": 0.4471,
+      "ci_lower": 4.382,
+      "ci_upper": 4.463,
+      "band": "lower",
+      "category_means": {
+        "engagement": 4.7,
+        "leadership": 4.4,
+        "performance_culture": 4.3,
+        "development_and_career": 4.41,
+        "manager_effectiveness": 4.37
+      }
+    },
+    {
+      "id": "job_level:Top Management__is_manager:Non-Manager",
+      "label": "Top Management \u00b7 Non-Manager",
+      "dimensions": {
+        "job_level": "Top Management",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 41,
+      "mean": 4.42,
+      "delta": -0.02,
+      "vs_mean": "-0.02",
+      "z_score": -1.46,
+      "z_abs": 1.46,
+      "std_dev_label": "1.46 SD",
+      "p_value": 0.4105,
+      "ci_lower": 4.319,
+      "ci_upper": 4.521,
+      "band": "lower",
+      "category_means": {
+        "engagement": 4.7,
+        "leadership": 4.3,
+        "performance_culture": 4.22,
+        "development_and_career": 4.21,
+        "manager_effectiveness": 4.51
+      }
+    },
+    {
+      "id": "job_level:Senior Management",
+      "label": "Senior Management",
+      "dimensions": {
+        "job_level": "Senior Management"
+      },
+      "depth": 1,
+      "n": 924,
+      "mean": 4.46,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 1.28,
+      "z_abs": 1.28,
+      "std_dev_label": "1.28 SD",
+      "p_value": 0.0104,
+      "ci_lower": 4.444,
+      "ci_upper": 4.467,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.44
+      }
+    },
+    {
+      "id": "job_level:Staff",
+      "label": "Staff",
+      "dimensions": {
+        "job_level": "Staff"
+      },
+      "depth": 1,
+      "n": 484,
+      "mean": 4.46,
+      "delta": 0.02,
+      "vs_mean": "+0.02",
+      "z_score": 1.28,
+      "z_abs": 1.28,
+      "std_dev_label": "1.28 SD",
+      "p_value": 0.0089,
+      "ci_lower": 4.446,
+      "ci_upper": 4.476,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.65,
+        "leadership": 4.5,
+        "performance_culture": 4.33,
+        "development_and_career": 4.43,
+        "manager_effectiveness": 4.45
+      }
+    },
+    {
+      "id": "gender:Female__tenure:20-25",
+      "label": "Female \u00b7 20-25",
+      "dimensions": {
+        "gender": "Female",
+        "tenure": "20-25"
+      },
+      "depth": 2,
+      "n": 161,
+      "mean": 4.46,
+      "delta": 0.02,
+      "vs_mean": "+0.02",
+      "z_score": 1.28,
+      "z_abs": 1.28,
+      "std_dev_label": "1.28 SD",
+      "p_value": 0.1046,
+      "ci_lower": 4.437,
+      "ci_upper": 4.488,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.68,
+        "leadership": 4.48,
+        "performance_culture": 4.35,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Male__job_level:Staff",
+      "label": "Male \u00b7 Staff",
+      "dimensions": {
+        "gender": "Male",
+        "job_level": "Staff"
+      },
+      "depth": 2,
+      "n": 374,
+      "mean": 4.46,
+      "delta": 0.02,
+      "vs_mean": "+0.02",
+      "z_score": 1.28,
+      "z_abs": 1.28,
+      "std_dev_label": "1.28 SD",
+      "p_value": 0.0094,
+      "ci_lower": 4.446,
+      "ci_upper": 4.481,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.67,
+        "leadership": 4.5,
+        "performance_culture": 4.31,
+        "development_and_career": 4.46,
+        "manager_effectiveness": 4.45
+      }
+    },
+    {
+      "id": "gender:Male__job_level:Management",
+      "label": "Male \u00b7 Management",
+      "dimensions": {
+        "gender": "Male",
+        "job_level": "Management"
+      },
+      "depth": 2,
+      "n": 35,
+      "mean": 4.46,
+      "delta": 0.02,
+      "vs_mean": "+0.02",
+      "z_score": 1.28,
+      "z_abs": 1.28,
+      "std_dev_label": "1.28 SD",
+      "p_value": 0.5889,
+      "ci_lower": 4.41,
+      "ci_upper": 4.503,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.67,
+        "leadership": 4.47,
+        "performance_culture": 4.33,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.46
+      }
+    },
+    {
+      "id": "generation:Gen Y__job_level:Senior Management",
+      "label": "Gen Y \u00b7 Senior Management",
+      "dimensions": {
+        "generation": "Gen Y",
+        "job_level": "Senior Management"
+      },
+      "depth": 2,
+      "n": 127,
+      "mean": 4.46,
+      "delta": 0.02,
+      "vs_mean": "+0.02",
+      "z_score": 1.28,
+      "z_abs": 1.28,
+      "std_dev_label": "1.28 SD",
+      "p_value": 0.1969,
+      "ci_lower": 4.433,
+      "ci_upper": 4.487,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.6,
+        "leadership": 4.52,
+        "performance_culture": 4.32,
+        "development_and_career": 4.44,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen Y__job_level:Staff",
+      "label": "Gen Y \u00b7 Staff",
+      "dimensions": {
+        "generation": "Gen Y",
+        "job_level": "Staff"
+      },
+      "depth": 2,
+      "n": 199,
+      "mean": 4.46,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 1.28,
+      "z_abs": 1.28,
+      "std_dev_label": "1.28 SD",
+      "p_value": 0.2253,
+      "ci_lower": 4.435,
+      "ci_upper": 4.476,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.66,
+        "leadership": 4.46,
+        "performance_culture": 4.36,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.44
+      }
+    },
+    {
+      "id": "tenure:5-10__job_level:Staff",
+      "label": "5-10 \u00b7 Staff",
+      "dimensions": {
+        "tenure": "5-10",
+        "job_level": "Staff"
+      },
+      "depth": 2,
+      "n": 58,
+      "mean": 4.46,
+      "delta": 0.02,
+      "vs_mean": "+0.02",
+      "z_score": 1.28,
+      "z_abs": 1.28,
+      "std_dev_label": "1.28 SD",
+      "p_value": 0.4723,
+      "ci_lower": 4.406,
+      "ci_upper": 4.508,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.67,
+        "leadership": 4.51,
+        "performance_culture": 4.29,
+        "development_and_career": 4.41,
+        "manager_effectiveness": 4.47
+      }
+    },
+    {
+      "id": "tenure:15-20__job_level:Staff",
+      "label": "15-20 \u00b7 Staff",
+      "dimensions": {
+        "tenure": "15-20",
+        "job_level": "Staff"
+      },
+      "depth": 2,
+      "n": 87,
+      "mean": 4.46,
+      "delta": 0.02,
+      "vs_mean": "+0.02",
+      "z_score": 1.28,
+      "z_abs": 1.28,
+      "std_dev_label": "1.28 SD",
+      "p_value": 0.3462,
+      "ci_lower": 4.427,
+      "ci_upper": 4.489,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.61,
+        "leadership": 4.51,
+        "performance_culture": 4.32,
+        "development_and_career": 4.43,
+        "manager_effectiveness": 4.45
+      }
+    },
+    {
+      "id": "job_level:Staff__is_manager:Non-Manager",
+      "label": "Staff \u00b7 Non-Manager",
+      "dimensions": {
+        "job_level": "Staff",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 461,
+      "mean": 4.46,
+      "delta": 0.02,
+      "vs_mean": "+0.02",
+      "z_score": 1.28,
+      "z_abs": 1.28,
+      "std_dev_label": "1.28 SD",
+      "p_value": 0.0121,
+      "ci_lower": 4.446,
+      "ci_upper": 4.476,
+      "band": "higher",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.49,
+        "performance_culture": 4.33,
+        "development_and_career": 4.44,
+        "manager_effectiveness": 4.45
+      }
+    },
+    {
+      "id": "generation:Baby Boomer",
+      "label": "Baby Boomer",
+      "dimensions": {
+        "generation": "Baby Boomer"
+      },
+      "depth": 1,
+      "n": 111,
+      "mean": 4.43,
+      "delta": -0.02,
+      "vs_mean": "-0.02",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.3027,
+      "ci_lower": 4.397,
+      "ci_upper": 4.454,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.6,
+        "leadership": 4.51,
+        "performance_culture": 4.29,
+        "development_and_career": 4.29,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "job_level:Non Management",
+      "label": "Non Management",
+      "dimensions": {
+        "job_level": "Non Management"
+      },
+      "depth": 1,
+      "n": 116,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.5359,
+      "ci_lower": 4.391,
+      "ci_upper": 4.473,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.61,
+        "leadership": 4.41,
+        "performance_culture": 4.33,
+        "development_and_career": 4.3,
+        "manager_effectiveness": 4.46
+      }
+    },
+    {
+      "id": "job_level:Top Management",
+      "label": "Top Management",
+      "dimensions": {
+        "job_level": "Top Management"
+      },
+      "depth": 1,
+      "n": 306,
+      "mean": 4.43,
+      "delta": -0.02,
+      "vs_mean": "-0.02",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.1045,
+      "ci_lower": 4.405,
+      "ci_upper": 4.447,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.6,
+        "leadership": 4.49,
+        "performance_culture": 4.3,
+        "development_and_career": 4.31,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Male__generation:Baby Boomer",
+      "label": "Male \u00b7 Baby Boomer",
+      "dimensions": {
+        "gender": "Male",
+        "generation": "Baby Boomer"
+      },
+      "depth": 2,
+      "n": 93,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.4263,
+      "ci_lower": 4.397,
+      "ci_upper": 4.459,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.61,
+        "leadership": 4.51,
+        "performance_culture": 4.29,
+        "development_and_career": 4.29,
+        "manager_effectiveness": 4.4
+      }
+    },
+    {
+      "id": "gender:Female__tenure:>25 (Equal or more than 25)",
+      "label": "Female \u00b7 >25 (Equal or more than 25)",
+      "dimensions": {
+        "gender": "Female",
+        "tenure": ">25 (Equal or more than 25)"
+      },
+      "depth": 2,
+      "n": 252,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.3119,
+      "ci_lower": 4.411,
+      "ci_upper": 4.451,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.49,
+        "performance_culture": 4.29,
+        "development_and_career": 4.34,
+        "manager_effectiveness": 4.39
+      }
+    },
+    {
+      "id": "gender:Female__tenure:10-15",
+      "label": "Female \u00b7 10-15",
+      "dimensions": {
+        "gender": "Female",
+        "tenure": "10-15"
+      },
+      "depth": 2,
+      "n": 629,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.1423,
+      "ci_lower": 4.419,
+      "ci_upper": 4.444,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.47,
+        "performance_culture": 4.32,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Male__job_level:Non Management",
+      "label": "Male \u00b7 Non Management",
+      "dimensions": {
+        "gender": "Male",
+        "job_level": "Non Management"
+      },
+      "depth": 2,
+      "n": 106,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.4354,
+      "ci_lower": 4.386,
+      "ci_upper": 4.472,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.4,
+        "performance_culture": 4.34,
+        "development_and_career": 4.25,
+        "manager_effectiveness": 4.46
+      }
+    },
+    {
+      "id": "gender:Male__job_level:Top Management",
+      "label": "Male \u00b7 Top Management",
+      "dimensions": {
+        "gender": "Male",
+        "job_level": "Top Management"
+      },
+      "depth": 2,
+      "n": 282,
+      "mean": 4.43,
+      "delta": -0.02,
+      "vs_mean": "-0.02",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.125,
+      "ci_lower": 4.405,
+      "ci_upper": 4.448,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.6,
+        "leadership": 4.51,
+        "performance_culture": 4.31,
+        "development_and_career": 4.3,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Female__job_level:Middle Management",
+      "label": "Female \u00b7 Middle Management",
+      "dimensions": {
+        "gender": "Female",
+        "job_level": "Middle Management"
+      },
+      "depth": 2,
+      "n": 823,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.2505,
+      "ci_lower": 4.424,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.36,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Female__is_manager:Manager",
+      "label": "Female \u00b7 Manager",
+      "dimensions": {
+        "gender": "Female",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 1471,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.0242,
+      "ci_lower": 4.424,
+      "ci_upper": 4.44,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.31,
+        "development_and_career": 4.35,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen Z__tenure:2-5",
+      "label": "Gen Z \u00b7 2-5",
+      "dimensions": {
+        "generation": "Gen Z",
+        "tenure": "2-5"
+      },
+      "depth": 2,
+      "n": 2221,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.0171,
+      "ci_lower": 4.427,
+      "ci_upper": 4.439,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen X__job_level:Top Management",
+      "label": "Gen X \u00b7 Top Management",
+      "dimensions": {
+        "generation": "Gen X",
+        "job_level": "Top Management"
+      },
+      "depth": 2,
+      "n": 219,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.3039,
+      "ci_lower": 4.411,
+      "ci_upper": 4.449,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.58,
+        "leadership": 4.54,
+        "performance_culture": 4.32,
+        "development_and_career": 4.32,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen Z__job_level:Job Band NA",
+      "label": "Gen Z \u00b7 Job Band NA",
+      "dimensions": {
+        "generation": "Gen Z",
+        "job_level": "Job Band NA"
+      },
+      "depth": 2,
+      "n": 82,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.5162,
+      "ci_lower": 4.398,
+      "ci_upper": 4.462,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.61,
+        "leadership": 4.49,
+        "performance_culture": 4.34,
+        "development_and_career": 4.34,
+        "manager_effectiveness": 4.46
+      }
+    },
+    {
+      "id": "generation:Baby Boomer__is_manager:Manager",
+      "label": "Baby Boomer \u00b7 Manager",
+      "dimensions": {
+        "generation": "Baby Boomer",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 61,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.6419,
+      "ci_lower": 4.395,
+      "ci_upper": 4.469,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.59,
+        "leadership": 4.48,
+        "performance_culture": 4.28,
+        "development_and_career": 4.36,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "tenure:>25 (Equal or more than 25)__job_level:Top Management",
+      "label": ">25 (Equal or more than 25) \u00b7 Top Management",
+      "dimensions": {
+        "tenure": ">25 (Equal or more than 25)",
+        "job_level": "Top Management"
+      },
+      "depth": 2,
+      "n": 83,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.6597,
+      "ci_lower": 4.404,
+      "ci_upper": 4.463,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.67,
+        "leadership": 4.54,
+        "performance_culture": 4.28,
+        "development_and_career": 4.29,
+        "manager_effectiveness": 4.37
+      }
+    },
+    {
+      "id": "tenure:0-2__job_level:Staff",
+      "label": "0-2 \u00b7 Staff",
+      "dimensions": {
+        "tenure": "0-2",
+        "job_level": "Staff"
+      },
+      "depth": 2,
+      "n": 60,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.6013,
+      "ci_lower": 4.387,
+      "ci_upper": 4.473,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.36,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.39
+      }
+    },
+    {
+      "id": "tenure:20-25__job_level:Senior Management",
+      "label": "20-25 \u00b7 Senior Management",
+      "dimensions": {
+        "tenure": "20-25",
+        "job_level": "Senior Management"
+      },
+      "depth": 2,
+      "n": 75,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.6847,
+      "ci_lower": 4.404,
+      "ci_upper": 4.463,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.6,
+        "leadership": 4.5,
+        "performance_culture": 4.36,
+        "development_and_career": 4.33,
+        "manager_effectiveness": 4.44
+      }
+    },
+    {
+      "id": "tenure:2-5__job_level:Senior Management",
+      "label": "2-5 \u00b7 Senior Management",
+      "dimensions": {
+        "tenure": "2-5",
+        "job_level": "Senior Management"
+      },
+      "depth": 2,
+      "n": 152,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.3944,
+      "ci_lower": 4.404,
+      "ci_upper": 4.456,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.5,
+        "performance_culture": 4.28,
+        "development_and_career": 4.32,
+        "manager_effectiveness": 4.4
+      }
+    },
+    {
+      "id": "tenure:2-5__job_level:Job Band NA",
+      "label": "2-5 \u00b7 Job Band NA",
+      "dimensions": {
+        "tenure": "2-5",
+        "job_level": "Job Band NA"
+      },
+      "depth": 2,
+      "n": 136,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.3773,
+      "ci_lower": 4.402,
+      "ci_upper": 4.456,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.66,
+        "leadership": 4.51,
+        "performance_culture": 4.33,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.35
+      }
+    },
+    {
+      "id": "tenure:20-25__is_manager:Manager",
+      "label": "20-25 \u00b7 Manager",
+      "dimensions": {
+        "tenure": "20-25",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 620,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.0677,
+      "ci_lower": 4.417,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.35,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "job_level:Top Management__is_manager:Manager",
+      "label": "Top Management \u00b7 Manager",
+      "dimensions": {
+        "job_level": "Top Management",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 265,
+      "mean": 4.43,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.1553,
+      "ci_lower": 4.409,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.58,
+        "leadership": 4.52,
+        "performance_culture": 4.31,
+        "development_and_career": 4.31,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "job_level:Job Band NA__is_manager:Manager",
+      "label": "Job Band NA \u00b7 Manager",
+      "dimensions": {
+        "job_level": "Job Band NA",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 113,
+      "mean": 4.43,
+      "delta": -0.02,
+      "vs_mean": "-0.02",
+      "z_score": -0.77,
+      "z_abs": 0.77,
+      "std_dev_label": "0.77 SD",
+      "p_value": 0.3035,
+      "ci_lower": 4.4,
+      "ci_upper": 4.451,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.46,
+        "performance_culture": 4.31,
+        "development_and_career": 4.44,
+        "manager_effectiveness": 4.4
+      }
+    },
+    {
+      "id": "tenure:20-25",
+      "label": "20-25",
+      "dimensions": {
+        "tenure": "20-25"
+      },
+      "depth": 1,
+      "n": 1714,
+      "mean": 4.45,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.3712,
+      "ci_lower": 4.437,
+      "ci_upper": 4.453,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.34,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Male__job_level:Senior Management",
+      "label": "Male \u00b7 Senior Management",
+      "dimensions": {
+        "gender": "Male",
+        "job_level": "Senior Management"
+      },
+      "depth": 2,
+      "n": 849,
+      "mean": 4.45,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.0365,
+      "ci_lower": 4.441,
+      "ci_upper": 4.465,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.44
+      }
+    },
+    {
+      "id": "gender:Female__job_level:Staff",
+      "label": "Female \u00b7 Staff",
+      "dimensions": {
+        "gender": "Female",
+        "job_level": "Staff"
+      },
+      "depth": 2,
+      "n": 110,
+      "mean": 4.45,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.4859,
+      "ci_lower": 4.427,
+      "ci_upper": 4.478,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.58,
+        "leadership": 4.49,
+        "performance_culture": 4.39,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.46
+      }
+    },
+    {
+      "id": "gender:Female__job_level:Job Band NA",
+      "label": "Female \u00b7 Job Band NA",
+      "dimensions": {
+        "gender": "Female",
+        "job_level": "Job Band NA"
+      },
+      "depth": 2,
+      "n": 131,
+      "mean": 4.45,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.7726,
+      "ci_lower": 4.419,
+      "ci_upper": 4.473,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.66,
+        "leadership": 4.5,
+        "performance_culture": 4.32,
+        "development_and_career": 4.4,
+        "manager_effectiveness": 4.39
+      }
+    },
+    {
+      "id": "generation:Baby Boomer__tenure:>25 (Equal or more than 25)",
+      "label": "Baby Boomer \u00b7 >25 (Equal or more than 25)",
+      "dimensions": {
+        "generation": "Baby Boomer",
+        "tenure": ">25 (Equal or more than 25)"
+      },
+      "depth": 2,
+      "n": 44,
+      "mean": 4.45,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.6384,
+      "ci_lower": 4.405,
+      "ci_upper": 4.501,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.68,
+        "leadership": 4.48,
+        "performance_culture": 4.29,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen Y__tenure:20-25",
+      "label": "Gen Y \u00b7 20-25",
+      "dimensions": {
+        "generation": "Gen Y",
+        "tenure": "20-25"
+      },
+      "depth": 2,
+      "n": 199,
+      "mean": 4.45,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.5407,
+      "ci_lower": 4.425,
+      "ci_upper": 4.472,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.48,
+        "performance_culture": 4.33,
+        "development_and_career": 4.43,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "generation:Gen Z__tenure:5-10",
+      "label": "Gen Z \u00b7 5-10",
+      "dimensions": {
+        "generation": "Gen Z",
+        "tenure": "5-10"
+      },
+      "depth": 2,
+      "n": 182,
+      "mean": 4.45,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.6893,
+      "ci_lower": 4.425,
+      "ci_upper": 4.467,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.66,
+        "leadership": 4.51,
+        "performance_culture": 4.32,
+        "development_and_career": 4.33,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "generation:Gen Y__job_level:Job Band NA",
+      "label": "Gen Y \u00b7 Job Band NA",
+      "dimensions": {
+        "generation": "Gen Y",
+        "job_level": "Job Band NA"
+      },
+      "depth": 2,
+      "n": 357,
+      "mean": 4.45,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.3919,
+      "ci_lower": 4.433,
+      "ci_upper": 4.465,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.51,
+        "performance_culture": 4.34,
+        "development_and_career": 4.44,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "tenure:2-5__job_level:Middle Management",
+      "label": "2-5 \u00b7 Middle Management",
+      "dimensions": {
+        "tenure": "2-5",
+        "job_level": "Middle Management"
+      },
+      "depth": 2,
+      "n": 1336,
+      "mean": 4.45,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.3914,
+      "ci_lower": 4.436,
+      "ci_upper": 4.454,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.65,
+        "leadership": 4.48,
+        "performance_culture": 4.31,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.44
+      }
+    },
+    {
+      "id": "tenure:0-2__job_level:Job Band NA",
+      "label": "0-2 \u00b7 Job Band NA",
+      "dimensions": {
+        "tenure": "0-2",
+        "job_level": "Job Band NA"
+      },
+      "depth": 2,
+      "n": 323,
+      "mean": 4.45,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.3881,
+      "ci_lower": 4.433,
+      "ci_upper": 4.466,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.6,
+        "leadership": 4.5,
+        "performance_culture": 4.34,
+        "development_and_career": 4.43,
+        "manager_effectiveness": 4.44
+      }
+    },
+    {
+      "id": "tenure:0-2__job_level:Senior Management",
+      "label": "0-2 \u00b7 Senior Management",
+      "dimensions": {
+        "tenure": "0-2",
+        "job_level": "Senior Management"
+      },
+      "depth": 2,
+      "n": 101,
+      "mean": 4.45,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.7265,
+      "ci_lower": 4.407,
+      "ci_upper": 4.488,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.55,
+        "leadership": 4.47,
+        "performance_culture": 4.34,
+        "development_and_career": 4.44,
+        "manager_effectiveness": 4.47
+      }
+    },
+    {
+      "id": "tenure:2-5__job_level:Staff",
+      "label": "2-5 \u00b7 Staff",
+      "dimensions": {
+        "tenure": "2-5",
+        "job_level": "Staff"
+      },
+      "depth": 2,
+      "n": 64,
+      "mean": 4.45,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.6688,
+      "ci_lower": 4.415,
+      "ci_upper": 4.485,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.5,
+        "performance_culture": 4.36,
+        "development_and_career": 4.41,
+        "manager_effectiveness": 4.44
+      }
+    },
+    {
+      "id": "tenure:20-25__is_manager:Non-Manager",
+      "label": "20-25 \u00b7 Non-Manager",
+      "dimensions": {
+        "tenure": "20-25",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 1094,
+      "mean": 4.45,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.0126,
+      "ci_lower": 4.443,
+      "ci_upper": 4.465,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.34,
+        "development_and_career": 4.42,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "job_level:Middle Management__is_manager:Non-Manager",
+      "label": "Middle Management \u00b7 Non-Manager",
+      "dimensions": {
+        "job_level": "Middle Management",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 1922,
+      "mean": 4.45,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.0355,
+      "ci_lower": 4.44,
+      "ci_upper": 4.459,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.47,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.45
+      }
+    },
+    {
+      "id": "job_level:Senior Management__is_manager:Manager",
+      "label": "Senior Management \u00b7 Manager",
+      "dimensions": {
+        "job_level": "Senior Management",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 740,
+      "mean": 4.45,
+      "delta": 0.01,
+      "vs_mean": "+0.01",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.3481,
+      "ci_lower": 4.436,
+      "ci_upper": 4.458,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.5,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "job_level:Job Band NA__is_manager:Non-Manager",
+      "label": "Job Band NA \u00b7 Non-Manager",
+      "dimensions": {
+        "job_level": "Job Band NA",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 400,
+      "mean": 4.45,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": 0.6,
+      "z_abs": 0.6,
+      "std_dev_label": "0.6 SD",
+      "p_value": 0.5492,
+      "ci_lower": 4.431,
+      "ci_upper": 4.462,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.5,
+        "performance_culture": 4.34,
+        "development_and_career": 4.42,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Male",
+      "label": "Male",
+      "dimensions": {
+        "gender": "Male"
+      },
+      "depth": 1,
+      "n": 46934,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.4081,
+      "ci_lower": 4.441,
+      "ci_upper": 4.444,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Female",
+      "label": "Female",
+      "dimensions": {
+        "gender": "Female"
+      },
+      "depth": 1,
+      "n": 8511,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.051,
+      "ci_lower": 4.435,
+      "ci_upper": 4.441,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen Y",
+      "label": "Gen Y",
+      "dimensions": {
+        "generation": "Gen Y"
+      },
+      "depth": 1,
+      "n": 27916,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.3837,
+      "ci_lower": 4.439,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen X",
+      "label": "Gen X",
+      "dimensions": {
+        "generation": "Gen X"
+      },
+      "depth": 1,
+      "n": 11134,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.4305,
+      "ci_lower": 4.437,
+      "ci_upper": 4.443,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen Z",
+      "label": "Gen Z",
+      "dimensions": {
+        "generation": "Gen Z"
+      },
+      "depth": 1,
+      "n": 7315,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.0954,
+      "ci_lower": 4.435,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:5-10",
+      "label": "5-10",
+      "dimensions": {
+        "tenure": "5-10"
+      },
+      "depth": 1,
+      "n": 6706,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.2201,
+      "ci_lower": 4.435,
+      "ci_upper": 4.443,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.65,
+        "leadership": 4.48,
+        "performance_culture": 4.31,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:2-5",
+      "label": "2-5",
+      "dimensions": {
+        "tenure": "2-5"
+      },
+      "depth": 1,
+      "n": 14377,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.8186,
+      "ci_lower": 4.439,
+      "ci_upper": 4.444,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:10-15",
+      "label": "10-15",
+      "dimensions": {
+        "tenure": "10-15"
+      },
+      "depth": 1,
+      "n": 7662,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9838,
+      "ci_lower": 4.437,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:0-2",
+      "label": "0-2",
+      "dimensions": {
+        "tenure": "0-2"
+      },
+      "depth": 1,
+      "n": 15247,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.5289,
+      "ci_lower": 4.44,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:>25 (Equal or more than 25)",
+      "label": ">25 (Equal or more than 25)",
+      "dimensions": {
+        "tenure": ">25 (Equal or more than 25)"
+      },
+      "depth": 1,
+      "n": 4128,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.5126,
+      "ci_lower": 4.434,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.47,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:15-20",
+      "label": "15-20",
+      "dimensions": {
+        "tenure": "15-20"
+      },
+      "depth": 1,
+      "n": 5619,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9959,
+      "ci_lower": 4.437,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "job_level:Middle Management",
+      "label": "Middle Management",
+      "dimensions": {
+        "job_level": "Middle Management"
+      },
+      "depth": 1,
+      "n": 6663,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.812,
+      "ci_lower": 4.437,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.43
+      }
+    },
+    {
+      "id": "job_level:Junior Management",
+      "label": "Junior Management",
+      "dimensions": {
+        "job_level": "Junior Management"
+      },
+      "depth": 1,
+      "n": 38772,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.1383,
+      "ci_lower": 4.439,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "job_level:Management",
+      "label": "Management",
+      "dimensions": {
+        "job_level": "Management"
+      },
+      "depth": 1,
+      "n": 39,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9133,
+      "ci_lower": 4.4,
+      "ci_upper": 4.489,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.69,
+        "leadership": 4.47,
+        "performance_culture": 4.32,
+        "development_and_career": 4.36,
+        "manager_effectiveness": 4.45
+      }
+    },
+    {
+      "id": "job_level:Job Band NA",
+      "label": "Job Band NA",
+      "dimensions": {
+        "job_level": "Job Band NA"
+      },
+      "depth": 1,
+      "n": 513,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9634,
+      "ci_lower": 4.429,
+      "ci_upper": 4.455,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.33,
+        "development_and_career": 4.42,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "is_manager:Manager",
+      "label": "Manager",
+      "dimensions": {
+        "is_manager": "Manager"
+      },
+      "depth": 1,
+      "n": 13920,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.02,
+      "ci_lower": 4.436,
+      "ci_upper": 4.441,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "is_manager:Non-Manager",
+      "label": "Non-Manager",
+      "dimensions": {
+        "is_manager": "Non-Manager"
+      },
+      "depth": 1,
+      "n": 41537,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.1779,
+      "ci_lower": 4.441,
+      "ci_upper": 4.444,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Female__generation:Gen Y",
+      "label": "Female \u00b7 Gen Y",
+      "dimensions": {
+        "gender": "Female",
+        "generation": "Gen Y"
+      },
+      "depth": 2,
+      "n": 3696,
+      "mean": 4.44,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.0609,
+      "ci_lower": 4.432,
+      "ci_upper": 4.441,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.47,
+        "performance_culture": 4.31,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Male__generation:Gen X",
+      "label": "Male \u00b7 Gen X",
+      "dimensions": {
+        "gender": "Male",
+        "generation": "Gen X"
+      },
+      "depth": 2,
+      "n": 10323,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.4863,
+      "ci_lower": 4.437,
+      "ci_upper": 4.443,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Male__generation:Gen Z",
+      "label": "Male \u00b7 Gen Z",
+      "dimensions": {
+        "gender": "Male",
+        "generation": "Gen Z"
+      },
+      "depth": 2,
+      "n": 4988,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.0843,
+      "ci_lower": 4.433,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Male__generation:Gen Y",
+      "label": "Male \u00b7 Gen Y",
+      "dimensions": {
+        "gender": "Male",
+        "generation": "Gen Y"
+      },
+      "depth": 2,
+      "n": 24219,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.8415,
+      "ci_lower": 4.439,
+      "ci_upper": 4.443,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Female__generation:Gen X",
+      "label": "Female \u00b7 Gen X",
+      "dimensions": {
+        "gender": "Female",
+        "generation": "Gen X"
+      },
+      "depth": 2,
+      "n": 811,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.6617,
+      "ci_lower": 4.428,
+      "ci_upper": 4.449,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.39
+      }
+    },
+    {
+      "id": "gender:Female__generation:Gen Z",
+      "label": "Female \u00b7 Gen Z",
+      "dimensions": {
+        "gender": "Female",
+        "generation": "Gen Z"
+      },
+      "depth": 2,
+      "n": 2326,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.6598,
+      "ci_lower": 4.434,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Male__tenure:5-10",
+      "label": "Male \u00b7 5-10",
+      "dimensions": {
+        "gender": "Male",
+        "tenure": "5-10"
+      },
+      "depth": 2,
+      "n": 5691,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.3499,
+      "ci_lower": 4.435,
+      "ci_upper": 4.444,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.31,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Female__tenure:2-5",
+      "label": "Female \u00b7 2-5",
+      "dimensions": {
+        "gender": "Female",
+        "tenure": "2-5"
+      },
+      "depth": 2,
+      "n": 2911,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.1398,
+      "ci_lower": 4.431,
+      "ci_upper": 4.443,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.31,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Male__tenure:10-15",
+      "label": "Male \u00b7 10-15",
+      "dimensions": {
+        "gender": "Male",
+        "tenure": "10-15"
+      },
+      "depth": 2,
+      "n": 7032,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.6841,
+      "ci_lower": 4.438,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.43
+      }
+    },
+    {
+      "id": "gender:Male__tenure:0-2",
+      "label": "Male \u00b7 0-2",
+      "dimensions": {
+        "gender": "Male",
+        "tenure": "0-2"
+      },
+      "depth": 2,
+      "n": 12128,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.3297,
+      "ci_lower": 4.44,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Male__tenure:>25 (Equal or more than 25)",
+      "label": "Male \u00b7 >25 (Equal or more than 25)",
+      "dimensions": {
+        "gender": "Male",
+        "tenure": ">25 (Equal or more than 25)"
+      },
+      "depth": 2,
+      "n": 3876,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.676,
+      "ci_lower": 4.435,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.47,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Male__tenure:2-5",
+      "label": "Male \u00b7 2-5",
+      "dimensions": {
+        "gender": "Male",
+        "tenure": "2-5"
+      },
+      "depth": 2,
+      "n": 11460,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.3076,
+      "ci_lower": 4.44,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Female__tenure:15-20",
+      "label": "Female \u00b7 15-20",
+      "dimensions": {
+        "gender": "Female",
+        "tenure": "15-20"
+      },
+      "depth": 2,
+      "n": 426,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.6772,
+      "ci_lower": 4.423,
+      "ci_upper": 4.453,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.48,
+        "performance_culture": 4.34,
+        "development_and_career": 4.36,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Male__tenure:15-20",
+      "label": "Male \u00b7 15-20",
+      "dimensions": {
+        "gender": "Male",
+        "tenure": "15-20"
+      },
+      "depth": 2,
+      "n": 5193,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9094,
+      "ci_lower": 4.437,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Male__tenure:20-25",
+      "label": "Male \u00b7 20-25",
+      "dimensions": {
+        "gender": "Male",
+        "tenure": "20-25"
+      },
+      "depth": 2,
+      "n": 1553,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.6767,
+      "ci_lower": 4.434,
+      "ci_upper": 4.452,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.33,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Female__tenure:5-10",
+      "label": "Female \u00b7 5-10",
+      "dimensions": {
+        "gender": "Female",
+        "tenure": "5-10"
+      },
+      "depth": 2,
+      "n": 1015,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.348,
+      "ci_lower": 4.427,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.65,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.36,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Female__tenure:0-2",
+      "label": "Female \u00b7 0-2",
+      "dimensions": {
+        "gender": "Female",
+        "tenure": "0-2"
+      },
+      "depth": 2,
+      "n": 3116,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.5926,
+      "ci_lower": 4.434,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Male__job_level:Middle Management",
+      "label": "Male \u00b7 Middle Management",
+      "dimensions": {
+        "gender": "Male",
+        "job_level": "Middle Management"
+      },
+      "depth": 2,
+      "n": 5840,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.8593,
+      "ci_lower": 4.437,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.47,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.43
+      }
+    },
+    {
+      "id": "gender:Female__job_level:Junior Management",
+      "label": "Female \u00b7 Junior Management",
+      "dimensions": {
+        "gender": "Female",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 5817,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.0673,
+      "ci_lower": 4.434,
+      "ci_upper": 4.441,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.31,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Male__job_level:Junior Management",
+      "label": "Male \u00b7 Junior Management",
+      "dimensions": {
+        "gender": "Male",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 32953,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.4013,
+      "ci_lower": 4.439,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Male__job_level:Job Band NA",
+      "label": "Male \u00b7 Job Band NA",
+      "dimensions": {
+        "gender": "Male",
+        "job_level": "Job Band NA"
+      },
+      "depth": 2,
+      "n": 382,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9077,
+      "ci_lower": 4.426,
+      "ci_upper": 4.455,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.49,
+        "performance_culture": 4.34,
+        "development_and_career": 4.43,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "gender:Male__is_manager:Manager",
+      "label": "Male \u00b7 Manager",
+      "dimensions": {
+        "gender": "Male",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 12441,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.0946,
+      "ci_lower": 4.436,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Female__is_manager:Non-Manager",
+      "label": "Female \u00b7 Non-Manager",
+      "dimensions": {
+        "gender": "Female",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 7040,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.2646,
+      "ci_lower": 4.436,
+      "ci_upper": 4.443,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "gender:Male__is_manager:Non-Manager",
+      "label": "Male \u00b7 Non-Manager",
+      "dimensions": {
+        "gender": "Male",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 34493,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.049,
+      "ci_lower": 4.441,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "generation:Gen Y__tenure:2-5",
+      "label": "Gen Y \u00b7 2-5",
+      "dimensions": {
+        "generation": "Gen Y",
+        "tenure": "2-5"
+      },
+      "depth": 2,
+      "n": 9325,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.5165,
+      "ci_lower": 4.437,
+      "ci_upper": 4.443,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen X__tenure:10-15",
+      "label": "Gen X \u00b7 10-15",
+      "dimensions": {
+        "generation": "Gen X",
+        "tenure": "10-15"
+      },
+      "depth": 2,
+      "n": 1889,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.885,
+      "ci_lower": 4.435,
+      "ci_upper": 4.449,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.49,
+        "performance_culture": 4.33,
+        "development_and_career": 4.4,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "generation:Gen Z__tenure:0-2",
+      "label": "Gen Z \u00b7 0-2",
+      "dimensions": {
+        "generation": "Gen Z",
+        "tenure": "0-2"
+      },
+      "depth": 2,
+      "n": 4911,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.6159,
+      "ci_lower": 4.436,
+      "ci_upper": 4.444,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "generation:Gen Y__tenure:0-2",
+      "label": "Gen Y \u00b7 0-2",
+      "dimensions": {
+        "generation": "Gen Y",
+        "tenure": "0-2"
+      },
+      "depth": 2,
+      "n": 8114,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.5038,
+      "ci_lower": 4.439,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen X__tenure:2-5",
+      "label": "Gen X \u00b7 2-5",
+      "dimensions": {
+        "generation": "Gen X",
+        "tenure": "2-5"
+      },
+      "depth": 2,
+      "n": 1131,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.5816,
+      "ci_lower": 4.43,
+      "ci_upper": 4.448,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.31,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.4
+      }
+    },
+    {
+      "id": "generation:Gen Y__tenure:10-15",
+      "label": "Gen Y \u00b7 10-15",
+      "dimensions": {
+        "generation": "Gen Y",
+        "tenure": "10-15"
+      },
+      "depth": 2,
+      "n": 3874,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.4093,
+      "ci_lower": 4.434,
+      "ci_upper": 4.444,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen X__tenure:>25 (Equal or more than 25)",
+      "label": "Gen X \u00b7 >25 (Equal or more than 25)",
+      "dimensions": {
+        "generation": "Gen X",
+        "tenure": ">25 (Equal or more than 25)"
+      },
+      "depth": 2,
+      "n": 2704,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9086,
+      "ci_lower": 4.435,
+      "ci_upper": 4.447,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen Y__tenure:15-20",
+      "label": "Gen Y \u00b7 15-20",
+      "dimensions": {
+        "generation": "Gen Y",
+        "tenure": "15-20"
+      },
+      "depth": 2,
+      "n": 2341,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.8044,
+      "ci_lower": 4.436,
+      "ci_upper": 4.449,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen X__tenure:15-20",
+      "label": "Gen X \u00b7 15-20",
+      "dimensions": {
+        "generation": "Gen X",
+        "tenure": "15-20"
+      },
+      "depth": 2,
+      "n": 2677,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.4327,
+      "ci_lower": 4.433,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "generation:Gen Y__tenure:5-10",
+      "label": "Gen Y \u00b7 5-10",
+      "dimensions": {
+        "generation": "Gen Y",
+        "tenure": "5-10"
+      },
+      "depth": 2,
+      "n": 4063,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.0779,
+      "ci_lower": 4.432,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.65,
+        "leadership": 4.48,
+        "performance_culture": 4.31,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen X__tenure:20-25",
+      "label": "Gen X \u00b7 20-25",
+      "dimensions": {
+        "generation": "Gen X",
+        "tenure": "20-25"
+      },
+      "depth": 2,
+      "n": 989,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.6356,
+      "ci_lower": 4.429,
+      "ci_upper": 4.449,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.33,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen X__tenure:5-10",
+      "label": "Gen X \u00b7 5-10",
+      "dimensions": {
+        "generation": "Gen X",
+        "tenure": "5-10"
+      },
+      "depth": 2,
+      "n": 1090,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.7468,
+      "ci_lower": 4.431,
+      "ci_upper": 4.449,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.49,
+        "performance_culture": 4.33,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.4
+      }
+    },
+    {
+      "id": "generation:Gen X__tenure:0-2",
+      "label": "Gen X \u00b7 0-2",
+      "dimensions": {
+        "generation": "Gen X",
+        "tenure": "0-2"
+      },
+      "depth": 2,
+      "n": 654,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9635,
+      "ci_lower": 4.43,
+      "ci_upper": 4.453,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.61,
+        "leadership": 4.48,
+        "performance_culture": 4.33,
+        "development_and_career": 4.41,
+        "manager_effectiveness": 4.43
+      }
+    },
+    {
+      "id": "generation:Gen Y__job_level:Junior Management",
+      "label": "Gen Y \u00b7 Junior Management",
+      "dimensions": {
+        "generation": "Gen Y",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 24053,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.433,
+      "ci_lower": 4.439,
+      "ci_upper": 4.443,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen X__job_level:Junior Management",
+      "label": "Gen X \u00b7 Junior Management",
+      "dimensions": {
+        "generation": "Gen X",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 7194,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.4851,
+      "ci_lower": 4.437,
+      "ci_upper": 4.444,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen Z__job_level:Junior Management",
+      "label": "Gen Z \u00b7 Junior Management",
+      "dimensions": {
+        "generation": "Gen Z",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 7147,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.1283,
+      "ci_lower": 4.435,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "generation:Gen X__job_level:Senior Management",
+      "label": "Gen X \u00b7 Senior Management",
+      "dimensions": {
+        "generation": "Gen X",
+        "job_level": "Senior Management"
+      },
+      "depth": 2,
+      "n": 639,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.6499,
+      "ci_lower": 4.433,
+      "ci_upper": 4.456,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.33,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "generation:Gen Y__job_level:Middle Management",
+      "label": "Gen Y \u00b7 Middle Management",
+      "dimensions": {
+        "generation": "Gen Y",
+        "job_level": "Middle Management"
+      },
+      "depth": 2,
+      "n": 3131,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.2485,
+      "ci_lower": 4.433,
+      "ci_upper": 4.443,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.47,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "generation:Gen X__job_level:Middle Management",
+      "label": "Gen X \u00b7 Middle Management",
+      "dimensions": {
+        "generation": "Gen X",
+        "job_level": "Middle Management"
+      },
+      "depth": 2,
+      "n": 2795,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.327,
+      "ci_lower": 4.433,
+      "ci_upper": 4.444,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "generation:Gen Y__is_manager:Non-Manager",
+      "label": "Gen Y \u00b7 Non-Manager",
+      "dimensions": {
+        "generation": "Gen Y",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 20805,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9658,
+      "ci_lower": 4.439,
+      "ci_upper": 4.444,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen X__is_manager:Non-Manager",
+      "label": "Gen X \u00b7 Non-Manager",
+      "dimensions": {
+        "generation": "Gen X",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 6099,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.7822,
+      "ci_lower": 4.438,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.4,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen Z__is_manager:Non-Manager",
+      "label": "Gen Z \u00b7 Non-Manager",
+      "dimensions": {
+        "generation": "Gen Z",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 7107,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.0901,
+      "ci_lower": 4.435,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "generation:Gen X__is_manager:Manager",
+      "label": "Gen X \u00b7 Manager",
+      "dimensions": {
+        "generation": "Gen X",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 5035,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.1398,
+      "ci_lower": 4.434,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen Y__is_manager:Manager",
+      "label": "Gen Y \u00b7 Manager",
+      "dimensions": {
+        "generation": "Gen Y",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 7111,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.072,
+      "ci_lower": 4.434,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "generation:Gen Z__is_manager:Manager",
+      "label": "Gen Z \u00b7 Manager",
+      "dimensions": {
+        "generation": "Gen Z",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 208,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9857,
+      "ci_lower": 4.42,
+      "ci_upper": 4.463,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.46,
+        "performance_culture": 4.35,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "tenure:5-10__job_level:Middle Management",
+      "label": "5-10 \u00b7 Middle Management",
+      "dimensions": {
+        "tenure": "5-10",
+        "job_level": "Middle Management"
+      },
+      "depth": 2,
+      "n": 1135,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.3513,
+      "ci_lower": 4.427,
+      "ci_upper": 4.447,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.31,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:2-5__job_level:Junior Management",
+      "label": "2-5 \u00b7 Junior Management",
+      "dimensions": {
+        "tenure": "2-5",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 11142,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.1429,
+      "ci_lower": 4.436,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "tenure:10-15__job_level:Junior Management",
+      "label": "10-15 \u00b7 Junior Management",
+      "dimensions": {
+        "tenure": "10-15",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 4561,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9228,
+      "ci_lower": 4.437,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "tenure:0-2__job_level:Junior Management",
+      "label": "0-2 \u00b7 Junior Management",
+      "dimensions": {
+        "tenure": "0-2",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 12423,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.791,
+      "ci_lower": 4.439,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:>25 (Equal or more than 25)__job_level:Middle Management",
+      "label": ">25 (Equal or more than 25) \u00b7 Middle Management",
+      "dimensions": {
+        "tenure": ">25 (Equal or more than 25)",
+        "job_level": "Middle Management"
+      },
+      "depth": 2,
+      "n": 687,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.5771,
+      "ci_lower": 4.431,
+      "ci_upper": 4.459,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.44,
+        "performance_culture": 4.33,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.46
+      }
+    },
+    {
+      "id": "tenure:10-15__job_level:Middle Management",
+      "label": "10-15 \u00b7 Middle Management",
+      "dimensions": {
+        "tenure": "10-15",
+        "job_level": "Middle Management"
+      },
+      "depth": 2,
+      "n": 1291,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.5994,
+      "ci_lower": 4.429,
+      "ci_upper": 4.449,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.48,
+        "performance_culture": 4.33,
+        "development_and_career": 4.36,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:>25 (Equal or more than 25)__job_level:Junior Management",
+      "label": ">25 (Equal or more than 25) \u00b7 Junior Management",
+      "dimensions": {
+        "tenure": ">25 (Equal or more than 25)",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 2004,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.3706,
+      "ci_lower": 4.431,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.4,
+        "manager_effectiveness": 4.4
+      }
+    },
+    {
+      "id": "tenure:10-15__job_level:Senior Management",
+      "label": "10-15 \u00b7 Senior Management",
+      "dimensions": {
+        "tenure": "10-15",
+        "job_level": "Senior Management"
+      },
+      "depth": 2,
+      "n": 146,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9146,
+      "ci_lower": 4.408,
+      "ci_upper": 4.478,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.6,
+        "leadership": 4.46,
+        "performance_culture": 4.3,
+        "development_and_career": 4.42,
+        "manager_effectiveness": 4.46
+      }
+    },
+    {
+      "id": "tenure:15-20__job_level:Middle Management",
+      "label": "15-20 \u00b7 Middle Management",
+      "dimensions": {
+        "tenure": "15-20",
+        "job_level": "Middle Management"
+      },
+      "depth": 2,
+      "n": 1009,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.4447,
+      "ci_lower": 4.428,
+      "ci_upper": 4.447,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.31,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:0-2__job_level:Middle Management",
+      "label": "0-2 \u00b7 Middle Management",
+      "dimensions": {
+        "tenure": "0-2",
+        "job_level": "Middle Management"
+      },
+      "depth": 2,
+      "n": 859,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.8154,
+      "ci_lower": 4.432,
+      "ci_upper": 4.453,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.48,
+        "performance_culture": 4.33,
+        "development_and_career": 4.42,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:15-20__job_level:Junior Management",
+      "label": "15-20 \u00b7 Junior Management",
+      "dimensions": {
+        "tenure": "15-20",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 3749,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.6578,
+      "ci_lower": 4.435,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:5-10__job_level:Junior Management",
+      "label": "5-10 \u00b7 Junior Management",
+      "dimensions": {
+        "tenure": "5-10",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 4125,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.1009,
+      "ci_lower": 4.433,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.65,
+        "leadership": 4.48,
+        "performance_culture": 4.31,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "tenure:10-15__job_level:Top Management",
+      "label": "10-15 \u00b7 Top Management",
+      "dimensions": {
+        "tenure": "10-15",
+        "job_level": "Top Management"
+      },
+      "depth": 2,
+      "n": 58,
+      "mean": 4.44,
+      "delta": -0.01,
+      "vs_mean": "-0.01",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.7835,
+      "ci_lower": 4.374,
+      "ci_upper": 4.497,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.6,
+        "leadership": 4.45,
+        "performance_culture": 4.32,
+        "development_and_career": 4.24,
+        "manager_effectiveness": 4.51
+      }
+    },
+    {
+      "id": "tenure:20-25__job_level:Middle Management",
+      "label": "20-25 \u00b7 Middle Management",
+      "dimensions": {
+        "tenure": "20-25",
+        "job_level": "Middle Management"
+      },
+      "depth": 2,
+      "n": 346,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.8993,
+      "ci_lower": 4.424,
+      "ci_upper": 4.461,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.67,
+        "leadership": 4.46,
+        "performance_culture": 4.36,
+        "development_and_career": 4.36,
+        "manager_effectiveness": 4.4
+      }
+    },
+    {
+      "id": "tenure:20-25__job_level:Junior Management",
+      "label": "20-25 \u00b7 Junior Management",
+      "dimensions": {
+        "tenure": "20-25",
+        "job_level": "Junior Management"
+      },
+      "depth": 2,
+      "n": 768,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.6567,
+      "ci_lower": 4.433,
+      "ci_upper": 4.456,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.61,
+        "leadership": 4.5,
+        "performance_culture": 4.33,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "tenure:15-20__job_level:Senior Management",
+      "label": "15-20 \u00b7 Senior Management",
+      "dimensions": {
+        "tenure": "15-20",
+        "job_level": "Senior Management"
+      },
+      "depth": 2,
+      "n": 143,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9188,
+      "ci_lower": 4.416,
+      "ci_upper": 4.464,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.7,
+        "leadership": 4.45,
+        "performance_culture": 4.34,
+        "development_and_career": 4.34,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:5-10__is_manager:Manager",
+      "label": "5-10 \u00b7 Manager",
+      "dimensions": {
+        "tenure": "5-10",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 2230,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.2689,
+      "ci_lower": 4.431,
+      "ci_upper": 4.444,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "tenure:2-5__is_manager:Non-Manager",
+      "label": "2-5 \u00b7 Non-Manager",
+      "dimensions": {
+        "tenure": "2-5",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 11098,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.4173,
+      "ci_lower": 4.44,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:10-15__is_manager:Non-Manager",
+      "label": "10-15 \u00b7 Non-Manager",
+      "dimensions": {
+        "tenure": "10-15",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 5260,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.3729,
+      "ci_lower": 4.438,
+      "ci_upper": 4.449,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.47,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.43
+      }
+    },
+    {
+      "id": "tenure:0-2__is_manager:Non-Manager",
+      "label": "0-2 \u00b7 Non-Manager",
+      "dimensions": {
+        "tenure": "0-2",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 13321,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.362,
+      "ci_lower": 4.44,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:>25 (Equal or more than 25)__is_manager:Non-Manager",
+      "label": ">25 (Equal or more than 25) \u00b7 Non-Manager",
+      "dimensions": {
+        "tenure": ">25 (Equal or more than 25)",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 2773,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.7731,
+      "ci_lower": 4.433,
+      "ci_upper": 4.448,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.47,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:2-5__is_manager:Manager",
+      "label": "2-5 \u00b7 Manager",
+      "dimensions": {
+        "tenure": "2-5",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 3279,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.3114,
+      "ci_lower": 4.433,
+      "ci_upper": 4.444,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.31,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "tenure:0-2__is_manager:Manager",
+      "label": "0-2 \u00b7 Manager",
+      "dimensions": {
+        "tenure": "0-2",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 1926,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.5315,
+      "ci_lower": 4.432,
+      "ci_upper": 4.446,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.47,
+        "performance_culture": 4.32,
+        "development_and_career": 4.4,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:15-20__is_manager:Manager",
+      "label": "15-20 \u00b7 Manager",
+      "dimensions": {
+        "tenure": "15-20",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 2106,
+      "mean": 4.44,
+      "delta": 0.0,
+      "vs_mean": "+0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9792,
+      "ci_lower": 4.435,
+      "ci_upper": 4.448,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.43
+      }
+    },
+    {
+      "id": "tenure:15-20__is_manager:Non-Manager",
+      "label": "15-20 \u00b7 Non-Manager",
+      "dimensions": {
+        "tenure": "15-20",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 3513,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.9787,
+      "ci_lower": 4.436,
+      "ci_upper": 4.447,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "tenure:>25 (Equal or more than 25)__is_manager:Manager",
+      "label": ">25 (Equal or more than 25) \u00b7 Manager",
+      "dimensions": {
+        "tenure": ">25 (Equal or more than 25)",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 1355,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.4651,
+      "ci_lower": 4.43,
+      "ci_upper": 4.447,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.49,
+        "performance_culture": 4.32,
+        "development_and_career": 4.37,
+        "manager_effectiveness": 4.4
+      }
+    },
+    {
+      "id": "tenure:10-15__is_manager:Manager",
+      "label": "10-15 \u00b7 Manager",
+      "dimensions": {
+        "tenure": "10-15",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 2402,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.1755,
+      "ci_lower": 4.431,
+      "ci_upper": 4.443,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.61,
+        "leadership": 4.49,
+        "performance_culture": 4.33,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "tenure:5-10__is_manager:Non-Manager",
+      "label": "5-10 \u00b7 Non-Manager",
+      "dimensions": {
+        "tenure": "5-10",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 4476,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.4712,
+      "ci_lower": 4.434,
+      "ci_upper": 4.445,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.65,
+        "leadership": 4.47,
+        "performance_culture": 4.31,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "job_level:Middle Management__is_manager:Manager",
+      "label": "Middle Management \u00b7 Manager",
+      "dimensions": {
+        "job_level": "Middle Management",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 4741,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.1051,
+      "ci_lower": 4.433,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.42
+      }
+    },
+    {
+      "id": "job_level:Junior Management__is_manager:Non-Manager",
+      "label": "Junior Management \u00b7 Non-Manager",
+      "dimensions": {
+        "job_level": "Junior Management",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 32114,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.4148,
+      "ci_lower": 4.439,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.64,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.38,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "job_level:Junior Management__is_manager:Manager",
+      "label": "Junior Management \u00b7 Manager",
+      "dimensions": {
+        "job_level": "Junior Management",
+        "is_manager": "Manager"
+      },
+      "depth": 2,
+      "n": 6658,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.0741,
+      "ci_lower": 4.434,
+      "ci_upper": 4.442,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.63,
+        "leadership": 4.48,
+        "performance_culture": 4.32,
+        "development_and_career": 4.39,
+        "manager_effectiveness": 4.41
+      }
+    },
+    {
+      "id": "job_level:Non Management__is_manager:Non-Manager",
+      "label": "Non Management \u00b7 Non-Manager",
+      "dimensions": {
+        "job_level": "Non Management",
+        "is_manager": "Non-Manager"
+      },
+      "depth": 2,
+      "n": 94,
+      "mean": 4.44,
+      "delta": -0.0,
+      "vs_mean": "-0.0",
+      "z_score": -0.09,
+      "z_abs": 0.09,
+      "std_dev_label": "0.09 SD",
+      "p_value": 0.852,
+      "ci_lower": 4.39,
+      "ci_upper": 4.487,
+      "band": "typical",
+      "category_means": {
+        "engagement": 4.62,
+        "leadership": 4.38,
+        "performance_culture": 4.35,
+        "development_and_career": 4.27,
+        "manager_effectiveness": 4.48
+      }
+    }
+  ]
+}

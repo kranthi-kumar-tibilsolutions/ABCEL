@@ -430,21 +430,20 @@ export default function StatisticalAnalysisPage() {
       if (filters?.inactive === 'Yes') qs.set('include_inactive', 'Yes');
       const qStr = qs.toString() ? `&${qs}` : '';
 
-      const [corrRes, cgramRes, netRes, insightRes] = await Promise.all([
+      // Fetch core data first — never let LLM failure block this
+      const [corrRes, cgramRes, netRes] = await Promise.all([
         apiFetch(`/api/statistical/correlations/${qId}?${qStr.slice(1)}`),
         apiFetch(`/api/statistical/correlogram/${qId}?top=${corrN}${qStr}`),
         apiFetch(`/api/statistical/network/${qId}?top=${netN}${qStr}`),
-        apiFetch(`/api/statistical/insights/${qId}?${qStr.slice(1)}`),
       ]);
-      const [corrData, cgramData, netData, insData] = await Promise.all([
-        corrRes.json(), cgramRes.json(), netRes.json(), insightRes.json(),
+      const [corrData, cgramData, netData] = await Promise.all([
+        corrRes.json(), cgramRes.json(), netRes.json(),
       ]);
 
       const tabCts = corrData.tab_counts || {};
       const bn     = corrData.n || 0;
       const corrs  = corrData.correlations || [];
       const basis  = corrData.data_basis || '';
-      const ins    = insData.insight || '';
 
       setTabCounts(tabCts);
       setBaseN(bn);
@@ -452,7 +451,6 @@ export default function StatisticalAnalysisPage() {
       setCorrelations(corrs);
       setCorrelogramData(cgramData);
       setNetworkData(netData);
-      setInsight(ins);
 
       // Persist to context so navigating back restores data without re-fetching
       setSaCache({
@@ -464,10 +462,16 @@ export default function StatisticalAnalysisPage() {
         correlations:    corrs,
         correlogramData: cgramData,
         networkData:     netData,
-        insight:         ins,
+        insight:         saCache?.insight || '',
       });
     } catch {}
     setLoading(false);
+
+    // LLM insight is non-blocking — fetch separately so failure doesn't blank the page
+    apiFetch(`/api/statistical/insights/${qId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.insight) { setInsight(d.insight); setSaCache(prev => prev ? { ...prev, insight: d.insight } : prev); } })
+      .catch(() => {});
   }, [setSaCache]);
 
   useEffect(() => {

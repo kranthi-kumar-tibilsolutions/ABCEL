@@ -32,7 +32,7 @@ function GapBar({ score, groupAvg }) {
 }
 
 export default function BenchmarksPage() {
-  const { businesses, meta, setBreadcrumb } = useContext(AppContext);
+  const { businesses, meta, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
   const [activeTab, setActiveTab] = useState('peers');
 
   useEffect(() => {
@@ -40,6 +40,7 @@ export default function BenchmarksPage() {
       { label: 'Overview', page: 'overview' },
       { label: 'Benchmarks' },
     ]);
+    setActiveScreenContext({ tab: 'benchmarks', description: 'Benchmark comparisons for ABG Vibes 2026 engagement scores against peer, industry, and regional norms.' });
   }, []);
 
   const groupAvg    = meta?.group_avg ?? 4.44;

@@ -12,13 +12,14 @@ function scoreColor(s) {
 }
 
 export default function OutliersPage() {
-  const { units, businesses, navigate, setBreadcrumb, outliersTopN } = useContext(AppContext);
+  const { units, businesses, navigate, setBreadcrumb, outliersTopN, setActiveScreenContext } = useContext(AppContext);
 
   useEffect(() => {
     setBreadcrumb([
       { label: 'Overview', page: 'overview' },
       { label: 'Outliers & Alerts' },
     ]);
+    setActiveScreenContext({ tab: 'outliers_alerts', description: 'Business units and categories flagged as statistical outliers in ABG Vibes 2026.' });
   }, []);
   const topN = outliersTopN;
 

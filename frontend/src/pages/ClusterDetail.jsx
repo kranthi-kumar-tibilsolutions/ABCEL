@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 import Badge      from '../components/shared/Badge';
 import Breadcrumb from '../components/shared/Breadcrumb';
@@ -21,7 +21,11 @@ function scoreColor(s) {
 }
 
 export default function ClusterDetail() {
-  const { selectedCluster, clusters, navigate } = useContext(AppContext);
+  const { selectedCluster, clusters, navigate, setActiveScreenContext } = useContext(AppContext);
+
+  useEffect(() => {
+    setActiveScreenContext({ tab: 'cluster_detail', description: `Cluster detail view — ${selectedCluster ?? 'all'} cluster engagement breakdown for ABG Vibes 2026.` });
+  }, [selectedCluster]);
 
   const filterKey = selectedCluster === 'all' ? null : selectedCluster;
 

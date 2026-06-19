@@ -247,23 +247,14 @@ function TrendIcon({ t }) {
 /* ── Page ────────────────────────────────────────────────────── */
 export default function SentimentAnalysisPage() {
   const { rightPanelCollapsed, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
-  const compact = !rightPanelCollapsed;
+  const compact = !rightPanelCollapsed; // right panel is open → use compact sizes
 
   useEffect(() => {
     setBreadcrumb([{ label: 'Explore' }, { label: 'Sentiment Analysis' }]);
   }, []);
 
-  useEffect(() => {
-    setActiveScreenContext({
-      tab: 'sentiment_analysis',
-      overall_score: 0.28,
-      total_responses: 4892,
-      distribution: { positive: 41.5, neutral: 33.0, negative: 25.5 },
-      top_topics: TOPIC_BREAKDOWN.map(t => ({ topic: t.topic, score: t.score, pct: t.pct })),
-    });
-  }, []);
-
-  const [activeSentiment, setActiveSentiment] = useState(null);
+  const [period,           setPeriod]           = useState('Monthly');
+  const [activeSentiment,  setActiveSentiment]  = useState(null);
 
   const filteredTopics = activeSentiment
     ? TOPIC_BREAKDOWN.filter(row =>
@@ -273,8 +264,36 @@ export default function SentimentAnalysisPage() {
       )
     : TOPIC_BREAKDOWN;
 
+  // Broadcast screen context
+  useEffect(() => {
+    setActiveScreenContext({
+      tab: 'sentiment_analysis',
+      overall_score: 0.28,
+      total_responses: 4892,
+      distribution: { positive: 41.5, neutral: 33.0, negative: 25.5 },
+      top_topics: TOPIC_BREAKDOWN.map(t => ({ topic: t.topic, score: t.score, pct: t.pct })),
+      period,
+      active_filter: activeSentiment,
+      visible_topics: filteredTopics,
+    });
+  }, [period, activeSentiment]);
+
   return (
     <div className="page-container">
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap' }}>
+          <button className="topbar-btn" style={{ fontSize: 11 }}>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="7" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="1" y="7" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="7" y="7" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/></svg>
+            Save View
+          </button>
+          <button className="topbar-btn" style={{ fontSize: 11 }}>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3.5 6l3-3 3 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 10h9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+            Share
+          </button>
+        </div>
+      </div>
 
       {/* Row 1 — Score · Distribution · Over Time */}
       <div className="sa-grid-3">

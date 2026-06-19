@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useContext, useEffect } from 'react';
+import { AppContext } from '../context/AppContext';
 
 function InfoIcon() {
   return (
@@ -44,7 +45,13 @@ function SettingRow({ label, description, children }) {
 }
 
 export default function SettingsPage() {
+  const { setActiveScreenContext, setBreadcrumb } = useContext(AppContext);
   const [minSample, setMinSample] = useState(30);
+
+  useEffect(() => {
+    setBreadcrumb([{ label: 'Settings' }]);
+    setActiveScreenContext({ tab: 'settings', description: 'Platform settings for ABG Vibes 2026 — configure analysis parameters and preferences.' });
+  }, []);
 
   const presets = [10, 25, 30, 50, 100];
 

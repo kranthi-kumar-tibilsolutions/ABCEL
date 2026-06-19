@@ -4,13 +4,14 @@ import Papa from 'papaparse';
 import InfoTip from '../components/shared/InfoTip';
 
 export default function ReportsPage() {
-  const { businesses, units, clusters, meta, setBreadcrumb } = useContext(AppContext);
+  const { businesses, units, clusters, meta, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
 
   useEffect(() => {
     setBreadcrumb([
       { label: 'Overview', page: 'overview' },
       { label: 'Reports' },
     ]);
+    setActiveScreenContext({ tab: 'reports', description: 'Downloadable engagement reports for businesses, business units, and clusters.' });
   }, []);
 
   const downloadCsv = (data, filename) => {

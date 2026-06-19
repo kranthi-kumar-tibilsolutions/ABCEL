@@ -1,0 +1,1045 @@
+{
+  "age_group": [
+    {
+      "name": "25-30",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.37,
+        "Leadership": 4.49,
+        "Performance culture": 4.33,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 7773
+    },
+    {
+      "name": "30-35",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 10741
+    },
+    {
+      "name": "35-40",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.39,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.41
+      },
+      "respondent_count": 10537
+    },
+    {
+      "name": "40-45",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 9219
+    },
+    {
+      "name": "45-50",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.39,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 5843
+    },
+    {
+      "name": "50-55",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.33,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 4612
+    },
+    {
+      "name": ">55",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.62,
+        "Development & Career": 4.38,
+        "Leadership": 4.49,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.39
+      },
+      "respondent_count": 4361
+    },
+    {
+      "name": "21-25",
+      "overall": 4.43,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.37,
+        "Leadership": 4.48,
+        "Performance culture": 4.31,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.41
+      },
+      "respondent_count": 2250
+    },
+    {
+      "name": "<21",
+      "overall": 4.41,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.29,
+        "Leadership": 4.53,
+        "Performance culture": 4.27,
+        "Manager Effectiveness": 4.37,
+        "Uncategorized": 4.38
+      },
+      "respondent_count": 107
+    }
+  ],
+  "generation": [
+    {
+      "name": "Traditionalist",
+      "overall": 4.59,
+      "categories": {
+        "Engagement Index": 4.75,
+        "Development & Career": 4.75,
+        "Leadership": 4.56,
+        "Performance culture": 4.67,
+        "Manager Effectiveness": 3.83,
+        "Uncategorized": 5.0
+      },
+      "respondent_count": 1
+    },
+    {
+      "name": "DOB not Available",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.37,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 8980
+    },
+    {
+      "name": "Gen X",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.39,
+        "Leadership": 4.49,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 11134
+    },
+    {
+      "name": "Gen Y",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 27916
+    },
+    {
+      "name": "Gen Z",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.37,
+        "Leadership": 4.49,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 7315
+    },
+    {
+      "name": "Baby Boomer",
+      "overall": 4.43,
+      "categories": {
+        "Engagement Index": 4.6,
+        "Development & Career": 4.29,
+        "Leadership": 4.51,
+        "Performance culture": 4.29,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.45
+      },
+      "respondent_count": 111
+    }
+  ],
+  "gender": [
+    {
+      "name": "Unknown",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.58,
+        "Development & Career": 4.5,
+        "Leadership": 4.63,
+        "Performance culture": 4.23,
+        "Manager Effectiveness": 4.44,
+        "Uncategorized": 4.33
+      },
+      "respondent_count": 3
+    },
+    {
+      "name": "Female",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.37,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 8511
+    },
+    {
+      "name": "Male",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 46934
+    }
+  ],
+  "job_band": [
+    {
+      "name": "Staff",
+      "overall": 4.46,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.43,
+        "Leadership": 4.5,
+        "Performance culture": 4.34,
+        "Manager Effectiveness": 4.44,
+        "Uncategorized": 4.39
+      },
+      "respondent_count": 484
+    },
+    {
+      "name": "Senior Management",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.38,
+        "Leadership": 4.5,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.44
+      },
+      "respondent_count": 924
+    },
+    {
+      "name": "Job Band NA",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.41,
+        "Leadership": 4.49,
+        "Performance culture": 4.33,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.36
+      },
+      "respondent_count": 513
+    },
+    {
+      "name": "Junior Management",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 38772
+    },
+    {
+      "name": "Management",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.69,
+        "Development & Career": 4.34,
+        "Leadership": 4.47,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.45,
+        "Uncategorized": 4.38
+      },
+      "respondent_count": 39
+    },
+    {
+      "name": "Middle Management",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.39
+      },
+      "respondent_count": 6663
+    },
+    {
+      "name": "Top Management",
+      "overall": 4.43,
+      "categories": {
+        "Engagement Index": 4.59,
+        "Development & Career": 4.31,
+        "Leadership": 4.52,
+        "Performance culture": 4.31,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.43
+      },
+      "respondent_count": 306
+    },
+    {
+      "name": "Non Management",
+      "overall": 4.41,
+      "categories": {
+        "Engagement Index": 4.61,
+        "Development & Career": 4.29,
+        "Leadership": 4.46,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.35
+      },
+      "respondent_count": 116
+    }
+  ],
+  "tenure": [
+    {
+      "name": "0-2",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 15247
+    },
+    {
+      "name": "10-15",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 7662
+    },
+    {
+      "name": "15-20",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 5619
+    },
+    {
+      "name": "2-5",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 14377
+    },
+    {
+      "name": "20-25",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.39,
+        "Leadership": 4.49,
+        "Performance culture": 4.33,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.41
+      },
+      "respondent_count": 1714
+    },
+    {
+      "name": "5-10",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.65,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.31,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.39
+      },
+      "respondent_count": 6706
+    },
+    {
+      "name": ">25 (Equal or more than 25)",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 4128
+    }
+  ],
+  "abglp": [
+    {
+      "name": "No",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 54448
+    },
+    {
+      "name": "Yes",
+      "overall": 4.43,
+      "categories": {
+        "Engagement Index": 4.61,
+        "Development & Career": 4.37,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.43,
+        "Uncategorized": 4.39
+      },
+      "respondent_count": 1009
+    }
+  ],
+  "country": [
+    {
+      "name": "Viet Nam",
+      "overall": 4.65,
+      "categories": {
+        "Engagement Index": 5.0,
+        "Development & Career": 4.58,
+        "Leadership": 4.48,
+        "Performance culture": 4.31,
+        "Manager Effectiveness": 4.53,
+        "Uncategorized": 5.0
+      },
+      "respondent_count": 3
+    },
+    {
+      "name": "Paraguay",
+      "overall": 4.61,
+      "categories": {
+        "Engagement Index": 4.5,
+        "Development & Career": 4.83,
+        "Leadership": 4.28,
+        "Performance culture": 4.36,
+        "Manager Effectiveness": 4.71,
+        "Uncategorized": 5.0
+      },
+      "respondent_count": 2
+    },
+    {
+      "name": "Austria",
+      "overall": 4.57,
+      "categories": {
+        "Engagement Index": 5.0,
+        "Development & Career": 4.5,
+        "Leadership": 4.56,
+        "Performance culture": 4.2,
+        "Manager Effectiveness": 4.17,
+        "Uncategorized": 5.0
+      },
+      "respondent_count": 1
+    },
+    {
+      "name": "Tanzania, United Republic of",
+      "overall": 4.52,
+      "categories": {
+        "Engagement Index": 4.75,
+        "Development & Career": 5.0,
+        "Leadership": 4.67,
+        "Performance culture": 4.2,
+        "Manager Effectiveness": 4.5,
+        "Uncategorized": 4.0
+      },
+      "respondent_count": 1
+    },
+    {
+      "name": "Zimbabwe",
+      "overall": 4.51,
+      "categories": {
+        "Engagement Index": 5.0,
+        "Development & Career": 4.67,
+        "Leadership": 4.33,
+        "Performance culture": 4.47,
+        "Manager Effectiveness": 4.58,
+        "Uncategorized": 4.0
+      },
+      "respondent_count": 1
+    },
+    {
+      "name": "Ghana",
+      "overall": 4.49,
+      "categories": {
+        "Engagement Index": 4.88,
+        "Development & Career": 4.75,
+        "Leadership": 4.44,
+        "Performance culture": 4.43,
+        "Manager Effectiveness": 4.46,
+        "Uncategorized": 4.0
+      },
+      "respondent_count": 2
+    },
+    {
+      "name": "Kenya",
+      "overall": 4.49,
+      "categories": {
+        "Engagement Index": 4.94,
+        "Development & Career": 4.44,
+        "Leadership": 4.34,
+        "Performance culture": 4.15,
+        "Manager Effectiveness": 4.56,
+        "Uncategorized": 4.5
+      },
+      "respondent_count": 4
+    },
+    {
+      "name": "Hungary",
+      "overall": 4.48,
+      "categories": {
+        "Engagement Index": 4.66,
+        "Development & Career": 4.45,
+        "Leadership": 4.54,
+        "Performance culture": 4.38,
+        "Manager Effectiveness": 4.5,
+        "Uncategorized": 4.37
+      },
+      "respondent_count": 43
+    },
+    {
+      "name": "Sri Lanka",
+      "overall": 4.48,
+      "categories": {
+        "Engagement Index": 4.6,
+        "Development & Career": 4.3,
+        "Leadership": 4.61,
+        "Performance culture": 4.37,
+        "Manager Effectiveness": 4.47,
+        "Uncategorized": 4.54
+      },
+      "respondent_count": 26
+    },
+    {
+      "name": "Italy",
+      "overall": 4.46,
+      "categories": {
+        "Engagement Index": 4.62,
+        "Development & Career": 4.44,
+        "Leadership": 4.49,
+        "Performance culture": 4.34,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.44
+      },
+      "respondent_count": 364
+    },
+    {
+      "name": "Myanmar",
+      "overall": 4.46,
+      "categories": {
+        "Engagement Index": 4.38,
+        "Development & Career": 4.75,
+        "Leadership": 4.39,
+        "Performance culture": 4.3,
+        "Manager Effectiveness": 4.46,
+        "Uncategorized": 4.5
+      },
+      "respondent_count": 4
+    },
+    {
+      "name": "Spain",
+      "overall": 4.46,
+      "categories": {
+        "Engagement Index": 4.72,
+        "Development & Career": 4.31,
+        "Leadership": 4.49,
+        "Performance culture": 4.41,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.41
+      },
+      "respondent_count": 34
+    },
+    {
+      "name": "Belgium",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.58,
+        "Development & Career": 4.41,
+        "Leadership": 4.51,
+        "Performance culture": 4.35,
+        "Manager Effectiveness": 4.43,
+        "Uncategorized": 4.39
+      },
+      "respondent_count": 33
+    },
+    {
+      "name": "Brazil",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.62,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.34,
+        "Manager Effectiveness": 4.45,
+        "Uncategorized": 4.42
+      },
+      "respondent_count": 1409
+    },
+    {
+      "name": "Thailand",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.65,
+        "Development & Career": 4.41,
+        "Leadership": 4.48,
+        "Performance culture": 4.34,
+        "Manager Effectiveness": 4.44,
+        "Uncategorized": 4.38
+      },
+      "respondent_count": 653
+    },
+    {
+      "name": "United Arab Emirates",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.78,
+        "Development & Career": 4.42,
+        "Leadership": 4.43,
+        "Performance culture": 4.26,
+        "Manager Effectiveness": 4.39,
+        "Uncategorized": 4.44
+      },
+      "respondent_count": 9
+    },
+    {
+      "name": "Canada",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.61,
+        "Development & Career": 4.39,
+        "Leadership": 4.49,
+        "Performance culture": 4.36,
+        "Manager Effectiveness": 4.4,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 290
+    },
+    {
+      "name": "India",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 44809
+    },
+    {
+      "name": "Indonesia",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.5,
+        "Performance culture": 4.31,
+        "Manager Effectiveness": 4.4,
+        "Uncategorized": 4.41
+      },
+      "respondent_count": 348
+    },
+    {
+      "name": "Korea",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.65,
+        "Development & Career": 4.37,
+        "Leadership": 4.47,
+        "Performance culture": 4.33,
+        "Manager Effectiveness": 4.44,
+        "Uncategorized": 4.36
+      },
+      "respondent_count": 777
+    },
+    {
+      "name": "United Arab Emirates (the)",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.35,
+        "Leadership": 4.49,
+        "Performance culture": 4.34,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.41
+      },
+      "respondent_count": 194
+    },
+    {
+      "name": "China",
+      "overall": 4.43,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.35,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.44,
+        "Uncategorized": 4.37
+      },
+      "respondent_count": 978
+    },
+    {
+      "name": "Germany",
+      "overall": 4.43,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.37,
+        "Leadership": 4.48,
+        "Performance culture": 4.31,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.39
+      },
+      "respondent_count": 2151
+    },
+    {
+      "name": "Korea (the Republic of)",
+      "overall": 4.43,
+      "categories": {
+        "Engagement Index": 4.53,
+        "Development & Career": 4.44,
+        "Leadership": 4.55,
+        "Performance culture": 4.37,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.29
+      },
+      "respondent_count": 45
+    },
+    {
+      "name": "Singapore",
+      "overall": 4.43,
+      "categories": {
+        "Engagement Index": 4.8,
+        "Development & Career": 4.3,
+        "Leadership": 4.46,
+        "Performance culture": 4.26,
+        "Manager Effectiveness": 4.39,
+        "Uncategorized": 4.38
+      },
+      "respondent_count": 21
+    },
+    {
+      "name": "Switzerland",
+      "overall": 4.43,
+      "categories": {
+        "Engagement Index": 4.62,
+        "Development & Career": 4.37,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.4,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 542
+    },
+    {
+      "name": "United States",
+      "overall": 4.43,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.36,
+        "Leadership": 4.47,
+        "Performance culture": 4.31,
+        "Manager Effectiveness": 4.43,
+        "Uncategorized": 4.41
+      },
+      "respondent_count": 2091
+    },
+    {
+      "name": "United States of America (the)",
+      "overall": 4.43,
+      "categories": {
+        "Engagement Index": 4.62,
+        "Development & Career": 4.34,
+        "Leadership": 4.51,
+        "Performance culture": 4.34,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.37
+      },
+      "respondent_count": 207
+    },
+    {
+      "name": "Egypt",
+      "overall": 4.42,
+      "categories": {
+        "Engagement Index": 4.56,
+        "Development & Career": 4.4,
+        "Leadership": 4.47,
+        "Performance culture": 4.3,
+        "Manager Effectiveness": 4.4,
+        "Uncategorized": 4.38
+      },
+      "respondent_count": 69
+    },
+    {
+      "name": "Mozambique",
+      "overall": 4.42,
+      "categories": {
+        "Engagement Index": 4.79,
+        "Development & Career": 4.19,
+        "Leadership": 4.5,
+        "Performance culture": 4.14,
+        "Manager Effectiveness": 4.57,
+        "Uncategorized": 4.33
+      },
+      "respondent_count": 6
+    },
+    {
+      "name": "Sweden",
+      "overall": 4.42,
+      "categories": {
+        "Engagement Index": 4.58,
+        "Development & Career": 4.38,
+        "Leadership": 4.46,
+        "Performance culture": 4.29,
+        "Manager Effectiveness": 4.4,
+        "Uncategorized": 4.43
+      },
+      "respondent_count": 83
+    },
+    {
+      "name": "United Kingdom",
+      "overall": 4.42,
+      "categories": {
+        "Engagement Index": 4.61,
+        "Development & Career": 4.35,
+        "Leadership": 4.49,
+        "Performance culture": 4.35,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.33
+      },
+      "respondent_count": 123
+    },
+    {
+      "name": "Bahrain",
+      "overall": 4.39,
+      "categories": {
+        "Engagement Index": 4.45,
+        "Development & Career": 4.47,
+        "Leadership": 4.48,
+        "Performance culture": 4.28,
+        "Manager Effectiveness": 4.4,
+        "Uncategorized": 4.29
+      },
+      "respondent_count": 14
+    },
+    {
+      "name": "Netherlands (the)",
+      "overall": 4.39,
+      "categories": {
+        "Engagement Index": 4.0,
+        "Development & Career": 4.62,
+        "Leadership": 4.61,
+        "Performance culture": 4.37,
+        "Manager Effectiveness": 4.25,
+        "Uncategorized": 4.5
+      },
+      "respondent_count": 2
+    },
+    {
+      "name": "Australia",
+      "overall": 4.35,
+      "categories": {
+        "Engagement Index": 4.25,
+        "Development & Career": 4.15,
+        "Leadership": 4.5,
+        "Performance culture": 4.27,
+        "Manager Effectiveness": 4.44,
+        "Uncategorized": 4.5
+      },
+      "respondent_count": 4
+    },
+    {
+      "name": "Japan",
+      "overall": 4.35,
+      "categories": {
+        "Engagement Index": 5.0,
+        "Development & Career": 4.25,
+        "Leadership": 4.67,
+        "Performance culture": 4.27,
+        "Manager Effectiveness": 3.92,
+        "Uncategorized": 4.0
+      },
+      "respondent_count": 1
+    },
+    {
+      "name": "Hong Kong",
+      "overall": 4.33,
+      "categories": {
+        "Engagement Index": 4.5,
+        "Development & Career": 3.5,
+        "Leadership": 4.33,
+        "Performance culture": 4.29,
+        "Manager Effectiveness": 4.33,
+        "Uncategorized": 5.0
+      },
+      "respondent_count": 1
+    },
+    {
+      "name": "Zambia",
+      "overall": 4.3,
+      "categories": {
+        "Engagement Index": 4.5,
+        "Development & Career": 4.06,
+        "Leadership": 4.52,
+        "Performance culture": 4.4,
+        "Manager Effectiveness": 4.33,
+        "Uncategorized": 4.0
+      },
+      "respondent_count": 3
+    },
+    {
+      "name": "Nepal",
+      "overall": 4.27,
+      "categories": {
+        "Engagement Index": 4.5,
+        "Development & Career": 4.25,
+        "Leadership": 4.61,
+        "Performance culture": 4.0,
+        "Manager Effectiveness": 4.29,
+        "Uncategorized": 4.0
+      },
+      "respondent_count": 2
+    },
+    {
+      "name": "Turkey",
+      "overall": 4.27,
+      "categories": {
+        "Engagement Index": 3.75,
+        "Development & Career": 4.5,
+        "Leadership": 4.44,
+        "Performance culture": 4.2,
+        "Manager Effectiveness": 4.75,
+        "Uncategorized": 4.0
+      },
+      "respondent_count": 1
+    },
+    {
+      "name": "Vietnam",
+      "overall": 4.25,
+      "categories": {
+        "Engagement Index": 4.0,
+        "Development & Career": 3.75,
+        "Leadership": 4.44,
+        "Performance culture": 3.79,
+        "Manager Effectiveness": 4.5,
+        "Uncategorized": 5.0
+      },
+      "respondent_count": 1
+    },
+    {
+      "name": "Bangladesh",
+      "overall": 4.23,
+      "categories": {
+        "Engagement Index": 4.62,
+        "Development & Career": 3.88,
+        "Leadership": 4.44,
+        "Performance culture": 4.03,
+        "Manager Effectiveness": 3.88,
+        "Uncategorized": 4.5
+      },
+      "respondent_count": 2
+    }
+  ],
+  "is_manager": [
+    {
+      "name": "No",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 41537
+    },
+    {
+      "name": "Yes",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 13920
+    }
+  ]
+}

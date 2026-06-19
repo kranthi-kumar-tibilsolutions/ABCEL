@@ -1,0 +1,312 @@
+[
+  {
+    "id": "H-1781854328999",
+    "hypothesis": "Employees with higher Career Development scores tend to have higher Engagement scores.",
+    "result": "inconclusive",
+    "test_type": "pearson_correlation",
+    "p_value": 0.6194,
+    "filters_applied": {},
+    "date_tested": "Jun 19, 2026",
+    "params": {
+      "hypothesis_type": "relationship",
+      "parseable": true,
+      "parse_error": null,
+      "x_var": {
+        "source": "theme",
+        "field": "development_and_career",
+        "question_id": null,
+        "label": "Career Development Score",
+        "confidence": 0.99
+      },
+      "y_var": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "group_a": null,
+      "group_b": null,
+      "group": null,
+      "outcome": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "There is no correlation between Career Development scores and Engagement scores.",
+      "h1": "There is a positive correlation between Career Development scores and Engagement scores.",
+      "test_recommended": "pearson_correlation",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1781854220154",
+    "hypothesis": "Higher Manager Effectiveness scores are associated with higher Engagement.",
+    "result": "inconclusive",
+    "test_type": "pearson_correlation",
+    "p_value": 0.309,
+    "filters_applied": {},
+    "date_tested": "Jun 19, 2026",
+    "params": {
+      "hypothesis_type": "relationship",
+      "parseable": true,
+      "parse_error": null,
+      "x_var": {
+        "source": "theme",
+        "field": "manager_effectiveness",
+        "question_id": null,
+        "label": "Manager Effectiveness Score",
+        "confidence": 0.99
+      },
+      "y_var": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "group_a": null,
+      "group_b": null,
+      "group": null,
+      "outcome": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "There is no correlation between Manager Effectiveness scores and Engagement scores.",
+      "h1": "Higher Manager Effectiveness scores are associated with higher Engagement scores.",
+      "test_recommended": "pearson_correlation",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1781851023723",
+    "hypothesis": "Employees with higher Career Development scores tend to have higher Engagement scores.",
+    "result": "inconclusive",
+    "test_type": "pearson_correlation",
+    "p_value": 0.6194,
+    "filters_applied": {},
+    "date_tested": "Jun 19, 2026",
+    "params": {
+      "hypothesis_type": "relationship",
+      "parseable": true,
+      "parse_error": null,
+      "x_var": {
+        "source": "theme",
+        "field": "development_and_career",
+        "question_id": null,
+        "label": "Career Development Score",
+        "confidence": 0.99
+      },
+      "y_var": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "group_a": null,
+      "group_b": null,
+      "group": null,
+      "outcome": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "There is no positive correlation between Career Development scores and Engagement scores.",
+      "h1": "There is a positive correlation between Career Development scores and Engagement scores.",
+      "test_recommended": "pearson_correlation",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1781846269012",
+    "hypothesis": "Employees with higher Career Development scores tend to have higher Engagement scores.",
+    "result": "inconclusive",
+    "test_type": "pearson_correlation",
+    "p_value": 0.6194,
+    "filters_applied": {},
+    "date_tested": "Jun 19, 2026",
+    "params": {
+      "hypothesis_type": "relationship",
+      "parseable": true,
+      "parse_error": null,
+      "group_a": null,
+      "group_b": null,
+      "x_var": {
+        "source": "theme",
+        "field": "development_and_career",
+        "question_id": null,
+        "label": "Career Development Score",
+        "confidence": 0.99
+      },
+      "y_var": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "group": null,
+      "outcome": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "There is no correlation between Career Development scores and Engagement scores.",
+      "h1": "There is a positive correlation between Career Development scores and Engagement scores.",
+      "test_recommended": "pearson_correlation",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1781845490137",
+    "hypothesis": "Higher Manager Effectiveness scores are associated with higher Engagement.",
+    "result": "inconclusive",
+    "test_type": "pearson_correlation",
+    "p_value": 0.309,
+    "filters_applied": {},
+    "date_tested": "Jun 19, 2026",
+    "params": {
+      "hypothesis_type": "relationship",
+      "parseable": true,
+      "parse_error": null,
+      "group_a": null,
+      "group_b": null,
+      "x_var": {
+        "source": "theme",
+        "field": "manager_effectiveness",
+        "question_id": null,
+        "label": "Manager Effectiveness Score",
+        "confidence": 0.99
+      },
+      "y_var": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "group": null,
+      "outcome": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "There is no association between Manager Effectiveness scores and Engagement scores.",
+      "h1": "Higher Manager Effectiveness scores are associated with higher Engagement scores.",
+      "test_recommended": "pearson_correlation",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1781675164289",
+    "hypothesis": "Gen Z employees have higher Onboarding scores than the company average.",
+    "result": "validated",
+    "test_type": "one_sample_z",
+    "p_value": 0.0006,
+    "filters_applied": {},
+    "date_tested": "Jun 17, 2026",
+    "params": {
+      "hypothesis_type": "one_sample",
+      "parseable": true,
+      "parse_error": null,
+      "group_a": null,
+      "group_b": null,
+      "x_var": null,
+      "y_var": null,
+      "group": {
+        "field": "generation",
+        "value": "Gen Z",
+        "label": "Gen Z employees",
+        "confidence": 0.98
+      },
+      "outcome": {
+        "source": "theme",
+        "field": "onboarding",
+        "question_id": null,
+        "label": "Onboarding Score",
+        "confidence": 0.95
+      },
+      "baseline": "group_average",
+      "baseline_value": 4.44,
+      "h0": "Gen Z employees have onboarding scores equal to the company average.",
+      "h1": "Gen Z employees have higher onboarding scores than the company average.",
+      "test_recommended": "one_sample_z",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1781673005139",
+    "hypothesis": "Gen Z employees have higher Onboarding scores than the company average.",
+    "result": "validated",
+    "test_type": "one_sample_z",
+    "p_value": 0.0006,
+    "filters_applied": {},
+    "date_tested": "Jun 17, 2026",
+    "params": {
+      "hypothesis_type": "one_sample",
+      "parseable": true,
+      "parse_error": null,
+      "group_a": null,
+      "group_b": null,
+      "x_var": null,
+      "y_var": null,
+      "group": {
+        "field": "generation",
+        "value": "Gen Z",
+        "label": "Gen Z employees",
+        "confidence": 0.98
+      },
+      "outcome": {
+        "source": "theme",
+        "field": "onboarding",
+        "question_id": null,
+        "label": "Onboarding Score",
+        "confidence": 0.95
+      },
+      "baseline": "company_average",
+      "baseline_value": 4.44,
+      "h0": "Gen Z employees have onboarding scores equal to the company average.",
+      "h1": "Gen Z employees have higher onboarding scores than the company average.",
+      "test_recommended": "one_sample_z",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1781672915932",
+    "hypothesis": "Employees with higher Career Development scores tend to have higher Engagement scores.",
+    "result": "inconclusive",
+    "test_type": "pearson_correlation",
+    "p_value": 0.2048,
+    "filters_applied": {},
+    "date_tested": "Jun 17, 2026",
+    "params": {
+      "hypothesis_type": "relationship",
+      "parseable": true,
+      "parse_error": null,
+      "group_a": null,
+      "group_b": null,
+      "x_var": {
+        "source": "theme",
+        "field": "development_and_career",
+        "question_id": null,
+        "label": "Career Development Score",
+        "confidence": 0.95
+      },
+      "y_var": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "group": null,
+      "outcome": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "There is no correlation between Career Development scores and Engagement scores.",
+      "h1": "There is a positive correlation between Career Development scores and Engagement scores.",
+      "test_recommended": "pearson_correlation",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  }
+]

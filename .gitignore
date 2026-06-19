@@ -1,11 +1,10 @@
 node_modules/
 backend/uploads/
-backend/data/*
-!backend/data/sample/
-!backend/data/sample/**
-data/
+/data/
 dist/
 .env
+backend/data/responses.json
+backend/data/users.json
 *.xlsx
 *.xls
 __pycache__/
