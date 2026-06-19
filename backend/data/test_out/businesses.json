@@ -1,0 +1,70 @@
+[
+  {
+    "name": "Aditya Birla New Age Hospitality Pvt. Ltd.",
+    "overall": 4.47,
+    "band": "strong",
+    "categories": {
+      "Engagement Index": 4.66,
+      "Development & Career": 4.4,
+      "Leadership": 4.51,
+      "Performance culture": 4.33,
+      "Manager Effectiveness": 4.42,
+      "Onboarding": 4.54,
+      "Uncategorized": 4.45
+    },
+    "variance": 0.1,
+    "respondent_count": 93,
+    "rank": 1
+  },
+  {
+    "name": "ABG Renewables",
+    "overall": 4.45,
+    "band": "strong",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.41,
+      "Leadership": 4.48,
+      "Performance culture": 4.31,
+      "Manager Effectiveness": 4.42,
+      "Onboarding": 4.51,
+      "Uncategorized": 4.39
+    },
+    "variance": 0.097,
+    "respondent_count": 287,
+    "rank": 2
+  },
+  {
+    "name": "Birla Pivot",
+    "overall": 4.45,
+    "band": "strong",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.37,
+      "Leadership": 4.48,
+      "Performance culture": 4.32,
+      "Manager Effectiveness": 4.4,
+      "Onboarding": 4.49,
+      "Uncategorized": 4.43
+    },
+    "variance": 0.096,
+    "respondent_count": 283,
+    "rank": 3
+  },
+  {
+    "name": "Novelis",
+    "overall": 4.45,
+    "band": "strong",
+    "categories": {
+      "Engagement Index": 4.63,
+      "Development & Career": 4.37,
+      "Leadership": 4.48,
+      "Performance culture": 4.32,
+      "Manager Effectiveness": 4.42,
+      "Onboarding": 4.57,
+      "Uncategorized": 4.39
+    },
+    "variance": 0.104,
+    "respondent_count": 8227,
+    "rank": 4
+  }
+]

@@ -1,0 +1,1081 @@
+[
+  {
+    "name": "Aditya Birla Renewables",
+    "business": "ABG Renewables",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.41,
+      "Leadership": 4.48,
+      "Performance culture": 4.31,
+      "Manager Effectiveness": 4.42,
+      "Onboarding": 4.51,
+      "Uncategorized": 4.39
+    },
+    "variance": 0.097,
+    "respondent_count": 287
+  },
+  {
+    "name": "BP - Admin & Support",
+    "business": "Birla Pivot",
+    "overall": 4.56,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.75,
+      "Development & Career": 4.75,
+      "Leadership": 4.22,
+      "Performance culture": 4.4,
+      "Manager Effectiveness": 4.83,
+      "Onboarding": 5.0,
+      "Uncategorized": 4.0
+    },
+    "variance": 0.337,
+    "respondent_count": 1
+  },
+  {
+    "name": "BP - Category",
+    "business": "Birla Pivot",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.7,
+      "Development & Career": 4.33,
+      "Leadership": 4.5,
+      "Performance culture": 4.31,
+      "Manager Effectiveness": 4.46,
+      "Onboarding": 4.39,
+      "Uncategorized": 4.43
+    },
+    "variance": 0.121,
+    "respondent_count": 37
+  },
+  {
+    "name": "BP - Chemicals",
+    "business": "Birla Pivot",
+    "overall": 4.4,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.7,
+      "Development & Career": 4.43,
+      "Leadership": 4.4,
+      "Performance culture": 4.25,
+      "Manager Effectiveness": 4.39,
+      "Onboarding": 4.45,
+      "Uncategorized": 4.2
+    },
+    "variance": 0.149,
+    "respondent_count": 10
+  },
+  {
+    "name": "BP - Customer Experience",
+    "business": "Birla Pivot",
+    "overall": 4.51,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.8,
+      "Development & Career": 4.38,
+      "Leadership": 4.36,
+      "Performance culture": 4.33,
+      "Manager Effectiveness": 4.37,
+      "Onboarding": 4.77,
+      "Uncategorized": 4.55
+    },
+    "variance": 0.187,
+    "respondent_count": 11
+  },
+  {
+    "name": "BP - Direct Sales",
+    "business": "Birla Pivot",
+    "overall": 4.43,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.58,
+      "Development & Career": 4.34,
+      "Leadership": 4.45,
+      "Performance culture": 4.32,
+      "Manager Effectiveness": 4.38,
+      "Onboarding": 4.44,
+      "Uncategorized": 4.47
+    },
+    "variance": 0.082,
+    "respondent_count": 51
+  },
+  {
+    "name": "BP - Finance",
+    "business": "Birla Pivot",
+    "overall": 4.35,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.28,
+      "Leadership": 4.57,
+      "Performance culture": 4.46,
+      "Manager Effectiveness": 4.3,
+      "Onboarding": 3.78,
+      "Uncategorized": 4.43
+    },
+    "variance": 0.263,
+    "respondent_count": 7
+  },
+  {
+    "name": "BP - Human Resources",
+    "business": "Birla Pivot",
+    "overall": 4.4,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.75,
+      "Development & Career": 4.17,
+      "Leadership": 4.38,
+      "Performance culture": 4.23,
+      "Manager Effectiveness": 4.37,
+      "Onboarding": 4.67,
+      "Uncategorized": 4.2
+    },
+    "variance": 0.213,
+    "respondent_count": 5
+  },
+  {
+    "name": "BP - Leadership",
+    "business": "Birla Pivot",
+    "overall": 4.42,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.65,
+      "Development & Career": 4.47,
+      "Leadership": 4.54,
+      "Performance culture": 4.33,
+      "Manager Effectiveness": 4.35,
+      "Onboarding": 4.33,
+      "Uncategorized": 4.3
+    },
+    "variance": 0.123,
+    "respondent_count": 10
+  },
+  {
+    "name": "BP - Legal",
+    "business": "Birla Pivot",
+    "overall": 4.4,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.62,
+      "Development & Career": 4.5,
+      "Leadership": 4.67,
+      "Performance culture": 4.33,
+      "Manager Effectiveness": 4.67,
+      "Onboarding": 4.0,
+      "Uncategorized": 4.0
+    },
+    "variance": 0.275,
+    "respondent_count": 2
+  },
+  {
+    "name": "BP - Logistics",
+    "business": "Birla Pivot",
+    "overall": 4.43,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.67,
+      "Development & Career": 4.19,
+      "Leadership": 4.69,
+      "Performance culture": 4.35,
+      "Manager Effectiveness": 4.4,
+      "Onboarding": 4.71,
+      "Uncategorized": 4.0
+    },
+    "variance": 0.255,
+    "respondent_count": 6
+  },
+  {
+    "name": "BP - Marketing",
+    "business": "Birla Pivot",
+    "overall": 4.59,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.5,
+      "Development & Career": 4.78,
+      "Leadership": 4.37,
+      "Performance culture": 4.4,
+      "Manager Effectiveness": 4.42,
+      "Onboarding": 5.0,
+      "Uncategorized": 4.67
+    },
+    "variance": 0.218,
+    "respondent_count": 3
+  },
+  {
+    "name": "BP - Product",
+    "business": "Birla Pivot",
+    "overall": 4.5,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.67,
+      "Development & Career": 4.37,
+      "Leadership": 4.51,
+      "Performance culture": 4.25,
+      "Manager Effectiveness": 4.52,
+      "Onboarding": 4.29,
+      "Uncategorized": 4.89
+    },
+    "variance": 0.209,
+    "respondent_count": 9
+  },
+  {
+    "name": "BP - Retail",
+    "business": "Birla Pivot",
+    "overall": 4.44,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.57,
+      "Development & Career": 4.45,
+      "Leadership": 4.54,
+      "Performance culture": 4.28,
+      "Manager Effectiveness": 4.4,
+      "Onboarding": 4.39,
+      "Uncategorized": 4.44
+    },
+    "variance": 0.09,
+    "respondent_count": 45
+  },
+  {
+    "name": "BP - Strategic Partnership",
+    "business": "Birla Pivot",
+    "overall": 4.49,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.52,
+      "Development & Career": 4.37,
+      "Leadership": 4.44,
+      "Performance culture": 4.48,
+      "Manager Effectiveness": 4.55,
+      "Onboarding": 4.62,
+      "Uncategorized": 4.43
+    },
+    "variance": 0.077,
+    "respondent_count": 14
+  },
+  {
+    "name": "BP - Strategy",
+    "business": "Birla Pivot",
+    "overall": 4.54,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.92,
+      "Development & Career": 4.56,
+      "Leadership": 4.37,
+      "Performance culture": 4.3,
+      "Manager Effectiveness": 4.33,
+      "Onboarding": 5.0,
+      "Uncategorized": 4.33
+    },
+    "variance": 0.275,
+    "respondent_count": 3
+  },
+  {
+    "name": "BP - Technology",
+    "business": "Birla Pivot",
+    "overall": 4.46,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.69,
+      "Development & Career": 4.36,
+      "Leadership": 4.46,
+      "Performance culture": 4.34,
+      "Manager Effectiveness": 4.36,
+      "Onboarding": 4.57,
+      "Uncategorized": 4.42
+    },
+    "variance": 0.12,
+    "respondent_count": 67
+  },
+  {
+    "name": "Birla Pivot",
+    "business": "Birla Pivot",
+    "overall": 4.38,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.75,
+      "Development & Career": 4.0,
+      "Leadership": 4.0,
+      "Performance culture": 4.38,
+      "Manager Effectiveness": 4.0,
+      "Onboarding": 5.0,
+      "Uncategorized": 4.5
+    },
+    "variance": 0.372,
+    "respondent_count": 2
+  },
+  {
+    "name": "Novelis Aerospace",
+    "business": "Novelis",
+    "overall": 4.44,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.6,
+      "Development & Career": 4.49,
+      "Leadership": 4.39,
+      "Performance culture": 4.33,
+      "Manager Effectiveness": 4.4,
+      "Onboarding": 4.5,
+      "Uncategorized": 4.34
+    },
+    "variance": 0.091,
+    "respondent_count": 44
+  },
+  {
+    "name": "Novelis Ashville",
+    "business": "Novelis",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.73,
+      "Development & Career": 4.39,
+      "Leadership": 4.53,
+      "Performance culture": 4.28,
+      "Manager Effectiveness": 4.47,
+      "Onboarding": 4.38,
+      "Uncategorized": 4.4
+    },
+    "variance": 0.134,
+    "respondent_count": 36
+  },
+  {
+    "name": "Novelis Asia Regional Office",
+    "business": "Novelis",
+    "overall": 4.44,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.35,
+      "Leadership": 4.48,
+      "Performance culture": 4.3,
+      "Manager Effectiveness": 4.42,
+      "Onboarding": 4.53,
+      "Uncategorized": 4.39
+    },
+    "variance": 0.107,
+    "respondent_count": 150
+  },
+  {
+    "name": "Novelis Bay Minette",
+    "business": "Novelis",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.6,
+      "Development & Career": 4.36,
+      "Leadership": 4.45,
+      "Performance culture": 4.34,
+      "Manager Effectiveness": 4.41,
+      "Onboarding": 4.61,
+      "Uncategorized": 4.4
+    },
+    "variance": 0.102,
+    "respondent_count": 200
+  },
+  {
+    "name": "Novelis Berea",
+    "business": "Novelis",
+    "overall": 4.49,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.69,
+      "Development & Career": 4.44,
+      "Leadership": 4.36,
+      "Performance culture": 4.29,
+      "Manager Effectiveness": 4.4,
+      "Onboarding": 4.79,
+      "Uncategorized": 4.47
+    },
+    "variance": 0.168,
+    "respondent_count": 94
+  },
+  {
+    "name": "Novelis Birmingham",
+    "business": "Novelis",
+    "overall": 4.53,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.72,
+      "Development & Career": 4.38,
+      "Leadership": 4.61,
+      "Performance culture": 4.54,
+      "Manager Effectiveness": 4.29,
+      "Uncategorized": 4.62
+    },
+    "variance": 0.148,
+    "respondent_count": 8
+  },
+  {
+    "name": "Novelis Bresso",
+    "business": "Novelis",
+    "overall": 4.5,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.61,
+      "Development & Career": 4.43,
+      "Leadership": 4.49,
+      "Performance culture": 4.33,
+      "Manager Effectiveness": 4.42,
+      "Onboarding": 4.76,
+      "Uncategorized": 4.48
+    },
+    "variance": 0.131,
+    "respondent_count": 148
+  },
+  {
+    "name": "Novelis Changzhou",
+    "business": "Novelis",
+    "overall": 4.4,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.65,
+      "Development & Career": 4.29,
+      "Leadership": 4.53,
+      "Performance culture": 4.34,
+      "Manager Effectiveness": 4.46,
+      "Onboarding": 4.18,
+      "Uncategorized": 4.32
+    },
+    "variance": 0.148,
+    "respondent_count": 200
+  },
+  {
+    "name": "Novelis Corporate HQ",
+    "business": "Novelis",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.61,
+      "Development & Career": 4.35,
+      "Leadership": 4.48,
+      "Performance culture": 4.3,
+      "Manager Effectiveness": 4.41,
+      "Onboarding": 4.64,
+      "Uncategorized": 4.39
+    },
+    "variance": 0.12,
+    "respondent_count": 239
+  },
+  {
+    "name": "Novelis Davenport (Casting)",
+    "business": "Novelis",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.63,
+      "Development & Career": 4.3,
+      "Leadership": 4.5,
+      "Performance culture": 4.29,
+      "Manager Effectiveness": 4.5,
+      "Onboarding": 4.57,
+      "Uncategorized": 4.38
+    },
+    "variance": 0.122,
+    "respondent_count": 91
+  },
+  {
+    "name": "Novelis Davenport (Finishing)",
+    "business": "Novelis",
+    "overall": 4.37,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.62,
+      "Development & Career": 4.32,
+      "Leadership": 4.43,
+      "Performance culture": 4.34,
+      "Manager Effectiveness": 4.48,
+      "Onboarding": 4.0,
+      "Uncategorized": 4.37
+    },
+    "variance": 0.177,
+    "respondent_count": 60
+  },
+  {
+    "name": "Novelis DisCenter Espirito Sto",
+    "business": "Novelis",
+    "overall": 4.33,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.25,
+      "Development & Career": 4.17,
+      "Leadership": 4.22,
+      "Performance culture": 4.57,
+      "Manager Effectiveness": 4.58,
+      "Onboarding": 4.5,
+      "Uncategorized": 4.0
+    },
+    "variance": 0.208,
+    "respondent_count": 1
+  },
+  {
+    "name": "Novelis Europe",
+    "business": "Novelis",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.36,
+      "Leadership": 4.5,
+      "Performance culture": 4.34,
+      "Manager Effectiveness": 4.4,
+      "Onboarding": 4.51,
+      "Uncategorized": 4.39
+    },
+    "variance": 0.099,
+    "respondent_count": 110
+  },
+  {
+    "name": "Novelis Fairmont",
+    "business": "Novelis",
+    "overall": 4.6,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 5.0,
+      "Development & Career": 4.75,
+      "Leadership": 4.89,
+      "Performance culture": 4.21,
+      "Manager Effectiveness": 4.33,
+      "Onboarding": 5.0,
+      "Uncategorized": 4.0
+    },
+    "variance": 0.38,
+    "respondent_count": 1
+  },
+  {
+    "name": "Novelis Global R&T",
+    "business": "Novelis",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.33,
+      "Leadership": 4.47,
+      "Performance culture": 4.32,
+      "Manager Effectiveness": 4.42,
+      "Onboarding": 4.57,
+      "Uncategorized": 4.4
+    },
+    "variance": 0.111,
+    "respondent_count": 330
+  },
+  {
+    "name": "Novelis Greensboro",
+    "business": "Novelis",
+    "overall": 4.44,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.69,
+      "Development & Career": 4.36,
+      "Leadership": 4.43,
+      "Performance culture": 4.34,
+      "Manager Effectiveness": 4.45,
+      "Onboarding": 4.45,
+      "Uncategorized": 4.37
+    },
+    "variance": 0.11,
+    "respondent_count": 122
+  },
+  {
+    "name": "Novelis Guthrie",
+    "business": "Novelis",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.38,
+      "Leadership": 4.46,
+      "Performance culture": 4.3,
+      "Manager Effectiveness": 4.44,
+      "Onboarding": 4.59,
+      "Uncategorized": 4.37
+    },
+    "variance": 0.113,
+    "respondent_count": 175
+  },
+  {
+    "name": "Novelis G\u00f6ttingen",
+    "business": "Novelis",
+    "overall": 4.42,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.63,
+      "Development & Career": 4.35,
+      "Leadership": 4.49,
+      "Performance culture": 4.31,
+      "Manager Effectiveness": 4.41,
+      "Onboarding": 4.39,
+      "Uncategorized": 4.39
+    },
+    "variance": 0.098,
+    "respondent_count": 273
+  },
+  {
+    "name": "Novelis Kingston",
+    "business": "Novelis",
+    "overall": 4.46,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.65,
+      "Development & Career": 4.35,
+      "Leadership": 4.55,
+      "Performance culture": 4.39,
+      "Manager Effectiveness": 4.48,
+      "Onboarding": 4.51,
+      "Uncategorized": 4.32
+    },
+    "variance": 0.109,
+    "respondent_count": 90
+  },
+  {
+    "name": "Novelis Koblenz",
+    "business": "Novelis",
+    "overall": 4.46,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.65,
+      "Development & Career": 4.36,
+      "Leadership": 4.48,
+      "Performance culture": 4.32,
+      "Manager Effectiveness": 4.41,
+      "Onboarding": 4.58,
+      "Uncategorized": 4.41
+    },
+    "variance": 0.111,
+    "respondent_count": 556
+  },
+  {
+    "name": "Novelis Latchford",
+    "business": "Novelis",
+    "overall": 4.41,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.6,
+      "Development & Career": 4.34,
+      "Leadership": 4.47,
+      "Performance culture": 4.33,
+      "Manager Effectiveness": 4.41,
+      "Onboarding": 4.4,
+      "Uncategorized": 4.32
+    },
+    "variance": 0.092,
+    "respondent_count": 112
+  },
+  {
+    "name": "Novelis Lincolnshire",
+    "business": "Novelis",
+    "overall": 4.44,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.71,
+      "Development & Career": 4.54,
+      "Leadership": 4.45,
+      "Performance culture": 4.34,
+      "Manager Effectiveness": 4.45,
+      "Onboarding": 4.21,
+      "Uncategorized": 4.39
+    },
+    "variance": 0.146,
+    "respondent_count": 71
+  },
+  {
+    "name": "Novelis Manufactur Excellence",
+    "business": "Novelis",
+    "overall": 4.47,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.4,
+      "Leadership": 4.49,
+      "Performance culture": 4.29,
+      "Manager Effectiveness": 4.37,
+      "Onboarding": 4.64,
+      "Uncategorized": 4.45
+    },
+    "variance": 0.123,
+    "respondent_count": 87
+  },
+  {
+    "name": "Novelis NA Reg Office",
+    "business": "Novelis",
+    "overall": 4.47,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.63,
+      "Development & Career": 4.37,
+      "Leadership": 4.48,
+      "Performance culture": 4.31,
+      "Manager Effectiveness": 4.42,
+      "Onboarding": 4.63,
+      "Uncategorized": 4.43
+    },
+    "variance": 0.114,
+    "respondent_count": 321
+  },
+  {
+    "name": "Novelis Nachterstedt",
+    "business": "Novelis",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.33,
+      "Leadership": 4.5,
+      "Performance culture": 4.34,
+      "Manager Effectiveness": 4.42,
+      "Onboarding": 4.53,
+      "Uncategorized": 4.39
+    },
+    "variance": 0.104,
+    "respondent_count": 527
+  },
+  {
+    "name": "Novelis Newport",
+    "business": "Novelis",
+    "overall": 4.5,
+    "band": "strong",
+    "cluster": "polarised",
+    "categories": {
+      "Engagement Index": 4.5,
+      "Development & Career": 4.44,
+      "Leadership": 4.49,
+      "Performance culture": 4.33,
+      "Manager Effectiveness": 4.41,
+      "Onboarding": 4.87,
+      "Uncategorized": 4.43
+    },
+    "variance": 0.161,
+    "respondent_count": 59
+  },
+  {
+    "name": "Novelis Ohle (Plettenberg)",
+    "business": "Novelis",
+    "overall": 4.44,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.66,
+      "Development & Career": 4.42,
+      "Leadership": 4.49,
+      "Performance culture": 4.28,
+      "Manager Effectiveness": 4.39,
+      "Onboarding": 4.46,
+      "Uncategorized": 4.38
+    },
+    "variance": 0.109,
+    "respondent_count": 295
+  },
+  {
+    "name": "Novelis Oswego",
+    "business": "Novelis",
+    "overall": 4.47,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.62,
+      "Development & Career": 4.36,
+      "Leadership": 4.47,
+      "Performance culture": 4.29,
+      "Manager Effectiveness": 4.44,
+      "Onboarding": 4.69,
+      "Uncategorized": 4.43
+    },
+    "variance": 0.13,
+    "respondent_count": 295
+  },
+  {
+    "name": "Novelis Pieve",
+    "business": "Novelis",
+    "overall": 4.47,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.61,
+      "Development & Career": 4.46,
+      "Leadership": 4.5,
+      "Performance culture": 4.34,
+      "Manager Effectiveness": 4.41,
+      "Onboarding": 4.56,
+      "Uncategorized": 4.38
+    },
+    "variance": 0.09,
+    "respondent_count": 174
+  },
+  {
+    "name": "Novelis Pinda",
+    "business": "Novelis",
+    "overall": 4.46,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.63,
+      "Development & Career": 4.37,
+      "Leadership": 4.47,
+      "Performance culture": 4.33,
+      "Manager Effectiveness": 4.45,
+      "Onboarding": 4.57,
+      "Uncategorized": 4.43
+    },
+    "variance": 0.098,
+    "respondent_count": 1082
+  },
+  {
+    "name": "Novelis SA ColCenter",
+    "business": "Novelis",
+    "overall": 4.43,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.58,
+      "Development & Career": 4.42,
+      "Leadership": 4.43,
+      "Performance culture": 4.27,
+      "Manager Effectiveness": 4.39,
+      "Onboarding": 4.45,
+      "Uncategorized": 4.5
+    },
+    "variance": 0.089,
+    "respondent_count": 76
+  },
+  {
+    "name": "Novelis SA Regional Office",
+    "business": "Novelis",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.63,
+      "Development & Career": 4.41,
+      "Leadership": 4.48,
+      "Performance culture": 4.36,
+      "Manager Effectiveness": 4.42,
+      "Onboarding": 4.41,
+      "Uncategorized": 4.42
+    },
+    "variance": 0.081,
+    "respondent_count": 74
+  },
+  {
+    "name": "Novelis SIG",
+    "business": "Novelis",
+    "overall": 4.49,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.46,
+      "Leadership": 4.45,
+      "Performance culture": 4.32,
+      "Manager Effectiveness": 4.43,
+      "Onboarding": 4.7,
+      "Uncategorized": 4.4
+    },
+    "variance": 0.125,
+    "respondent_count": 178
+  },
+  {
+    "name": "Novelis Santo Andre",
+    "business": "Novelis",
+    "overall": 4.44,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.66,
+      "Development & Career": 4.47,
+      "Leadership": 4.49,
+      "Performance culture": 4.37,
+      "Manager Effectiveness": 4.4,
+      "Onboarding": 4.36,
+      "Uncategorized": 4.33
+    },
+    "variance": 0.105,
+    "respondent_count": 84
+  },
+  {
+    "name": "Novelis Shanghai",
+    "business": "Novelis",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.59,
+      "Development & Career": 4.39,
+      "Leadership": 4.46,
+      "Performance culture": 4.33,
+      "Manager Effectiveness": 4.45,
+      "Onboarding": 4.67,
+      "Uncategorized": 4.29
+    },
+    "variance": 0.126,
+    "respondent_count": 77
+  },
+  {
+    "name": "Novelis Sierre",
+    "business": "Novelis",
+    "overall": 4.45,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.62,
+      "Development & Career": 4.38,
+      "Leadership": 4.47,
+      "Performance culture": 4.32,
+      "Manager Effectiveness": 4.41,
+      "Onboarding": 4.59,
+      "Uncategorized": 4.37
+    },
+    "variance": 0.106,
+    "respondent_count": 425
+  },
+  {
+    "name": "Novelis Terre Haute",
+    "business": "Novelis",
+    "overall": 4.42,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.68,
+      "Development & Career": 4.26,
+      "Leadership": 4.48,
+      "Performance culture": 4.25,
+      "Manager Effectiveness": 4.38,
+      "Onboarding": 4.5,
+      "Uncategorized": 4.39
+    },
+    "variance": 0.139,
+    "respondent_count": 63
+  },
+  {
+    "name": "Novelis Uhrichsville",
+    "business": "Novelis",
+    "overall": 4.49,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.72,
+      "Development & Career": 4.37,
+      "Leadership": 4.62,
+      "Performance culture": 4.3,
+      "Manager Effectiveness": 4.41,
+      "Onboarding": 4.58,
+      "Uncategorized": 4.41
+    },
+    "variance": 0.142,
+    "respondent_count": 33
+  },
+  {
+    "name": "Novelis Voerde",
+    "business": "Novelis",
+    "overall": 4.4,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.55,
+      "Development & Career": 4.36,
+      "Leadership": 4.47,
+      "Performance culture": 4.34,
+      "Manager Effectiveness": 4.39,
+      "Onboarding": 4.34,
+      "Uncategorized": 4.32
+    },
+    "variance": 0.078,
+    "respondent_count": 93
+  },
+  {
+    "name": "Novelis Warren",
+    "business": "Novelis",
+    "overall": 4.48,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.56,
+      "Development & Career": 4.32,
+      "Leadership": 4.5,
+      "Performance culture": 4.39,
+      "Manager Effectiveness": 4.43,
+      "Onboarding": 4.69,
+      "Uncategorized": 4.47
+    },
+    "variance": 0.112,
+    "respondent_count": 81
+  },
+  {
+    "name": "Novelis YeongJu",
+    "business": "Novelis",
+    "overall": 4.46,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.4,
+      "Leadership": 4.46,
+      "Performance culture": 4.34,
+      "Manager Effectiveness": 4.46,
+      "Onboarding": 4.54,
+      "Uncategorized": 4.35
+    },
+    "variance": 0.099,
+    "respondent_count": 626
+  },
+  {
+    "name": "Novelis Zhenjiang",
+    "business": "Novelis",
+    "overall": 4.44,
+    "band": "strong",
+    "cluster": "thriving",
+    "categories": {
+      "Engagement Index": 4.64,
+      "Development & Career": 4.33,
+      "Leadership": 4.47,
+      "Performance culture": 4.28,
+      "Manager Effectiveness": 4.46,
+      "Onboarding": 4.55,
+      "Uncategorized": 4.35
+    },
+    "variance": 0.119,
+    "respondent_count": 465
+  }
+]

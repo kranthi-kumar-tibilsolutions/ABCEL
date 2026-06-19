@@ -1,0 +1,345 @@
+{
+  "generation": [
+    {
+      "name": "Traditionalist",
+      "overall": 4.59,
+      "categories": {
+        "Engagement Index": 4.75,
+        "Development & Career": 4.75,
+        "Leadership": 4.56,
+        "Performance culture": 4.67,
+        "Manager Effectiveness": 3.83,
+        "Uncategorized": 5.0
+      },
+      "respondent_count": 1
+    },
+    {
+      "name": "Gen X",
+      "overall": 4.46,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.39,
+        "Leadership": 4.49,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Onboarding": 4.58,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 11134
+    },
+    {
+      "name": "DOB not Available",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.37,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Onboarding": 4.56,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 8980
+    },
+    {
+      "name": "Gen Y",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Onboarding": 4.54,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 27916
+    },
+    {
+      "name": "Gen Z",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.37,
+        "Leadership": 4.49,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Onboarding": 4.53,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 7315
+    },
+    {
+      "name": "Baby Boomer",
+      "overall": 4.42,
+      "categories": {
+        "Engagement Index": 4.6,
+        "Development & Career": 4.29,
+        "Leadership": 4.51,
+        "Performance culture": 4.29,
+        "Manager Effectiveness": 4.42,
+        "Onboarding": 4.37,
+        "Uncategorized": 4.45
+      },
+      "respondent_count": 111
+    }
+  ],
+  "gender": [
+    {
+      "name": "Unknown",
+      "overall": 4.47,
+      "categories": {
+        "Engagement Index": 4.58,
+        "Development & Career": 4.5,
+        "Leadership": 4.63,
+        "Performance culture": 4.23,
+        "Manager Effectiveness": 4.44,
+        "Onboarding": 4.56,
+        "Uncategorized": 4.33
+      },
+      "respondent_count": 3
+    },
+    {
+      "name": "Male",
+      "overall": 4.46,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Onboarding": 4.55,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 46934
+    },
+    {
+      "name": "Female",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.37,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Onboarding": 4.53,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 8511
+    }
+  ],
+  "job_band": [
+    {
+      "name": "Staff",
+      "overall": 4.47,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.43,
+        "Leadership": 4.5,
+        "Performance culture": 4.34,
+        "Manager Effectiveness": 4.44,
+        "Onboarding": 4.52,
+        "Uncategorized": 4.39
+      },
+      "respondent_count": 484
+    },
+    {
+      "name": "Management",
+      "overall": 4.46,
+      "categories": {
+        "Engagement Index": 4.69,
+        "Development & Career": 4.34,
+        "Leadership": 4.47,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.45,
+        "Onboarding": 4.56,
+        "Uncategorized": 4.38
+      },
+      "respondent_count": 39
+    },
+    {
+      "name": "Senior Management",
+      "overall": 4.46,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.38,
+        "Leadership": 4.5,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Onboarding": 4.5,
+        "Uncategorized": 4.44
+      },
+      "respondent_count": 924
+    },
+    {
+      "name": "Job Band NA",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.41,
+        "Leadership": 4.49,
+        "Performance culture": 4.33,
+        "Manager Effectiveness": 4.41,
+        "Onboarding": 4.55,
+        "Uncategorized": 4.36
+      },
+      "respondent_count": 513
+    },
+    {
+      "name": "Junior Management",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Onboarding": 4.54,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 38772
+    },
+    {
+      "name": "Middle Management",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Onboarding": 4.53,
+        "Uncategorized": 4.39
+      },
+      "respondent_count": 6663
+    },
+    {
+      "name": "Top Management",
+      "overall": 4.44,
+      "categories": {
+        "Engagement Index": 4.59,
+        "Development & Career": 4.31,
+        "Leadership": 4.52,
+        "Performance culture": 4.31,
+        "Manager Effectiveness": 4.41,
+        "Onboarding": 4.49,
+        "Uncategorized": 4.43
+      },
+      "respondent_count": 306
+    },
+    {
+      "name": "Non Management",
+      "overall": 4.43,
+      "categories": {
+        "Engagement Index": 4.61,
+        "Development & Career": 4.29,
+        "Leadership": 4.46,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Onboarding": 4.57,
+        "Uncategorized": 4.35
+      },
+      "respondent_count": 116
+    }
+  ],
+  "tenure": [
+    {
+      "name": "20-25",
+      "overall": 4.47,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.39,
+        "Leadership": 4.49,
+        "Performance culture": 4.33,
+        "Manager Effectiveness": 4.41,
+        "Onboarding": 4.63,
+        "Uncategorized": 4.41
+      },
+      "respondent_count": 1714
+    },
+    {
+      "name": "5-10",
+      "overall": 4.47,
+      "categories": {
+        "Engagement Index": 4.65,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.31,
+        "Manager Effectiveness": 4.41,
+        "Onboarding": 4.66,
+        "Uncategorized": 4.39
+      },
+      "respondent_count": 6706
+    },
+    {
+      "name": "10-15",
+      "overall": 4.46,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Onboarding": 4.63,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 7662
+    },
+    {
+      "name": "15-20",
+      "overall": 4.46,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Onboarding": 4.61,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 5619
+    },
+    {
+      "name": "2-5",
+      "overall": 4.46,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Onboarding": 4.61,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 14377
+    },
+    {
+      "name": "0-2",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.64,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.42,
+        "Onboarding": 4.51,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 15247
+    },
+    {
+      "name": ">25 (Equal or more than 25)",
+      "overall": 4.45,
+      "categories": {
+        "Engagement Index": 4.63,
+        "Development & Career": 4.38,
+        "Leadership": 4.48,
+        "Performance culture": 4.32,
+        "Manager Effectiveness": 4.41,
+        "Onboarding": 4.54,
+        "Uncategorized": 4.4
+      },
+      "respondent_count": 4128
+    }
+  ]
+}

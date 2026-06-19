@@ -1,0 +1,154 @@
+{
+  "generation": [
+    {
+      "name": "Baby Boomer",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 107
+    },
+    {
+      "name": "DOB not Available",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 8950
+    },
+    {
+      "name": "Gen X",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 11164
+    },
+    {
+      "name": "Gen Y",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 27809
+    },
+    {
+      "name": "Gen Z",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 7426
+    },
+    {
+      "name": "Traditionalist",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 1
+    }
+  ],
+  "gender": [
+    {
+      "name": "Female",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 8332
+    },
+    {
+      "name": "Male",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 47114
+    },
+    {
+      "name": "Unknown",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 2
+    }
+  ],
+  "job_band": [
+    {
+      "name": "Job Band NA",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 518
+    },
+    {
+      "name": "Junior Management",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 38652
+    },
+    {
+      "name": "Management",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 37
+    },
+    {
+      "name": "Middle Management",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 6836
+    },
+    {
+      "name": "Non Management",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 113
+    },
+    {
+      "name": "Senior Management",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 870
+    },
+    {
+      "name": "Staff",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 456
+    },
+    {
+      "name": "Top Management",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 334
+    }
+  ],
+  "tenure": [
+    {
+      "name": "0-2",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 15273
+    },
+    {
+      "name": "10-15",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 7556
+    },
+    {
+      "name": "15-20",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 5561
+    },
+    {
+      "name": "2-5",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 14367
+    },
+    {
+      "name": "20-25",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 1685
+    },
+    {
+      "name": "5-10",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 6841
+    },
+    {
+      "name": ">25 (Equal or more than 25)",
+      "overall": 0,
+      "categories": {},
+      "respondent_count": 4168
+    }
+  ]
+}
