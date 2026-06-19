@@ -248,7 +248,7 @@ async def persona_query(req: QueryRequest):
 # ── GET /api/persona/dimensions ───────────────────────────────────────────────
 
 @router.get("/dimensions")
-async def get_dimensions():
+def get_dimensions():
     try:
         units = _read("responses.json")
         dimensions = [
@@ -267,7 +267,7 @@ async def get_dimensions():
 # ── GET /api/persona/top5 ─────────────────────────────────────────────────────
 
 @router.get("/top5")
-async def get_top5():
+def get_top5():
     try:
         units       = _read("responses.json")
         suggestions = []
@@ -341,7 +341,7 @@ Return ONLY a JSON object: {{ "takeaways": ["takeaway 1", "takeaway 2", "takeawa
 # ── POST /api/persona/save ────────────────────────────────────────────────────
 
 @router.post("/save")
-async def save_persona(req: SaveRequest):
+def save_persona(req: SaveRequest):
     try:
         saved_path = _DATA / "saved_personas.json"
         saved: list = []
@@ -368,7 +368,7 @@ async def save_persona(req: SaveRequest):
 # ── GET /api/persona/cohorts ──────────────────────────────────────────────────
 
 @router.get("/cohorts")
-async def get_cohorts():
+def get_cohorts():
     try:
         saved_path = _DATA / "saved_personas.json"
         saved: list = []

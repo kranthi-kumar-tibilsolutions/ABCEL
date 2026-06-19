@@ -41,7 +41,7 @@ class InsightRequest(BaseModel):
 
 # == GET /api/focus-spotlight/filters ==
 @router.get("/filters")
-async def get_filters(user: dict = Depends(get_current_user)):
+def get_filters(user: dict = Depends(get_current_user)):
     """Available filter values + what the data actually contains."""
     fp = _DATA / "businesses.json"
     businesses = json.loads(fp.read_text(encoding="utf-8")) if fp.exists() else []
@@ -105,7 +105,7 @@ async def get_filters(user: dict = Depends(get_current_user)):
 
 # == POST /api/focus-spotlight/results ==
 @router.post("/results")
-async def get_results(req: ResultsRequest, user: dict = Depends(get_current_user)):
+def get_results(req: ResultsRequest, user: dict = Depends(get_current_user)):
     """
     Return spotlight segments.
     Uses cached spotlight_segments.json when no business filter is set;
@@ -149,7 +149,7 @@ async def get_results(req: ResultsRequest, user: dict = Depends(get_current_user
 
 # == POST /api/focus-spotlight/precompute ==
 @router.post("/precompute")
-async def trigger_precompute(_: dict = Depends(get_current_user)):
+def trigger_precompute(_: dict = Depends(get_current_user)):
     """Recompute and cache segments for all businesses. Call after new data upload."""
     result = precompute_and_save()
     if not result:

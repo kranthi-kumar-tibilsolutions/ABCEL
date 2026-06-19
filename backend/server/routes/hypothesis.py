@@ -577,7 +577,7 @@ Return ONLY JSON: {{"interpretation": "<sentence(s)>"}}"""
 # ── GET /api/hypothesis/templates ─────────────────────────────────────────────
 
 @router.get("/templates")
-async def get_templates():
+def get_templates():
     return {
         "templates": [
             {
@@ -612,7 +612,7 @@ async def get_templates():
 # ── GET /api/hypothesis/history ───────────────────────────────────────────────
 
 @router.get("/history")
-async def get_history(limit: int = Query(20), offset: int = Query(0)):
+def get_history(limit: int = Query(20), offset: int = Query(0)):
     try:
         history: list = []
         try:
@@ -627,7 +627,7 @@ async def get_history(limit: int = Query(20), offset: int = Query(0)):
 # ── GET /api/hypothesis/history/{id} ─────────────────────────────────────────
 
 @router.get("/history/{item_id}")
-async def get_history_item(item_id: str):
+def get_history_item(item_id: str):
     try:
         history: list = []
         try:
@@ -647,7 +647,7 @@ async def get_history_item(item_id: str):
 # ── DELETE /api/hypothesis/history/{id} ──────────────────────────────────────
 
 @router.delete("/history/{item_id}")
-async def delete_history_item(item_id: str):
+def delete_history_item(item_id: str):
     try:
         history_path = _DATA / "hypotheses.json"
         history: list = []
