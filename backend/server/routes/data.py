@@ -7,6 +7,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from routes.auth import data_company, get_current_user
+from lib.cache   import load_responses
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -173,13 +174,8 @@ def get_cohorts(user: dict = Depends(get_current_user)):
         return data
 
     # Recompute cohort breakdowns from raw responses filtered to this company
-    responses_file = _DATA / "responses.json"
-    if not responses_file.exists():
-        return data
-
-    try:
-        responses = json.loads(responses_file.read_text(encoding="utf-8"))
-    except Exception:
+    responses = load_responses()
+    if not responses:
         return data
 
     company_rows = [r for r in responses if r.get("business") == co]

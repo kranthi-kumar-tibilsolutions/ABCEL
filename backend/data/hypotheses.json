@@ -1,5 +1,367 @@
 [
   {
+    "id": "H-1782284119044",
+    "hypothesis": "Gen Y employees have higher engagement scores than the company average.",
+    "result": "validated",
+    "test_type": "one_sample_z",
+    "p_value": 0.0,
+    "filters_applied": {},
+    "date_tested": "Jun 24, 2026",
+    "params": {
+      "hypothesis_type": "one_sample",
+      "parseable": true,
+      "parse_error": null,
+      "group": {
+        "field": "generation",
+        "value": "Gen Y",
+        "label": "Gen Y employees",
+        "confidence": 0.99
+      },
+      "outcome": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "baseline": "group_average",
+      "baseline_value": 4.44,
+      "group_a": null,
+      "group_b": null,
+      "x_var": null,
+      "y_var": null,
+      "h0": "Gen Y employees' engagement score is less than or equal to the company average of 4.44",
+      "h1": "Gen Y employees' engagement score is greater than the company average of 4.44",
+      "test_recommended": "one_sample_z",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1782284067944",
+    "hypothesis": "Employees with higher Career Development scores tend to have lower Engagement scores.",
+    "result": "inconclusive",
+    "test_type": "pearson_correlation",
+    "p_value": 0.6194,
+    "filters_applied": {},
+    "date_tested": "Jun 24, 2026",
+    "params": {
+      "hypothesis_type": "relationship",
+      "parseable": true,
+      "parse_error": null,
+      "x_var": {
+        "source": "theme",
+        "field": "development_and_career",
+        "question_id": null,
+        "label": "Career Development Score",
+        "confidence": 0.99
+      },
+      "y_var": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "group_a": null,
+      "group_b": null,
+      "group": null,
+      "outcome": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "There is no correlation between Career Development scores and Engagement scores.",
+      "h1": "There is a negative correlation between Career Development scores and Engagement scores (higher Career Development scores are associated with lower Engagement scores).",
+      "test_recommended": "pearson_correlation",
+      "direction": "less",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1782283915216",
+    "hypothesis": "Higher Manager Effectiveness scores are associated with higher Engagement.",
+    "result": "inconclusive",
+    "test_type": "pearson_correlation",
+    "p_value": 0.309,
+    "filters_applied": {},
+    "date_tested": "Jun 24, 2026",
+    "params": {
+      "hypothesis_type": "relationship",
+      "parseable": true,
+      "parse_error": null,
+      "x_var": {
+        "source": "theme",
+        "field": "manager_effectiveness",
+        "question_id": null,
+        "label": "Manager Effectiveness Score",
+        "confidence": 0.99
+      },
+      "y_var": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "group_a": null,
+      "group_b": null,
+      "group": null,
+      "outcome": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "There is no correlation between Manager Effectiveness scores and Engagement scores.",
+      "h1": "Higher Manager Effectiveness scores are associated with higher Engagement scores.",
+      "test_recommended": "pearson_correlation",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1782283901482",
+    "hypothesis": "Female employees rate Manager Effectiveness higher than Male employees.",
+    "result": "rejected",
+    "test_type": "two_sample_z",
+    "p_value": 0.0408,
+    "filters_applied": {},
+    "date_tested": "Jun 24, 2026",
+    "params": {
+      "hypothesis_type": "group_comparison",
+      "parseable": true,
+      "parse_error": null,
+      "group_a": {
+        "field": "gender",
+        "value": "Female",
+        "label": "Female employees",
+        "confidence": 0.99
+      },
+      "group_b": {
+        "field": "gender",
+        "value": "Male",
+        "label": "Male employees",
+        "confidence": 0.99
+      },
+      "outcome": {
+        "source": "theme",
+        "field": "manager_effectiveness",
+        "question_id": null,
+        "label": "Manager Effectiveness Score",
+        "confidence": 0.98
+      },
+      "x_var": null,
+      "y_var": null,
+      "group": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "Female employees do not rate Manager Effectiveness higher than Male employees.",
+      "h1": "Female employees rate Manager Effectiveness higher than Male employees.",
+      "test_recommended": "two_sample_z",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1782212495771",
+    "hypothesis": "Employees with higher Career Development scores tend to have higher Engagement scores.",
+    "result": "inconclusive",
+    "test_type": "pearson_correlation",
+    "p_value": 0.6194,
+    "filters_applied": {},
+    "date_tested": "Jun 23, 2026",
+    "params": {
+      "hypothesis_type": "relationship",
+      "parseable": true,
+      "parse_error": null,
+      "x_var": {
+        "source": "theme",
+        "field": "development_and_career",
+        "question_id": null,
+        "label": "Career Development Score",
+        "confidence": 0.99
+      },
+      "y_var": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "group_a": null,
+      "group_b": null,
+      "group": null,
+      "outcome": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "There is no significant positive relationship between Career Development scores and Engagement scores.",
+      "h1": "There is a significant positive relationship between Career Development scores and Engagement scores.",
+      "test_recommended": "pearson_correlation",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1782202193480",
+    "hypothesis": "Female employees rate Manager Effectiveness higher than Male employees.",
+    "result": "rejected",
+    "test_type": "two_sample_z",
+    "p_value": 0.0408,
+    "filters_applied": {},
+    "date_tested": "Jun 23, 2026",
+    "params": {
+      "hypothesis_type": "group_comparison",
+      "parseable": true,
+      "parse_error": null,
+      "group_a": {
+        "field": "gender",
+        "value": "Female",
+        "label": "Female employees",
+        "confidence": 0.99
+      },
+      "group_b": {
+        "field": "gender",
+        "value": "Male",
+        "label": "Male employees",
+        "confidence": 0.99
+      },
+      "outcome": {
+        "source": "theme",
+        "field": "manager_effectiveness",
+        "question_id": null,
+        "label": "Manager Effectiveness Score",
+        "confidence": 0.99
+      },
+      "x_var": null,
+      "y_var": null,
+      "group": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "There is no significant difference in Manager Effectiveness scores between Female and Male employees.",
+      "h1": "Female employees rate Manager Effectiveness higher than Male employees.",
+      "test_recommended": "two_sample_t",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1782202180711",
+    "hypothesis": "Higher Manager Effectiveness scores are associated with higher Engagement.",
+    "result": "inconclusive",
+    "test_type": "pearson_correlation",
+    "p_value": 0.309,
+    "filters_applied": {},
+    "date_tested": "Jun 23, 2026",
+    "params": {
+      "hypothesis_type": "relationship",
+      "parseable": true,
+      "parse_error": null,
+      "x_var": {
+        "source": "theme",
+        "field": "manager_effectiveness",
+        "question_id": null,
+        "label": "Manager Effectiveness Score",
+        "confidence": 0.99
+      },
+      "y_var": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "group_a": null,
+      "group_b": null,
+      "group": null,
+      "outcome": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "There is no correlation between Manager Effectiveness scores and Engagement scores.",
+      "h1": "Higher Manager Effectiveness scores are associated with higher Engagement scores.",
+      "test_recommended": "pearson_correlation",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1782202163228",
+    "hypothesis": "People Managers have higher trust in Leadership than Individual Contributors.",
+    "result": "inconclusive",
+    "test_type": "two_sample_z",
+    "p_value": 0.196,
+    "filters_applied": {},
+    "date_tested": "Jun 23, 2026",
+    "params": {
+      "hypothesis_type": "group_comparison",
+      "parseable": true,
+      "parse_error": null,
+      "group_a": {
+        "field": "is_manager",
+        "value": "Yes",
+        "label": "People Managers",
+        "confidence": 0.98
+      },
+      "group_b": {
+        "field": "is_manager",
+        "value": "No",
+        "label": "Individual Contributors",
+        "confidence": 0.98
+      },
+      "outcome": {
+        "source": "theme",
+        "field": "leadership",
+        "question_id": null,
+        "label": "Leadership Trust Score",
+        "confidence": 0.99
+      },
+      "x_var": null,
+      "y_var": null,
+      "group": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "People Managers do not have higher trust in Leadership than Individual Contributors (Leadership scores are equal or lower for Managers).",
+      "h1": "People Managers have higher trust in Leadership than Individual Contributors (Leadership scores are higher for Managers).",
+      "test_recommended": "two_sample_t",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1782198916055",
+    "hypothesis": "Higher Manager Effectiveness scores are associated with higher Engagement.",
+    "result": "inconclusive",
+    "test_type": "pearson_correlation",
+    "p_value": 0.309,
+    "filters_applied": {},
+    "date_tested": "Jun 23, 2026",
+    "params": {
+      "hypothesis_type": "relationship",
+      "parseable": true,
+      "parse_error": null,
+      "x_var": {
+        "source": "theme",
+        "field": "manager_effectiveness",
+        "question_id": null,
+        "label": "Manager Effectiveness Score",
+        "confidence": 0.99
+      },
+      "y_var": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "group_a": null,
+      "group_b": null,
+      "group": null,
+      "outcome": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "There is no correlation between Manager Effectiveness scores and Engagement scores.",
+      "h1": "Higher Manager Effectiveness scores are positively correlated with higher Engagement scores.",
+      "test_recommended": "pearson_correlation",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
     "id": "H-1781854328999",
     "hypothesis": "Employees with higher Career Development scores tend to have higher Engagement scores.",
     "result": "inconclusive",

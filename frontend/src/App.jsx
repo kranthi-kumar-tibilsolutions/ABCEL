@@ -74,6 +74,7 @@ export default function App() {
   const [authChecked,    setAuthChecked]    = useState(false);
   const [loggingOut,     setLoggingOut]     = useState(false);
   const [page,           setPage]           = useState('upload');
+  const [visitedPages,   setVisitedPages]   = useState(() => new Set(['overview']));
   const [navHistory,     setNavHistory]     = useState([]);
   const [dimension,      setDimension]      = useState('overall');
   const [selectedBusiness, setSelectedBusiness] = useState(null);
@@ -216,10 +217,22 @@ export default function App() {
     });
   }, [businesses, activeFilters]);
 
+  useEffect(() => {
+    if (page && page !== 'upload') {
+      setVisitedPages(prev => {
+        if (prev.has(page)) return prev;
+        const next = new Set(prev);
+        next.add(page);
+        return next;
+      });
+    }
+  }, [page]);
+
   const handleUploadComplete = useCallback(() => {
     setSummaryData(null);
     setInsightsData(null);
     setFocusAreasData(null);
+    setVisitedPages(new Set());
     fetchData().then(() => setPage('overview'));
   }, [fetchData]);
 
@@ -250,7 +263,7 @@ export default function App() {
     activeScreenContext, setActiveScreenContext,
   };
 
-  const PageComponent = PAGE_MAP[page] ?? Overview;
+  const PageComponent = PAGE_MAP[page] ?? Overview; // kept for upload/auth checks below
 
   if (!authChecked) return null;
 
@@ -288,7 +301,14 @@ export default function App() {
             <TopBar />
             <div className="content-with-panel">
               <div className="content">
-                <PageComponent />
+                {Object.entries(PAGE_MAP)
+                  .filter(([key]) => key !== 'upload' && visitedPages.has(key))
+                  .map(([key, Comp]) => (
+                    <div key={key} style={key === page ? undefined : { display: 'none' }}>
+                      <Comp />
+                    </div>
+                  ))
+                }
               </div>
               <RightPanel />
             </div>

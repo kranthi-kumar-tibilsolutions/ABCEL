@@ -940,7 +940,7 @@ export default function HypothesisTestingPage() {
               maxLength={500}
               value={input}
               onChange={e => { setInput(e.target.value); if (stage !== 'input') setStage('input'); }}
-              placeholder="Examples:&#10;• Managers trust Leadership more than Individual Contributors.&#10;• Higher Career Development scores lead to higher Engagement.&#10;• Gen Z employees score higher on Onboarding than the company average."
+              placeholder="Examples:&#10;• Managers trust Leadership more than Individual Contributors.&#10;• Higher Career Development scores lead to higher Engagement.&#10;• Gen Y employees score higher on Engagement than the company average."
               disabled={stage === 'parsing' || stage === 'running'}
             />
             <div className="ht-char-count">{input.length} / 500</div>

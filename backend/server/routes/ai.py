@@ -10,7 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException, Header
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from lib.llm import call_llm
+from lib.llm   import call_llm
+from lib.cache import load_responses
 from routes.auth import data_company, get_current_user
 
 router   = APIRouter()
@@ -43,6 +44,10 @@ def _read(file: str):
         return json.loads(fp.read_text(encoding="utf-8"))
     except Exception:
         return None
+
+
+# mtime-keyed cache for full precomputed chat data (group users only)
+_full_chat_data_cache: dict = {"mtime": None, "data": None}
 
 
 # ── Repair truncated JSON (JS parseJSON — exact line-by-line translation) ─────
@@ -427,8 +432,21 @@ def _compute_full_chat_data(user=None):
     If units.json is missing, builds it from responses.json as a fallback.
     Returns (businesses, gen_data, gender_data, job_data, tenure_data, manager_data, biz_cohorts, biz_units)
     """
+    is_company_user = bool(user and user.get("role") == "company")
+
+    # For non-scoped (group) users: return full cached result if responses.json unchanged
+    if not is_company_user:
+        try:
+            fp = _DATA / "responses.json"
+            mtime = fp.stat().st_mtime if fp.exists() else None
+            if (mtime and _full_chat_data_cache["mtime"] == mtime
+                    and _full_chat_data_cache["data"] is not None):
+                return _full_chat_data_cache["data"]
+        except Exception:
+            pass
+
     businesses = _read("businesses.json") or []
-    responses  = _read("responses.json")  or []
+    responses  = load_responses()  # shared mtime cache — avoids 77MB re-parse
     all_units  = _read("units.json")      or []
 
     # Fallback: build units from responses if units.json is missing or empty
@@ -566,7 +584,21 @@ def _compute_full_chat_data(user=None):
         'Gen Y':  _sample('generation', 'Gen Y'),
     }
 
-    return businesses, gen_data, gender_data, job_data, tenure_data, manager_data, biz_cohorts, biz_units, real_totals, sample_rows
+    result = (businesses, gen_data, gender_data, job_data, tenure_data, manager_data,
+              biz_cohorts, biz_units, real_totals, sample_rows)
+
+    # Cache full result for group (non-scoped) users so next request is instant
+    if not is_company_user:
+        try:
+            fp = _DATA / "responses.json"
+            mtime = fp.stat().st_mtime if fp.exists() else None
+            if mtime:
+                _full_chat_data_cache["mtime"] = mtime
+                _full_chat_data_cache["data"]  = result
+        except Exception:
+            pass
+
+    return result
 
 
 @router.post("/chat")
@@ -639,12 +671,27 @@ When the user says "this persona", "this analysis", "these results", "what I'm l
             out[_CAT_MAP.get(k, k)] = v
         return out
 
-    biz_json    = _json.dumps([{"name": b["name"], "overall": b.get("overall"), "band": b.get("band"),
-                                 "respondent_count": get_n(b),
-                                 "categories": _norm_cats(b.get("categories", {}))} for b in businesses], indent=2)
-    cohort_json = _json.dumps(biz_cohorts, indent=2)
+    # Compact one-liner per business — avoids indented JSON bloat (~5x smaller)
+    def _biz_line_chat(b):
+        cats = _norm_cats(b.get("categories", {}))
+        cat_str = ", ".join(f"{k}={v}" for k, v in cats.items() if v)
+        return f"{b['name']}: {b.get('overall')} ({b.get('band','')}, n={get_n(b)}) [{cat_str}]"
 
-    # BUSINESS UNITS BY COMPANY — numbered list per company, sorted by score desc
+    biz_lines_chat = "\n".join(_biz_line_chat(b) for b in businesses)
+
+    # Compact cohort text — one line per company, gen/gender only (replaces 100KB JSON dump)
+    def _cohort_compact(bname, bc):
+        gens   = ", ".join(f"{g['label']}={g['scores'].get('overall','?')}(n={g['n']})"
+                           for g in bc.get('by_generation', []))
+        genders = ", ".join(f"{g['label']}={g['scores'].get('overall','?')}(n={g['n']})"
+                            for g in bc.get('by_gender', []))
+        jobs   = ", ".join(f"{g['label']}={g['scores'].get('overall','?')}"
+                           for g in bc.get('by_job_level', []))
+        return f"{bname}(n={bc.get('n','')}): {gens} | {genders} | {jobs}"
+
+    cohort_lines = "\n".join(_cohort_compact(k, v) for k, v in biz_cohorts.items())
+
+    # BUSINESS UNITS BY COMPANY — compact one-liner per BU
     bu_section_lines = []
     _is_fallback = any(
         u.get('is_business_level_fallback')
@@ -652,11 +699,10 @@ When the user says "this persona", "this analysis", "these results", "what I'm l
     )
     for bname in sorted(biz_units.keys()):
         bus = biz_units[bname]
-        bu_section_lines.append(f"\n{bname} ({len(bus)} BUs):")
-        for i, u in enumerate(bus, 1):
-            bu_section_lines.append(
-                f"  {i}. {u['name']} — score: {u['score']}, respondents: {u['n']}, cluster: {u['cluster'] or 'n/a'}"
-            )
+        bu_entries = ", ".join(
+            f"{u['name']}={u['score']}(n={u['n']})" for u in bus
+        )
+        bu_section_lines.append(f"{bname}: {bu_entries}")
     bu_block = "\n".join(bu_section_lines)
     total_bu_count = sum(len(v) for v in biz_units.values())
     bu_count_note = (
@@ -739,49 +785,38 @@ GROUP SUMMARY:
 CATEGORY NAMES (use these exact names always):
 Engagement | Leadership | Performance Culture | Development and Career | Manager Effectiveness | Onboarding
 
-ALL 22 BUSINESSES (ranked highest to lowest):
-{biz_json}
+ALL 22 BUSINESSES (ranked highest to lowest — format: name: overall (band, n=respondents) [category scores]):
+{biz_lines_chat}
 
-BUSINESS UNITS BY COMPANY:
+BUSINESS UNITS BY COMPANY (format: company: BU=score(n=respondents), ...):
 {bu_block}
 
 GENDER (real totals from full dataset — never count sample rows):
-Male: {real_totals.get('male', 0)} ({round(real_totals.get('male', 0) / _tot * 100, 1)}%)
-Female: {real_totals.get('female', 0)} ({round(real_totals.get('female', 0) / _tot * 100, 1)}%)
+Male: {real_totals.get('male', 0)} ({round(real_totals.get('male', 0) / _tot * 100, 1)}%) | Female: {real_totals.get('female', 0)} ({round(real_totals.get('female', 0) / _tot * 100, 1)}%)
 
 GENERATION (real totals):
-Gen Y: {real_totals.get('gen_y', 0)} ({round(real_totals.get('gen_y', 0) / _tot * 100, 1)}%)
-Gen X: {real_totals.get('gen_x', 0)} ({round(real_totals.get('gen_x', 0) / _tot * 100, 1)}%)
-Gen Z: {real_totals.get('gen_z', 0)} ({round(real_totals.get('gen_z', 0) / _tot * 100, 1)}%)
+Gen Y: {real_totals.get('gen_y', 0)} | Gen X: {real_totals.get('gen_x', 0)} | Gen Z: {real_totals.get('gen_z', 0)}
 
 JOB LEVEL (real totals):
-Junior Management: {real_totals.get('junior_management', 0)}
-Middle Management: {real_totals.get('middle_management', 0)}
-Senior Management: {real_totals.get('senior_management', 0)}
+Junior Mgmt: {real_totals.get('junior_management', 0)} | Middle Mgmt: {real_totals.get('middle_management', 0)} | Senior Mgmt: {real_totals.get('senior_management', 0)}
 
 TENURE (real totals):
-0-2 years: {real_totals.get('tenure_0_2', 0)} | 2-5 years: {real_totals.get('tenure_2_5', 0)} | 5-10 years: {real_totals.get('tenure_5_10', 0)}
-10-15 years: {real_totals.get('tenure_10_15', 0)} | 15-20 years: {real_totals.get('tenure_15_20', 0)} | 20-25 years: {real_totals.get('tenure_20_25', 0)} | 25+ years: {real_totals.get('tenure_25_plus', 0)}
+0-2y: {real_totals.get('tenure_0_2', 0)} | 2-5y: {real_totals.get('tenure_2_5', 0)} | 5-10y: {real_totals.get('tenure_5_10', 0)} | 10-15y: {real_totals.get('tenure_10_15', 0)} | 15-20y: {real_totals.get('tenure_15_20', 0)} | 20-25y: {real_totals.get('tenure_20_25', 0)} | 25+y: {real_totals.get('tenure_25_plus', 0)}
 
-IMPORTANT — SAMPLE SIZE WARNING: The "n" values in the score sections below come from a 2,000-row sample used for score computation only. They are NOT the actual employee headcounts. For headcounts always use the GENDER / GENERATION / JOB LEVEL / TENURE real totals sections above.
+NOTE: n-values in score sections below are from compute sample only — NOT actual headcounts. Always use the real totals above for headcount questions.
 
-GENERATION SCORES (from sample — use n for score context only, not for headcount):
-{_json.dumps(gen_data, indent=2)}
+GENERATION SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')}, onb={g['scores'].get('onboarding','?')} (n={g['n']})" for g in gen_data)}
 
-GENDER SCORES (from sample — use n for score context only, not for headcount):
-{_json.dumps(gender_data, indent=2)}
+GENDER SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')}, onb={g['scores'].get('onboarding','?')} (n={g['n']})" for g in gender_data)}
 
-JOB LEVEL SCORES (from sample — use n for score context only, not for headcount):
-{_json.dumps(job_data, indent=2)}
+JOB LEVEL SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')}, onb={g['scores'].get('onboarding','?')} (n={g['n']})" for g in job_data)}
 
-TENURE SCORES (from sample — use n for score context only, not for headcount):
-{_json.dumps(tenure_data, indent=2)}
+TENURE SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')}, onb={g['scores'].get('onboarding','?')} (n={g['n']})" for g in tenure_data)}
 
-MANAGER vs INDIVIDUAL CONTRIBUTOR:
-{_json.dumps(manager_data, indent=2)}
+MANAGER vs IC: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')}, onb={g['scores'].get('onboarding','?')} (n={g['n']})" for g in manager_data)}
 
-PER-BUSINESS COHORT BREAKDOWNS:
-{cohort_json}
+PER-BUSINESS COHORT SCORES (generation | gender | job level — overall scores only):
+{cohort_lines}
 
 --- COMPANY NAME RULES ---
 "Novel Jewels" / "novel jewel" → Novel Jewels Ltd. (jewellery, 376 respondents, 1 BU)
@@ -804,11 +839,11 @@ Never say "I don't have data for [abbreviation]". Always attempt to match it to 
 There are NO open text comments in this dataset. Every response is a numeric Likert score 1-5.
 When asked to show a female / male / Gen Z / Gen Y employee response — use the exact sample rows below. Show them as a readable human profile (demographics first, then scores). Do NOT redirect to Sentiment Analysis.
 
-SAMPLE ROWS FROM responses.json (use these verbatim when asked to show an individual response):
-Female employee: {_json.dumps(sample_rows.get('Female'), indent=2)}
-Male employee: {_json.dumps(sample_rows.get('Male'), indent=2)}
-Gen Z employee: {_json.dumps(sample_rows.get('Gen Z'), indent=2)}
-Gen Y employee: {_json.dumps(sample_rows.get('Gen Y'), indent=2)}
+SAMPLE ROWS (use verbatim when asked to show an individual response):
+Female: {_json.dumps(sample_rows.get('Female'))}
+Male: {_json.dumps(sample_rows.get('Male'))}
+Gen Z: {_json.dumps(sample_rows.get('Gen Z'))}
+Gen Y: {_json.dumps(sample_rows.get('Gen Y'))}
 
 --- RESPONSE LENGTH AND FORMAT — MANDATORY ---
 - Default response length is 3 to 5 sentences. No more unless the user explicitly asks for a full breakdown, detailed analysis, or complete list.
@@ -850,9 +885,13 @@ Use this exact decision order for every message:
    → answer about Gen Z top 3 scores, NOT about whatever tab is open.
 
 2. IS THIS A TAB CONTEXT QUESTION?
-   Only use tab context if the question uses words like "explain this", "what am I looking at",
-   "what does this mean", "what is on this page", "what tab am I on", or "this" referring
-   to something on screen that has NOT already been discussed in conversation history.
+   Use tab context if the question uses words like "explain this", "what am I looking at",
+   "what does this mean", "what is on this page", "what tab am I on", "explain the kpi",
+   "what are these numbers", "what does this show", "give me bullets for this",
+   "explain each", "what is this tab", or "this" referring to something on screen
+   that has NOT already been discussed in conversation history.
+   IMPORTANT: If the previous assistant answer was an error ("AI unavailable" or similar),
+   treat the current question as a fresh tab context question, not a follow-up.
    Example: user opens statistical analysis tab and asks "explain what I am seeing"
    → use tab context to explain the selected question and correlations.
 
@@ -1002,6 +1041,44 @@ already established a topic.
             raise RuntimeError("Cerebras rate-limited after 4 retries")
 
         except Exception:
+            # One final Mistral retry before giving up
+            try:
+                await asyncio.sleep(1.5)
+                async with httpx.AsyncClient(timeout=30) as client:
+                    async with client.stream(
+                        "POST",
+                        "https://api.mistral.ai/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {os.getenv('MISTRAL_API_KEY')}",
+                            "Content-Type":  "application/json",
+                        },
+                        json={
+                            "model":       "mistral-small-latest",
+                            "messages":    messages,
+                            "max_tokens":  800,
+                            "stream":      True,
+                            "temperature": 0.3,
+                        },
+                    ) as r:
+                        if r.is_success:
+                            print("[LLM] Mistral retry OK")
+                            async for line in r.aiter_lines():
+                                if not line.startswith("data: "):
+                                    continue
+                                payload = line[6:].strip()
+                                if payload == "[DONE]":
+                                    yield "data: [DONE]\n\n"
+                                    return
+                                try:
+                                    tok = json.loads(payload)["choices"][0]["delta"].get("content", "")
+                                    if tok:
+                                        yield f"data: {json.dumps({'text': tok})}\n\n"
+                                except Exception:
+                                    pass
+                            yield "data: [DONE]\n\n"
+                            return
+            except Exception:
+                pass
             yield f"data: {json.dumps({'text': 'AI unavailable. Please try again.'})}\n\n"
             yield "data: [DONE]\n\n"
 

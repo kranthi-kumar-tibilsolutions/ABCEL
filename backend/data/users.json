@@ -1,0 +1,5 @@
+[
+  { "email": "niranjan@adityabirla.com", "password": "abg2026", "name": "Niranjan", "role": "group_hr", "company": "Aditya Birla", "theme": "abg" },
+  { "email": "hr@ultratechcement.com", "password": "cement2026", "name": "Kranthi", "role": "company", "company": "UltraTech Cement", "theme": "ultratech" },
+  { "email": "hr@novelis.com", "password": "novelis2026", "name": "Shashank", "role": "company", "company": "Novelis", "theme": "novelis" }
+]

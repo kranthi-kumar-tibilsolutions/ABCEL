@@ -1,0 +1,345 @@
+[
+  {
+    "id": "OP1",
+    "text": "I feel proud to be an employee of Aditya Birla Group.",
+    "short_label": "I feel proud to be an\u2026",
+    "category": "Engagement",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP2",
+    "text": "I see myself working in Aditya Birla Group two years from now.",
+    "short_label": "I see myself working in Aditya\u2026",
+    "category": "Engagement",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP4",
+    "text": "My Business inspires me to do my best work every day.",
+    "short_label": "My Business inspires me to do\u2026",
+    "category": "Engagement",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP48",
+    "text": "I would recommend Aditya Birla Group as a great place to work.",
+    "short_label": "I would recommend Aditya Birla Group\u2026",
+    "category": "Engagement",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP29",
+    "text": "I receive development inputs to do my role effectively.",
+    "short_label": "I receive development inputs to do\u2026",
+    "category": "Development & Career",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP30",
+    "text": "I receive exposures that prepare me for larger or wider roles in future.",
+    "short_label": "I receive exposures that prepare me\u2026",
+    "category": "Development & Career",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP31",
+    "text": "I have access to resources that help me build future skills.",
+    "short_label": "I have access to resources that\u2026",
+    "category": "Development & Career",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP32",
+    "text": "I feel my career goals are being met in my Business / Aditya Birla Group.",
+    "short_label": "I feel my career goals are\u2026",
+    "category": "Development & Career",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP33",
+    "text": "I am clear about the role or career direction I am being developed for.",
+    "short_label": "I am clear about the role\u2026",
+    "category": "Development & Career",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP34",
+    "text": "I understand what I need to do to advance in my career.",
+    "short_label": "I understand what I need to\u2026",
+    "category": "Development & Career",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP5",
+    "text": "Senior Leaders are approachable.",
+    "short_label": "Senior Leaders are approachable.",
+    "category": "Leadership",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP6",
+    "text": "Senior Leaders foster open and honest communication.",
+    "short_label": "Senior Leaders foster open and honest\u2026",
+    "category": "Leadership",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP7",
+    "text": "Senior Leaders communicate clear and consistent messages.",
+    "short_label": "Senior Leaders communicate clear and consistent\u2026",
+    "category": "Leadership",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP8",
+    "text": "Senior Leaders create excitement for future of my Business.",
+    "short_label": "Senior Leaders create excitement for future\u2026",
+    "category": "Leadership",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP9",
+    "text": "My Leadership team gives highest priority to safety.",
+    "short_label": "My Leadership team gives highest priority\u2026",
+    "category": "Leadership",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP10",
+    "text": "I feel that my senior leaders support my development.",
+    "short_label": "I feel that my senior leaders\u2026",
+    "category": "Leadership",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP11",
+    "text": "Our leaders consistently role model the Group Value of Integrity in their decisions and actions.",
+    "short_label": "Our leaders consistently role model the\u2026",
+    "category": "Leadership",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP12",
+    "text": "Our leaders role model the Group Value of Speed.",
+    "short_label": "Our leaders role model the Group\u2026",
+    "category": "Leadership",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP13",
+    "text": "Our leaders role model the Group Values of Commitment, Seamlessness & Passion.",
+    "short_label": "Our leaders role model the Group\u2026",
+    "category": "Leadership",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP14",
+    "text": "I get a sense of accomplishment from my work.",
+    "short_label": "I get a sense of accomplishment\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP15",
+    "text": "I can freely express my ideas, thoughts and suggestions without fear of negative consequences.",
+    "short_label": "I can freely express my ideas,\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP16",
+    "text": "I feel valued and appreciated.",
+    "short_label": "I feel valued and appreciated.",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP17",
+    "text": "Good Ideas are adopted here regardless of who suggests them.",
+    "short_label": "Good Ideas are adopted here regardless\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP18",
+    "text": "The people I work with share information and ideas that will help others succeed.",
+    "short_label": "The people I work with share\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP19",
+    "text": "Promotion and growth processes in my organization are fair and applied consistently.",
+    "short_label": "Promotion and growth processes in my\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP20",
+    "text": "I am empowered to make decisions to do my job effectively.",
+    "short_label": "I am empowered to make decisions\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP21",
+    "text": "When my work is good, my contributions and accomplishments have been recognized last year.",
+    "short_label": "When my work is good, my\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP22",
+    "text": "I am paid fairly for my work.",
+    "short_label": "I am paid fairly for my\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP23",
+    "text": "In my function/team, we make good use of data/technology to improve our operational efficiency.",
+    "short_label": "In my function/team, we make good\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP24",
+    "text": "Health and wellbeing offerings provided by my Business meet my needs.",
+    "short_label": "Health and wellbeing offerings provided by\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP25",
+    "text": "I have colleagues at work that I can lean on during difficult or stressful period.",
+    "short_label": "I have colleagues at work that\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP26",
+    "text": "The administration of health benefits (e.g., claims) is efficient and hassle-free.",
+    "short_label": "The administration of health benefits (e.g.,\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP27",
+    "text": "I believe that feedback shared through Vibes will lead to meaningful actions.",
+    "short_label": "I believe that feedback shared through\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP28",
+    "text": "My team and my manager came together to create action plans based on ABG Vibes 2025 feedback.",
+    "short_label": "My team and my manager came\u2026",
+    "category": "Performance Culture",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP36",
+    "text": "My manager clearly communicates what is expected of me.",
+    "short_label": "My manager clearly communicates what is\u2026",
+    "category": "Manager Effectiveness",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP37",
+    "text": "My manager provides me with helpful and timely feedback to improve performance.",
+    "short_label": "My manager provides me with helpful\u2026",
+    "category": "Manager Effectiveness",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP38",
+    "text": "My manager encourages me to come up with new and better way of doing things.",
+    "short_label": "My manager encourages me to come\u2026",
+    "category": "Manager Effectiveness",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP39",
+    "text": "My manager provides necessary support and guidance when I face challenges in my performance.",
+    "short_label": "My manager provides necessary support and\u2026",
+    "category": "Manager Effectiveness",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP40",
+    "text": "My manager holds me accountable for my performance / deliverables.",
+    "short_label": "My manager holds me accountable for\u2026",
+    "category": "Manager Effectiveness",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP41",
+    "text": "My manager cares for my wellbeing.",
+    "short_label": "My manager cares for my wellbeing.",
+    "category": "Manager Effectiveness",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP42",
+    "text": "My manager treats me with respect.",
+    "short_label": "My manager treats me with respect.",
+    "category": "Manager Effectiveness",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP43",
+    "text": "My manager actively helps me in my development.",
+    "short_label": "My manager actively helps me in\u2026",
+    "category": "Manager Effectiveness",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP44",
+    "text": "Subject to my time in role (TIR) being completed, my manager encourages me to explore roles in other parts of the Business and Group.",
+    "short_label": "Subject to my time in role\u2026",
+    "category": "Manager Effectiveness",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP45",
+    "text": "My manager has had candid career conversations with me in last one year.",
+    "short_label": "My manager has had candid career\u2026",
+    "category": "Manager Effectiveness",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP46",
+    "text": "My manager helps me identify the capabilities I need for future roles.",
+    "short_label": "My manager helps me identify the\u2026",
+    "category": "Manager Effectiveness",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP47",
+    "text": "My manager clearly explains the criteria and rationale behind decisions such as performance ratings, compensation, or promotions.",
+    "short_label": "My manager clearly explains the criteria\u2026",
+    "category": "Manager Effectiveness",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP49",
+    "text": "The onboarding process in my Business helped me settle down in my job well.",
+    "short_label": "The onboarding process in my Business\u2026",
+    "category": "Onboarding",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP50",
+    "text": "My manager helped me settle in my role well.",
+    "short_label": "My manager helped me settle in\u2026",
+    "category": "Onboarding",
+    "type": "likert_1_5"
+  },
+  {
+    "id": "OP52",
+    "text": "The onboarding process in my Business helped me settle down in my job well.",
+    "short_label": "The onboarding process in my Business\u2026",
+    "category": "Onboarding",
+    "type": "likert_1_5"
+  }
+]

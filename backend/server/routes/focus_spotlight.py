@@ -10,6 +10,7 @@ import httpx
 
 from routes.auth        import data_company, get_current_user
 from lib.segment_engine import compute_segments, precompute_and_save
+from lib.cache          import load_responses
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -55,10 +56,9 @@ def get_filters(user: dict = Depends(get_current_user)):
     has_active = has_inactive = False
     dim_values: dict = {}   # { dimension: [sorted unique values] }
 
-    resp_fp = _DATA / "responses.json"
-    if resp_fp.exists():
+    rows = load_responses()
+    if rows:
         try:
-            rows = json.loads(resp_fp.read_text(encoding="utf-8"))
 
             # Collect unique values per dimension
             DIM_FIELDS = {
@@ -123,8 +123,10 @@ def get_results(req: ResultsRequest, user: dict = Depends(get_current_user)):
     active_filter = (req.active_filter or 'all').lower()
     scope = {k: v for k, v in (req.scope or {}).items() if v and v != 'All'}
 
-    # No filters at all → serve precomputed cache (fastest path)
-    if not business and active_filter == 'all' and not scope:
+    # No filters at all → serve precomputed cache (fastest path).
+    # Cache is built with active_filter='active' (all real respondents are active),
+    # so serve it for both 'active' and 'all' unscoped requests.
+    if not business and active_filter in ('active', 'all') and not scope:
         cached = _load_precomputed()
         if cached:
             return cached

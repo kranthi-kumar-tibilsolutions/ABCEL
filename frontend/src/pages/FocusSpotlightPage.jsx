@@ -122,14 +122,13 @@ function EngagementScale({ mean, sd }) {
 
 /* ── main page ────────────────────────────────────────────────────── */
 export default function FocusSpotlightPage() {
-  const { setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
+  const { setBreadcrumb, setActiveScreenContext, page } = useContext(AppContext);
 
   useEffect(() => {
     setBreadcrumb([
       { label: 'Persona Explorer' },
       { label: 'Focus Spotlight' },
     ]);
-    setActiveScreenContext({ tab: 'focus_spotlight', description: 'AI persona segmentation — statistical outliers across demographic dimensions for ABG Vibes 2026.' });
   }, []);
 
   const [dims,           setDimsState]    = useState({});
@@ -139,6 +138,22 @@ export default function FocusSpotlightPage() {
   const [data,           setData]         = useState(null);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [activeTab,    setActiveTab]    = useState('much-lower');
+
+  useEffect(() => {
+    if (page !== 'focus-spotlight') return;
+    setActiveScreenContext({
+      tab:               'focus_spotlight',
+      active_band:       activeTab,
+      applied_filters:   dims,
+      total_segments:    data?.summary?.total_segments ?? 0,
+      total_respondents: data?.summary?.total_respondents ?? 0,
+      group_mean:        data?.summary?.group_mean ?? 0,
+      band_counts:       data?.summary?.band_counts ?? {},
+      top_segments:      (data?.segments ?? []).filter(s => s.band === activeTab).slice(0, 5).map(s => ({
+        label: s.label, band: s.band, mean: s.mean, z_score: s.z_score, n: s.n,
+      })),
+    });
+  }, [page, activeTab, dims, data]);
   const [showAll,      setShowAll]      = useState(false);
   const [canScrollLeft,  setCanScrollLeft]  = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);

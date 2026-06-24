@@ -197,6 +197,7 @@ export default function DynamicPersonaBuilderPage() {
     dpbFilters, setDpbFilters,
     setBreadcrumb, meta,
     setActiveScreenContext,
+    page,
   } = useContext(AppContext);
 
   const [personaName,   setPersonaName]   = useState('Custom Persona');
@@ -356,6 +357,7 @@ export default function DynamicPersonaBuilderPage() {
 
   // Broadcast screen context to chatbot whenever persona state changes
   useEffect(() => {
+    if (page !== 'dynamic-persona-builder') return;
     setActiveScreenContext({
       tab: 'dynamic_persona_builder',
       persona_name: personaName,
@@ -366,7 +368,7 @@ export default function DynamicPersonaBuilderPage() {
       ) : null,
       comparisons: comparisons.slice(0, 5).map(c => ({ name: c.name, overall: c.overall })),
     });
-  }, [personaName, dims, queryResult, personaN]);
+  }, [personaName, dims, queryResult, personaN, page]);
 
   const personaScores = {};
   const overallScores = {};

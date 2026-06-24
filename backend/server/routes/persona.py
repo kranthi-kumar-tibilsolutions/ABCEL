@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from lib.stats import std_dev, two_sample_z_test, significance_badge
 from lib.llm   import call_llm_json
+from lib.cache import load_responses
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -142,7 +143,7 @@ class SaveRequest(BaseModel):
 @router.post("/query")
 async def persona_query(req: QueryRequest):
     try:
-        units = _read("responses.json")
+        units = load_responses()
 
         # Apply top-level survey filters first (20.6)
         sf = req.survey_filters
@@ -250,7 +251,7 @@ async def persona_query(req: QueryRequest):
 @router.get("/dimensions")
 def get_dimensions():
     try:
-        units = _read("responses.json")
+        units = load_responses()
         dimensions = [
             {
                 "id":     dim,
@@ -266,29 +267,41 @@ def get_dimensions():
 
 # ── GET /api/persona/top5 ─────────────────────────────────────────────────────
 
+def _theme_means(rows: list) -> dict:
+    """Compute only means per theme — faster than _compute_group_scores (skips std_dev)."""
+    result = {}
+    for theme in THEMES:
+        k = theme["key"]
+        vals = [v for u in rows if (v := u.get(k)) is not None and v > 0]
+        result[theme["label"]] = sum(vals) / len(vals) if vals else 0.0
+    return result
+
+
 @router.get("/top5")
 def get_top5():
     try:
-        units       = _read("responses.json")
-        suggestions = []
+        units          = load_responses()
+        overall_means  = _theme_means(units)  # computed ONCE outside all loops
+        suggestions    = []
 
         for dim in DIMS:
-            values = list(set(u.get(dim) for u in units if u.get(dim)))
-            for val in values:
-                group = [u for u in units if u.get(dim) == val]
+            # Pre-group by dimension value in a single O(n) pass
+            groups: dict = {}
+            for u in units:
+                v = u.get(dim)
+                if v:
+                    groups.setdefault(v, []).append(u)
+
+            for val, group in groups.items():
                 if len(group) < 30:
                     continue
 
-                group_scores   = _compute_group_scores(group, THEMES)
-                overall_scores = _compute_group_scores(units, THEMES)
+                group_means = _theme_means(group)
 
                 max_delta = 0.0
                 max_theme = ""
                 for theme in THEMES:
-                    delta = abs(
-                        (group_scores[theme["label"]]["mean"] or 0)
-                        - (overall_scores[theme["label"]]["mean"] or 0)
-                    )
+                    delta = abs(group_means[theme["label"]] - overall_means[theme["label"]])
                     if delta > max_delta:
                         max_delta = delta
                         max_theme = theme["label"]

@@ -1,10 +1,7 @@
 node_modules/
 backend/uploads/
-/data/
 dist/
 .env
-backend/data/responses.json
-backend/data/users.json
 *.xlsx
 *.xls
 __pycache__/
@@ -13,3 +10,5 @@ __pycache__/
 .DS_Store
 *.log
 *.err
+frontend/dist.zip
+server.out

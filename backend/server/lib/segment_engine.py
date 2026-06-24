@@ -17,6 +17,7 @@ from pathlib   import Path
 import numpy as np
 
 from lib.stats import one_sample_z_test
+from lib.cache import load_responses
 
 DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
@@ -35,13 +36,7 @@ MAX_DEPTH = 2   # depth 1 = single dim, depth 2 = cross-dim pairs
 
 
 def _load_responses() -> list:
-    fp = DATA_DIR / "responses.json"
-    if not fp.exists():
-        return []
-    try:
-        return json.loads(fp.read_text(encoding="utf-8"))
-    except Exception:
-        return []
+    return load_responses()
 
 
 def _str_val(v) -> str:
@@ -162,16 +157,9 @@ def compute_segments(
                 seg_mean = float(np.mean(seg_arr))
                 delta    = seg_mean - group_mean
 
-                # Descriptive z-score: how many population SDs from the mean
-                z_display = delta / group_std
-
-                # Only surface meaningful outliers
-                if abs(z_display) < 1.0:
-                    continue
-
                 # Statistical significance: one-sample z-test vs population mean
-                stat    = one_sample_z_test(seg_mean, group_mean, group_std, n)
-                p_val   = stat.get('p_two_tailed', 1.0)
+                stat  = one_sample_z_test(seg_mean, group_mean, group_std, n)
+                p_val = stat.get('p_two_tailed', 1.0)
                 if p_val >= 0.05:
                     continue
 
@@ -207,15 +195,28 @@ def compute_segments(
                     'mean':           round(seg_mean, 2),
                     'delta':          round(delta, 2),
                     'vs_mean':        ('+' if delta >= 0 else '') + str(round(delta, 2)),
-                    'z_score':        round(z_display, 2),
-                    'z_abs':          round(abs(z_display), 2),
-                    'std_dev_label':  f'{abs(round(z_display, 2))} SD',
                     'p_value':        round(p_val, 4),
                     'ci_lower':       round(seg_mean - margin, 3),
                     'ci_upper':       round(seg_mean + margin, 3),
-                    'band':           _band(z_display),
                     'category_means': cat_means,
                 })
+
+    # Re-z-score using the SD of segment means (not individual score SD).
+    # Individual score SD is ~0.165 — all segment means lie within ±1 of that,
+    # so using it as the denominator collapses everything to "typical".
+    # Using segment-mean SD finds relative outliers among the segments themselves.
+    if segments:
+        seg_mean_arr  = np.array([s['mean'] for s in segments])
+        seg_dist_mean = float(np.mean(seg_mean_arr))
+        seg_dist_std  = float(np.std(seg_mean_arr, ddof=1)) if len(seg_mean_arr) > 1 else 1e-9
+        if seg_dist_std < 1e-9:
+            seg_dist_std = 1e-9
+        for s in segments:
+            z = (s['mean'] - seg_dist_mean) / seg_dist_std
+            s['z_score']      = round(z, 2)
+            s['z_abs']        = round(abs(z), 2)
+            s['std_dev_label'] = f'{abs(round(z, 2))} SD'
+            s['band']          = _band(z)
 
     # Rank by absolute z-score (strongest outliers first)
     segments.sort(key=lambda s: s['z_abs'], reverse=True)
@@ -248,7 +249,7 @@ def compute_segments(
 
 def precompute_and_save(min_n: int = MIN_N) -> dict | None:
     """Run segmentation for all data and cache to spotlight_segments.json."""
-    result = compute_segments(min_n=min_n)
+    result = compute_segments(min_n=min_n, active_filter='active')
     if result:
         out = DATA_DIR / 'spotlight_segments.json'
         out.write_text(json.dumps(result, indent=2), encoding='utf-8')

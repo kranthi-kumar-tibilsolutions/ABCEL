@@ -14,7 +14,8 @@ from lib.stats import (
     one_sample_z_test, two_sample_z_test,
     mean, std_dev,
 )
-from lib.llm import call_llm_json
+from lib.llm   import call_llm_json
+from lib.cache import load_responses
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -410,7 +411,7 @@ Hypothesis types:
 - "relationship": X correlates with / impacts / leads to Y
     (e.g. "Higher recognition leads to higher engagement")
 - "one_sample": One group vs company/benchmark average
-    (e.g. "Gen Z has higher onboarding score than company average")
+    (e.g. "Gen Y has higher engagement score than company average")
 - "unsupported": Cannot map to available data
 
 For variables: prefer theme scores when the concept maps clearly to one.
@@ -438,11 +439,11 @@ If hypothesis_type == "relationship" (e.g. "Higher recognition leads to higher e
   "h0": "...", "h1": "...", "test_recommended": "pearson_correlation", "direction": "greater|less|two_tailed"
 }}
 
-If hypothesis_type == "one_sample" (e.g. "Gen Z has higher onboarding score than company average"):
+If hypothesis_type == "one_sample" (e.g. "Gen Y has higher engagement score than company average"):
 {{
   "hypothesis_type": "one_sample", "parseable": true, "parse_error": null,
-  "group": {{"field": "generation", "value": "Gen Z", "label": "Gen Z employees", "confidence": 0.98}},
-  "outcome": {{"source": "theme", "field": "onboarding", "question_id": null, "label": "Onboarding Score", "confidence": 0.97}},
+  "group": {{"field": "generation", "value": "Gen Y", "label": "Gen Y employees", "confidence": 0.98}},
+  "outcome": {{"source": "theme", "field": "engagement", "question_id": null, "label": "Engagement Score", "confidence": 0.97}},
   "baseline": "group_average", "baseline_value": {group_avg},
   "group_a": null, "group_b": null, "x_var": null, "y_var": null,
   "h0": "...", "h1": "...", "test_recommended": "one_sample_z", "direction": "greater|less|two_tailed"
@@ -484,7 +485,7 @@ async def run_test(req: TestRequest):
     Accepts pre-parsed params from /parse; falls back to LLM re-parse if not provided.
     """
     try:
-        responses = _read("responses.json")
+        responses = load_responses()
         q_bu      = _read_dict("question_bu_scores.json")
 
         try:
@@ -593,7 +594,7 @@ def get_templates():
             {
                 "id":   "T-003",
                 "type": "one_sample",
-                "text": "Gen Z employees have higher Onboarding scores than the company average.",
+                "text": "Gen Y employees have higher Engagement scores than the company average.",
             },
             {
                 "id":   "T-004",

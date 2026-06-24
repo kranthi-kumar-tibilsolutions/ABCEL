@@ -108,7 +108,7 @@ export default function ChatWithData() {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
           message:        msg,
-          history:        messages.filter(m => m.content && m.content.trim()).slice(-10).map(m => ({ role: m.role, content: m.content })),
+          history:        messages.filter(m => m.content && m.content.trim() && !m.content.includes('AI unavailable') && !m.content.includes('something went wrong')).slice(-10).map(m => ({ role: m.role, content: m.content })),
           dimension:      ctxDimension,
           focusArea:      focusArea || null,
           companyFilter:  companyFilter || null,

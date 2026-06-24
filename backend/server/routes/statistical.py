@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from lib.stats import pearson_r, pearson_p_value, correlation_strength, correlation_category
 from lib.llm   import call_llm_json
+from lib.cache import load_responses
 from routes.auth import data_company, get_current_user
 
 router   = APIRouter()
@@ -126,7 +127,7 @@ def get_correlations(
         # company role: use cohort means (gen × job_level) within their company
         # group_hr: use BU-level means across all 22 businesses
         use_cohort = bool(business and business != "All")
-        filtered   = _filter(_read("responses.json"), business, year, country, department, include_inactive) if use_cohort else []
+        filtered   = _filter(load_responses(), business, year, country, department, include_inactive) if use_cohort else []
         q_bu       = {} if use_cohort else _read_dict("question_bu_scores.json")
 
         def _corr_vecs(id_a, id_b):
@@ -211,7 +212,7 @@ def get_correlogram(
         business    = _resolve_business(user, business)
         questions   = _read("questions.json")
         use_cohort  = bool(business and business != "All")
-        filtered    = _filter(_read("responses.json"), business, year, country, department, include_inactive) if use_cohort else []
+        filtered    = _filter(load_responses(), business, year, country, department, include_inactive) if use_cohort else []
         q_bu        = {} if use_cohort else _read_dict("question_bu_scores.json")
 
         def _corr_pair(id_a, id_b):
@@ -268,7 +269,7 @@ def get_network(
         business   = _resolve_business(user, business)
         questions  = _read("questions.json")
         use_cohort = bool(business and business != "All")
-        filtered   = _filter(_read("responses.json"), business, year, country, department, include_inactive) if use_cohort else []
+        filtered   = _filter(load_responses(), business, year, country, department, include_inactive) if use_cohort else []
         q_bu       = {} if use_cohort else _read_dict("question_bu_scores.json")
 
         all_edges = []
@@ -328,7 +329,7 @@ async def get_insights(
     try:
         business    = _resolve_business(user, business)
         questions   = _read("questions.json")
-        filtered    = _filter(_read("responses.json"), business, year, country, department)
+        filtered    = _filter(load_responses(), business, year, country, department)
         q_text      = next((q.get("text", "") for q in questions if q["id"] == question_id), question_id)
         base_scores = _scores(filtered, question_id)
         n_base      = len(base_scores)

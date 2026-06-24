@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from lib.stats import pearson_r
 from lib.llm   import call_llm_json
 from lib.nlp   import classify_batch
+from lib.cache import load_responses
 
 router   = APIRouter()
 _BACKEND = Path(__file__).resolve().parent.parent.parent
@@ -207,7 +208,7 @@ CATEGORY_REPS = {
 async def validate_statistical():
     try:
         sentiments = _read("sentiments.json")
-        responses  = _read("responses.json")
+        responses  = load_responses()
         questions  = _read("questions.json")
 
         base_scores = [
