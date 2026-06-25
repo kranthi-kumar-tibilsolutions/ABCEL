@@ -671,7 +671,7 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
         clean_hist = [m for m in req.history if m.get("content", "").strip()]
         pairs = []
         i = len(clean_hist) - 1
-        while i >= 1 and len(pairs) < 2:
+        while i >= 1 and len(pairs) < 5:
             if clean_hist[i]["role"] == "assistant" and clean_hist[i - 1]["role"] == "user":
                 u_text = clean_hist[i - 1]["content"].strip()
                 a_text = clean_hist[i]["content"].strip()[:600]
