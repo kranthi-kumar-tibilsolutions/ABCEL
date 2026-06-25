@@ -911,28 +911,38 @@ Use this exact decision order for every message:
    → answer about Gen Z top 3 scores, NOT about whatever tab is open.
 
 2. IS THIS A TAB CONTEXT QUESTION?
-   Use tab context if the question uses words like "explain this", "what am I looking at",
-   "what does this mean", "what is on this page", "what tab am I on", "explain the kpi",
-   "what are these numbers", "what does this show", "give me bullets for this",
-   "explain each", "what is this tab", referring to data or results currently visible on screen
-   that has NOT already been discussed in conversation history.
+   Rule 2 applies ONLY when the question is asking about the tab's current display itself —
+   what it shows, what the numbers mean, how to read it.
+   HARD EXCLUSION: If the question names any specific metric, score, category, company,
+   business unit, demographic group, or asks to list/rank/filter/show data — it is NOT a
+   tab context question. Skip Rule 2 entirely and go to Rule 3.
+   Rule 2 triggers only on phrases like "explain this", "what am I looking at",
+   "what does this mean", "what is on this page", "explain the kpi",
+   "what are these numbers", "give me bullets for this", "explain each", "what is this tab",
+   where the user is asking ABOUT THE DISPLAY, not asking for specific data.
    IMPORTANT: If the previous assistant answer was an error ("AI unavailable" or similar),
    treat the current question as a fresh tab context question, not a follow-up.
    Example: user opens statistical analysis tab and asks "explain what I am seeing"
    → use tab context to explain the selected question and correlations.
+   Counter-example (Rule 2 does NOT apply, use Rule 3 instead):
+   "show BUs with high polarization" — names a metric → Rule 3
+   "which businesses score low on communication" — names a category → Rule 3
+   "list the bottom 5 units by variance" — asks for ranked data → Rule 3
+   "how is Gen Z scoring" — names a demographic → Rule 3
+   "show me at-risk businesses" — asks for filtered data → Rule 3
+   These are data questions regardless of which tab is currently open.
 
 3. IS THIS A DATA QUESTION?
-   If neither follow-up nor tab context — answer from the retrieved data directly.
-   This includes ANY question that names a specific company, business unit, demographic,
-   metric, or category explicitly — regardless of what the current tab shows.
+   Any question that asks for specific data — by naming a company, BU, demographic,
+   metric, category, score, rank, or filter — is always answered from the retrieved data.
+   This applies regardless of which tab is currently open.
+   Do NOT check whether the current tab contains this data. Do NOT say "this tab doesn't
+   show that". Do NOT tell the user to navigate elsewhere. Always answer directly.
    Example: "what is the score for Cement HO", "how many female employees",
-   "what about Novelis", "tell me about Metals",
-   "show BUs with high polarization", "which businesses have low leadership scores",
-   "list the bottom 5 units by variance", "how is Gen Z scoring"
-   → answer from businesses.json and cohorts data.
-   CRITICAL: Do NOT say "this tab doesn't show that data" or tell the user to navigate
-   somewhere else. If the question names a metric or entity, find the answer in the data
-   and answer it directly, no matter which tab is currently open.
+   "what about Novelis", "tell me about Metals", "show BUs with high polarization",
+   "which businesses have low leadership", "list bottom 5 by variance",
+   "how is Gen Z scoring", "show me at-risk businesses", "which cluster is Novelis in"
+   → answer from businesses.json, cohorts, units, and clusters data.
 
 4. AMBIGUOUS QUESTION?
    If the question could mean either follow-up or tab context, use this tiebreaker:
