@@ -734,14 +734,20 @@ When the user says "this persona", "this analysis", "these results", "what I'm l
 
     biz_lines_chat = "\n".join(_biz_line_chat(b) for b in businesses)
 
-    # Compact cohort text — one line per company, gen/gender only (replaces 100KB JSON dump)
+    # Compact cohort text — one line per company, gen/gender/job level
+    # Includes overall + engagement so follow-up questions like "least engaging age group"
+    # can be answered using company-specific data instead of group-wide scores.
     def _cohort_compact(bname, bc):
-        gens   = ", ".join(f"{g['label']}={g['scores'].get('overall','?')}(n={g['n']})"
-                           for g in bc.get('by_generation', []))
-        genders = ", ".join(f"{g['label']}={g['scores'].get('overall','?')}(n={g['n']})"
-                            for g in bc.get('by_gender', []))
-        jobs   = ", ".join(f"{g['label']}={g['scores'].get('overall','?')}"
-                           for g in bc.get('by_job_level', []))
+        def _gs(g):
+            s = g['scores']
+            parts = [f"overall:{s.get('overall','?')}"]
+            if s.get('engagement'):
+                parts.append(f"eng:{s['engagement']}")
+            return f"{g['label']}={','.join(parts)}(n={g['n']})"
+        gens    = ", ".join(_gs(g) for g in bc.get('by_generation', []))
+        genders = ", ".join(_gs(g) for g in bc.get('by_gender', []))
+        jobs    = ", ".join(f"{g['label']}=overall:{g['scores'].get('overall','?')}"
+                            for g in bc.get('by_job_level', []))
         return f"{bname}(n={bc.get('n','')}): {gens} | {genders} | {jobs}"
 
     cohort_lines = "\n".join(_cohort_compact(k, v) for k, v in biz_cohorts.items())
@@ -804,6 +810,16 @@ Answer any question about any business, BU, or cohort freely.
     system_prompt = f"""You are ARIA — ABG's AI Analyst for the ABG Vibes 2026 Employee Engagement Survey.
 You are embedded inside the ABG analytics dashboard. You have complete knowledge of the survey data.
 You answer questions conversationally, like a senior HR consultant who knows this data inside out.
+
+RESPONSE SCOPE LABEL — MANDATORY FIRST LINE:
+Every response must start with a bold scope label on its own line so the user instantly knows what data you're using.
+Format: **[Scope: <label>]**
+- If answering about a specific company → **[Scope: <Company Name>]** e.g. **[Scope: ABG Renewables]**
+- If answering about a specific BU → **[Scope: <BU Name> (<Company>)]**
+- If answering about a specific demographic (e.g. Gen Z group-wide) → **[Scope: Gen Z — ABG Vibes Overall]**
+- If answering about the whole group / no specific entity → **[Scope: ABG Vibes Overall]**
+- If answering about the current tab/screen → **[Scope: Current Screen]**
+This label must ALWAYS be the very first thing in your response, before any other text.
 {prior_context_block}
 
 {role_block}
@@ -829,6 +845,9 @@ ONLY use the scope refusal ("I'm your HR engagement data analyst...") for questi
 ZERO relation to HR, employees, or engagement — for example: technology questions, programming,
 sports results, news events, general knowledge, or requests to write code.
 DO NOT use the scope refusal for:
+- Any feature, tab, tool, or analytical concept within this dashboard — if the user asks what
+  a dashboard feature does (e.g. a statistical method, a builder, an analysis view), explain it
+  in the context of HR analytics. These are always in scope.
 - HR or employee questions the survey doesn't cover (eNPS, attrition, headcount, turnover) — just
   say "this survey doesn't include [metric]" and offer what you DO have
 - Improvement/trend questions (no historical data) — just say "this system only has 2026 data"
