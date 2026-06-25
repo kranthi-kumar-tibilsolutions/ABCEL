@@ -12,14 +12,13 @@ function scoreColor(s) {
 }
 
 export default function OutliersPage() {
-  const { units, businesses, navigate, setBreadcrumb, outliersTopN, setActiveScreenContext } = useContext(AppContext);
+  const { units, businesses, navigate, setBreadcrumb, outliersTopN, setActiveScreenContext, page } = useContext(AppContext);
 
   useEffect(() => {
     setBreadcrumb([
       { label: 'Overview', page: 'overview' },
       { label: 'Outliers & Alerts' },
     ]);
-    setActiveScreenContext({ tab: 'outliers_alerts', description: 'Business units and categories flagged as statistical outliers in ABG Vibes 2026.' });
   }, []);
   const topN = outliersTopN;
 
@@ -40,6 +39,18 @@ export default function OutliersPage() {
     const sorted = [...businesses].sort((a,b) => (+(b.overall??b.score??0))-(+(a.overall??a.score??0)));
     return { topBiz: sorted.slice(0,3), bottomBiz: sorted.slice(-3).reverse() };
   }, [businesses]);
+
+  useEffect(() => {
+    if (page !== 'outliers') return;
+    setActiveScreenContext({
+      tab: 'outliers_alerts',
+      at_risk_businesses:  bottomBiz.map(b => ({ name: b.name, score: +(b.overall??b.score??0), band: b.band })),
+      thriving_businesses: topBiz.map(b => ({ name: b.name, score: +(b.overall??b.score??0), band: b.band })),
+      critical_bus: bottom5.map(u => ({ name: u.name, business: u.business, score: +(u.score??u.overall??0) })),
+      top_bus:      top5.map(u => ({ name: u.name, business: u.business, score: +(u.score??u.overall??0) })),
+      high_variance_bus: highVariance.slice(0, 5).map(u => ({ name: u.name, business: u.business, variance: u.variance?.toFixed(2) })),
+    });
+  }, [page, topBiz, bottomBiz, top5, bottom5, highVariance]);
 
   return (
     <div className="page-container">
