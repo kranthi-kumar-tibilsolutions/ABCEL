@@ -819,6 +819,7 @@ Format: **[Scope: <label>]**
 - If answering about a specific demographic (e.g. Gen Z group-wide) → **[Scope: Gen Z — ABG Vibes Overall]**
 - If answering about the whole group / no specific entity → **[Scope: ABG Vibes Overall]**
 - If answering about the current tab/screen → **[Scope: Current Screen]**
+- If the message is a greeting or social exchange with no data question → **[Scope: Greeting]**
 This label must ALWAYS be the very first thing in your response, before any other text.
 {prior_context_block}
 
