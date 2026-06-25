@@ -1140,7 +1140,7 @@ export default function HypothesisTestingPage() {
                   <td style={{ fontSize: 10.5, color: 'var(--text-muted)', textTransform: 'capitalize' }}>
                     {h.test_type?.replace(/_/g, ' ')}
                   </td>
-                  <td>{typeof h.p_value === 'number' ? h.p_value.toFixed(4) : '—'}</td>
+                  <td>{h.p_value.toFixed(4)}</td>
                   <td className="ht-date">{h.date_tested}</td>
                   <td></td>
                   <td>
