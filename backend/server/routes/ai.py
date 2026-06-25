@@ -623,8 +623,8 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
         while i >= 1 and len(pairs) < 2:
             if clean_hist[i]["role"] == "assistant" and clean_hist[i - 1]["role"] == "user":
                 u_text = clean_hist[i - 1]["content"].strip()
-                a_text = clean_hist[i]["content"].strip()[:300]
-                pairs.append(f'User: "{u_text}"\nYou: "{a_text}{"…" if len(clean_hist[i]["content"]) > 300 else ""}"')
+                a_text = clean_hist[i]["content"].strip()[:600]
+                pairs.append(f'User: "{u_text}"\nYou: "{a_text}{"…" if len(clean_hist[i]["content"]) > 600 else ""}"')
                 i -= 2
             else:
                 i -= 1
@@ -872,7 +872,7 @@ Gen Y: {_json.dumps(sample_rows.get('Gen Y'))}
 
 CONTEXT CHAINING — MOST IMPORTANT RULE:
 Every follow-up question inherits ALL context from the entire conversation history.
-When a user asks a follow-up question that references "this", "they", "them", "that", "here", "these", "how many", "what about" — look at the FULL conversation history and identify:
+When a user asks a follow-up question that references pronouns like "they", "them", "their", "theirs", "those", "the others", "it" — look at the FULL conversation history and identify:
 - What topic was being discussed (e.g. Ram's persona, Gen Z scores, a specific business)
 - What filters or dimensions were active (e.g. age group 25-30, ABMCo, female employees)
 - What the user is narrowing down or drilling into
@@ -888,11 +888,25 @@ The user is always drilling deeper into the same topic unless they explicitly ch
 
 Use this exact decision order for every message:
 
+0. IS THIS AN UNAMBIGUOUS SCREEN-REFERENCE QUESTION? (HIGHEST PRIORITY — overrides everything)
+   These phrases ALWAYS mean the user is asking about what is on their screen RIGHT NOW.
+   Use tab context immediately, regardless of conversation history:
+   "what page is this", "what tab is this", "what tab am I on", "what am I looking at",
+   "what does this page show", "what does this tab show", "what is on this screen",
+   "what is on screen", "explain this tab", "explain this page", "explain this",
+   "what is this", "what page am I on", "what does this show", "explain what I see",
+   "what's on screen", "break down what's on screen", "what's on this screen",
+   "what is being shown here", "what analysis is being done here".
+   NEVER treat these as follow-ups to prior conversation — they always reference the screen.
+
 1. IS THIS A FOLLOW-UP TO THE PREVIOUS MESSAGE?
-   Look at the conversation history. If the question refers to something already discussed
-   ("what are the top 3", "why", "tell me more", "what about them", "and the bottom 3",
-   "compare that", "which one", "how does that compare") — answer from the conversation
-   history. The tab context is irrelevant for follow-up questions.
+   Look at the conversation history. If the question continues the same topic using pronouns
+   or relative references ("what are the top 3", "why", "tell me more", "what about them",
+   "what about those", "what about their", "and the bottom 3", "compare that", "which one",
+   "how does that compare", "tell me more about that") — answer from the conversation history.
+   The tab context is irrelevant for genuine follow-up questions.
+   IMPORTANT: "what about [specific named company/person/topic]" is NOT a follow-up —
+   it is a NEW question about that named entity. Treat it as Rule 3 (data question).
    Example: user just asked about Gen Z lowest scores, then asks "what are the top 3"
    → answer about Gen Z top 3 scores, NOT about whatever tab is open.
 
@@ -900,7 +914,7 @@ Use this exact decision order for every message:
    Use tab context if the question uses words like "explain this", "what am I looking at",
    "what does this mean", "what is on this page", "what tab am I on", "explain the kpi",
    "what are these numbers", "what does this show", "give me bullets for this",
-   "explain each", "what is this tab", or "this" referring to something on screen
+   "explain each", "what is this tab", referring to data or results currently visible on screen
    that has NOT already been discussed in conversation history.
    IMPORTANT: If the previous assistant answer was an error ("AI unavailable" or similar),
    treat the current question as a fresh tab context question, not a follow-up.
@@ -909,13 +923,17 @@ Use this exact decision order for every message:
 
 3. IS THIS A DATA QUESTION?
    If neither follow-up nor tab context — answer from the retrieved data directly.
-   Example: "what is the score for Cement HO", "how many female employees"
+   This includes any question that names a specific company, business unit, demographic,
+   or metric explicitly.
+   Example: "what is the score for Cement HO", "how many female employees",
+   "what about Novelis", "tell me about Metals"
    → answer from businesses.json and cohorts data.
 
 4. AMBIGUOUS QUESTION?
-   If the question could mean either a follow-up or a tab context question — always
-   assume follow-up first. Check if the previous assistant message contains enough
-   context to answer. If yes, use it. If no, then use tab context.
+   If the question could mean either follow-up or tab context, use this tiebreaker:
+   - Contains a pronoun referring to prior topic ("they", "them", "their", "those", "it") → follow-up
+   - Contains "this" referring to screen content without prior conversation context → tab context
+   - No clear signal → follow-up first; if prior context is insufficient, fall back to tab context.
 
 CRITICAL RULE: The tab context only wins when there is NO conversation history
 that is relevant to the question. A user who just had a 5-message conversation
@@ -937,16 +955,17 @@ already established a topic.
         for i in range(len(clean_hist) - 1, 0, -1):
             if clean_hist[i]["role"] == "assistant" and clean_hist[i - 1]["role"] == "user":
                 prev_q = clean_hist[i - 1]["content"].strip()
-                prev_a = clean_hist[i]["content"].strip()[:350]
+                prev_a = clean_hist[i]["content"].strip()[:600]
                 context_reminder = [{
                     "role": "system",
                     "content": (
                         f"CONTEXT REMINDER (read this before answering the next message):\n"
                         f"The user's last question was: \"{prev_q}\"\n"
-                        f"Your last answer was about: \"{prev_a}{'…' if len(clean_hist[i]['content']) > 350 else ''}\"\n"
+                        f"Your last answer was about: \"{prev_a}{'…' if len(clean_hist[i]['content']) > 600 else ''}\"\n"
                         "RULE: If the user's next question does not explicitly name a different company, "
-                        "business unit, or topic, treat it as a follow-up to this same subject. "
-                        "Do NOT switch to org-wide data unless the user says so."
+                        "business unit, or topic — treat it as a follow-up to this same subject. "
+                        "EXCEPTION: If the user says 'the whole group', 'overall', 'across all', "
+                        "'everyone', 'org-wide', or names a completely different entity — answer that new scope directly."
                     ),
                 }]
                 break

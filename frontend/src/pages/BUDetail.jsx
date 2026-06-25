@@ -17,11 +17,20 @@ function scoreColor(s) {
 const CATEGORY_COLORS = ['#F97316','#2563EB','#16A34A','#7C3AED','#0891B2','#D97706'];
 
 export default function BUDetail() {
-  const { selectedBusiness, selectedBU, navigate, units, cohorts, setActiveScreenContext } = useContext(AppContext);
+  const { selectedBusiness, selectedBU, navigate, units, cohorts, setActiveScreenContext, page } = useContext(AppContext);
 
   useEffect(() => {
-    setActiveScreenContext({ tab: 'bu_detail', description: `Business unit detail view — ${selectedBU ?? 'unknown unit'} (${selectedBusiness ?? 'unknown business'}).` });
-  }, [selectedBU, selectedBusiness]);
+    if (page !== 'bu-detail') return;
+    const u = units?.find(u => u.name === selectedBU && (!selectedBusiness || u.business === selectedBusiness));
+    setActiveScreenContext({
+      tab: 'bu_detail',
+      business_unit: selectedBU,
+      business: selectedBusiness,
+      overall_score: u ? +(u.score ?? u.overall ?? 0) : null,
+      variance: u?.variance ?? null,
+      categories: u?.categories ?? {},
+    });
+  }, [page, selectedBU, selectedBusiness, units]);
 
   const unit = units?.find(u => u.name === selectedBU && (!selectedBusiness || u.business === selectedBusiness));
 

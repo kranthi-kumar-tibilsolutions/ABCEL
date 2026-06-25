@@ -26,7 +26,7 @@ function scoreColor(s) {
 }
 
 export default function BusinessDetail() {
-  const { selectedBusiness, navigate, units, businesses, dimension, setActiveScreenContext } = useContext(AppContext);
+  const { selectedBusiness, navigate, units, businesses, dimension, setActiveScreenContext, page } = useContext(AppContext);
   const [insight,      setInsight]     = useState(null);
   const [loadInsight,  setLoadInsight] = useState(false);
   const [showAllBUs,   setShowAllBUs]  = useState(false);
@@ -35,8 +35,21 @@ export default function BusinessDetail() {
   const bizUnits = units?.filter(u => u.business === selectedBusiness) ?? [];
 
   useEffect(() => {
-    setActiveScreenContext({ tab: 'business_detail', description: `Business detail view — ${selectedBusiness ?? 'unknown business'} engagement breakdown across categories and business units.` });
-  }, [selectedBusiness]);
+    if (page !== 'business-detail') return;
+    setActiveScreenContext({
+      tab: 'business_detail',
+      business: selectedBusiness,
+      overall_score: biz?.overall ?? null,
+      band: biz?.band ?? null,
+      respondents: biz?.respondent_count ?? null,
+      categories: biz?.categories ?? {},
+      business_units: bizUnits.slice(0, 20).map(u => ({
+        name: u.name,
+        score: +(u.score ?? u.overall ?? 0),
+        variance: u.variance ?? null,
+      })),
+    });
+  }, [page, selectedBusiness, biz, bizUnits]);
 
   useEffect(() => {
     if (!selectedBusiness) return;

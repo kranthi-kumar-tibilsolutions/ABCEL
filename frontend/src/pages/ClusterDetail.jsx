@@ -21,17 +21,30 @@ function scoreColor(s) {
 }
 
 export default function ClusterDetail() {
-  const { selectedCluster, clusters, navigate, setActiveScreenContext } = useContext(AppContext);
-
-  useEffect(() => {
-    setActiveScreenContext({ tab: 'cluster_detail', description: `Cluster detail view — ${selectedCluster ?? 'all'} cluster engagement breakdown for ABG Vibes 2026.` });
-  }, [selectedCluster]);
+  const { selectedCluster, clusters, navigate, setActiveScreenContext, page } = useContext(AppContext);
 
   const filterKey = selectedCluster === 'all' ? null : selectedCluster;
 
   const clusterEntries = filterKey
     ? [[filterKey, clusters?.[filterKey] ?? []]]
     : Object.entries(clusters ?? {});
+
+  useEffect(() => {
+    if (page !== 'cluster-detail') return;
+    const cfg = filterKey ? CLUSTER_CONFIG[filterKey] : null;
+    setActiveScreenContext({
+      tab: 'cluster_detail',
+      cluster: filterKey ?? 'all',
+      cluster_label: cfg?.label ?? filterKey ?? 'All Clusters',
+      businesses_in_cluster: clusterEntries.flatMap(([key, items]) =>
+        (items ?? []).slice(0, 15).map(b => ({
+          name: b.name ?? b,
+          cluster: key,
+          score: b.score ?? b.overall ?? null,
+        }))
+      ),
+    });
+  }, [page, selectedCluster, clusterEntries]);
 
   return (
     <div className="page-container">
