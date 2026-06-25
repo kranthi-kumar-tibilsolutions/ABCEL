@@ -36,8 +36,25 @@ const SkeletonLines = () => (
   </div>
 );
 
+const InsightsUnavailable = ({ onRetry }) => (
+  <div style={{ textAlign: 'center', padding: '12px 8px' }}>
+    <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>
+      AI insights unavailable right now
+    </div>
+    <button
+      onClick={onRetry}
+      style={{
+        fontSize: 11, color: '#d97706', background: 'none', border: '1px solid #d97706',
+        borderRadius: 6, padding: '4px 12px', cursor: 'pointer',
+      }}
+    >
+      Retry
+    </button>
+  </div>
+);
+
 export default function RightPanel() {
-  const { insightsData, navigate, rightPanelCollapsed: collapsed, setRightPanelCollapsed: setCollapsed } = useContext(AppContext);
+  const { insightsData, insightsFailed, retryInsights, navigate, rightPanelCollapsed: collapsed, setRightPanelCollapsed: setCollapsed } = useContext(AppContext);
   const [activeTab, setActiveTab] = useState('All Insights');
   const [insightsExpanded, setInsightsExpanded] = useState(false);
 
@@ -81,10 +98,17 @@ export default function RightPanel() {
             {activeTab === 'All Insights' && (
               <div className="rp-section">
                 <div className="rp-section-title">Top Trends</div>
-                {trends.length === 0 ? <SkeletonLines /> : trends.map((t, i) => <TrendItem key={i} item={t} />)}
+                {insightsFailed && trends.length === 0
+                  ? <InsightsUnavailable onRetry={retryInsights} />
+                  : trends.length === 0 ? <SkeletonLines />
+                  : trends.map((t, i) => <TrendItem key={i} item={t} />)}
 
-                <div className="rp-section-title" style={{ marginTop: 10 }}>Outliers Detected</div>
-                {outliers.length === 0 ? <SkeletonLines /> : outliers.map((o, i) => <OutlierItem key={i} item={o} />)}
+                {!insightsFailed && (
+                  <>
+                    <div className="rp-section-title" style={{ marginTop: 10 }}>Outliers Detected</div>
+                    {outliers.length === 0 ? <SkeletonLines /> : outliers.map((o, i) => <OutlierItem key={i} item={o} />)}
+                  </>
+                )}
 
                 <button className="rp-view-all" onClick={() => navigate('ai-insights')}>
                   View all Insights <ArrowLink />
@@ -95,20 +119,29 @@ export default function RightPanel() {
             {activeTab === 'Top Trends' && (
               <div className="rp-section">
                 <div className="rp-section-title">Top Trends</div>
-                {trends.length === 0 ? <SkeletonLines /> : trends.map((t, i) => <TrendItem key={i} item={t} />)}
+                {insightsFailed
+                  ? <InsightsUnavailable onRetry={retryInsights} />
+                  : trends.length === 0 ? <SkeletonLines />
+                  : trends.map((t, i) => <TrendItem key={i} item={t} />)}
               </div>
             )}
 
             {activeTab === 'Outliers & Alerts' && (
               <div className="rp-section">
                 <div className="rp-section-title">Outliers Detected</div>
-                {outliers.length === 0 ? <SkeletonLines /> : outliers.map((o, i) => <OutlierItem key={i} item={o} />)}
+                {insightsFailed
+                  ? <InsightsUnavailable onRetry={retryInsights} />
+                  : outliers.length === 0 ? <SkeletonLines />
+                  : outliers.map((o, i) => <OutlierItem key={i} item={o} />)}
               </div>
             )}
 
             {activeTab === 'Summary' && (
               <div className="rp-section">
-                {summary ? <p className="rp-summary-text">{summary}</p> : <SkeletonLines />}
+                {insightsFailed
+                  ? <InsightsUnavailable onRetry={retryInsights} />
+                  : summary ? <p className="rp-summary-text">{summary}</p>
+                  : <SkeletonLines />}
               </div>
             )}
           </div>

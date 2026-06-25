@@ -38,6 +38,8 @@ export const AppContext = createContext({
   setSummaryData:   () => {},
   insightsData:     null,
   setInsightsData:  () => {},
+  insightsFailed:   false,
+  retryInsights:    () => {},
   focusAreasData:   null,
   setFocusAreasData:() => {},
 

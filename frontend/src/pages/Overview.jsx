@@ -9,9 +9,10 @@ import EngagementHeatmap from '../components/overview/charts/EngagementHeatmap';
 import DriversTree       from '../components/overview/charts/DriversTree';
 
 export default function Overview() {
-  const { navigate, dimension, meta, setActiveScreenContext } = useContext(AppContext);
+  const { navigate, dimension, meta, page, setActiveScreenContext } = useContext(AppContext);
 
   useEffect(() => {
+    if (page !== 'overview') return;
     setActiveScreenContext({
       tab: 'overview',
       selected_dimension: dimension,
@@ -20,7 +21,7 @@ export default function Overview() {
       strongest_category: meta?.strongest_category,
       weakest_category: meta?.weakest_category,
     });
-  }, [dimension, meta]);
+  }, [page, dimension, meta]);
 
   return (
     <div className="overview-page">

@@ -45,13 +45,14 @@ function SettingRow({ label, description, children }) {
 }
 
 export default function SettingsPage() {
-  const { setActiveScreenContext, setBreadcrumb } = useContext(AppContext);
+  const { page, setActiveScreenContext, setBreadcrumb } = useContext(AppContext);
   const [minSample, setMinSample] = useState(30);
 
   useEffect(() => {
+    if (page !== 'settings') return;
     setBreadcrumb([{ label: 'Settings' }]);
     setActiveScreenContext({ tab: 'settings', description: 'Platform settings for ABG Vibes 2026 — configure analysis parameters and preferences.' });
-  }, []);
+  }, [page]);
 
   const presets = [10, 25, 30, 50, 100];
 

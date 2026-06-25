@@ -1,6 +1,5 @@
 import { useContext, useState, useRef, useEffect } from 'react';
 import { AppContext } from '../../context/AppContext';
-import { getActiveContext, subscribeToContext } from '../../context/ActiveContextStore';
 import { apiFetch } from '../../utils/api';
 
 const SUGGESTED = [
@@ -83,7 +82,7 @@ function PaperPlaneIcon() {
 }
 
 export default function ChatWithData() {
-  const { dimension: ctxDimension, businesses, user } = useContext(AppContext);
+  const { dimension: ctxDimension, businesses, user, activeScreenContext, page } = useContext(AppContext);
   const [messages, setMessages] = useState([
     { role: 'assistant', content: "Hi! I'm your AI analyst. Ask me anything about employee engagement:" }
   ]);
@@ -91,11 +90,9 @@ export default function ChatWithData() {
   const [loading,     setLoading]     = useState(false);
   const [focusArea,   setFocusArea]   = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
-  const [currentTab,  setCurrentTab]  = useState(getActiveContext().tab ?? 'overview');
 
-  useEffect(() => {
-    return subscribeToContext(ctx => setCurrentTab(ctx.tab ?? 'overview'));
-  }, []);
+  // page is always authoritative; activeScreenContext.tab can lag behind navigation
+  const currentTab = page?.replace(/-/g, '_') ?? activeScreenContext?.tab ?? 'overview';
   const bottomRef = useRef(null);
 
   // Company users are already scoped to their own company server-side —
@@ -124,7 +121,10 @@ export default function ChatWithData() {
           dimension:      ctxDimension,
           focusArea:      focusArea || null,
           companyFilter:  companyFilter || null,
-          active_context: getActiveContext() || null,
+          active_context: {
+            ...(activeScreenContext || {}),
+            tab: page?.replace(/-/g, '_') ?? activeScreenContext?.tab ?? 'overview',
+          },
         }),
       });
 

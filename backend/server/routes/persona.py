@@ -48,7 +48,6 @@ THEMES = [
     {"label": "Performance Culture",   "key": "performance_culture"},
     {"label": "Development & Career",  "key": "development_and_career"},
     {"label": "Manager Effectiveness", "key": "manager_effectiveness"},
-    {"label": "Onboarding",            "key": "onboarding"},
 ]
 
 # Built-in cohorts — values validated against actual responses.json data

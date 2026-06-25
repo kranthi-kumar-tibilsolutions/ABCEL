@@ -4,15 +4,16 @@ import AiSummary   from '../components/overview/AiSummary';
 import FocusAreas  from '../components/overview/FocusAreas';
 
 export default function AiInsightsPage() {
-  const { insightsData, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
+  const { insightsData, page, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
 
   useEffect(() => {
+    if (page !== 'ai-insights') return;
     setBreadcrumb([
       { label: 'Overview', page: 'overview' },
       { label: 'AI Insights' },
     ]);
     setActiveScreenContext({ tab: 'ai_insights', description: 'AI-generated executive summary, top trends, and outlier alerts for ABG Vibes 2026.' });
-  }, []);
+  }, [page]);
 
   return (
     <div className="page-container">

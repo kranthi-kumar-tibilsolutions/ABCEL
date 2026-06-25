@@ -16,15 +16,16 @@ const MOCK_THEMES = [
 const SENTIMENT_COLOR = { positive: '#16A34A', negative: '#DC2626', mixed: '#D97706' };
 
 export default function EmployeeVoicePage() {
-  const { meta, setBreadcrumb, evFilters, setActiveScreenContext } = useContext(AppContext);
+  const { meta, page, setBreadcrumb, evFilters, setActiveScreenContext } = useContext(AppContext);
 
   useEffect(() => {
+    if (page !== 'employee-voice') return;
     setBreadcrumb([
       { label: 'Overview', page: 'overview' },
       { label: 'Employee Voice' },
     ]);
     setActiveScreenContext({ tab: 'employee_voice', description: 'Employee voice and qualitative feedback themes with sentiment analysis.' });
-  }, []);
+  }, [page]);
 
   const { cohort, company, bu } = evFilters;
 

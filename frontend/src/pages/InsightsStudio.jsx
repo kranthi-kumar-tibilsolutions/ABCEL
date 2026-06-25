@@ -18,15 +18,16 @@ const SKILLS = [
 const DIMENSIONS = ['Business Unit','Gender','Generation','Tenure','Job Band'];
 
 export default function InsightsStudio() {
-  const { setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
+  const { page, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
 
   useEffect(() => {
+    if (page !== 'insights-studio') return;
     setBreadcrumb([
       { label: 'Overview', page: 'overview' },
       { label: 'Insights Studio' },
     ]);
     setActiveScreenContext({ tab: 'insights_studio', description: 'Insights Studio — custom cross-dimension analysis and engagement driver exploration.' });
-  }, []);
+  }, [page]);
 
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [dimension,      setDimension]      = useState('Business Unit');

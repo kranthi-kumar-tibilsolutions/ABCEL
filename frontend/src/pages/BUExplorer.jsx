@@ -11,7 +11,7 @@ function scoreColor(s) {
 }
 
 export default function BUExplorer() {
-  const { units, businesses, navigate, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
+  const { units, businesses, navigate, page, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
 
   useEffect(() => {
     setBreadcrumb([
@@ -57,6 +57,7 @@ export default function BUExplorer() {
   }, [units, search, filterBiz, sortBy, sortDir]);
 
   useEffect(() => {
+    if (page !== 'bu-explorer') return;
     setActiveScreenContext({
       tab: 'bu_explorer',
       filter_business: filterBiz || null,
@@ -66,7 +67,7 @@ export default function BUExplorer() {
         score: u.score ?? u.overall, cluster: u.cluster,
       })),
     });
-  }, [filtered, filterBiz, search]);
+  }, [page, filtered, filterBiz, search]);
 
   const toggleSort = (col) => {
     if (sortBy === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');

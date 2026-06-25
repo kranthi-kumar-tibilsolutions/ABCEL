@@ -32,7 +32,6 @@ THEME_KEYS = [
     'performance_culture',
     'development_and_career',
     'manager_effectiveness',
-    'onboarding',
 ]
 
 
@@ -193,7 +192,11 @@ Dimension: {dimension}
 ALL BUSINESSES (sorted highest to lowest — every company in the survey):
 {biz_lines}
 
-CLUSTERS: {cluster_lines}
+CLUSTERS (EXACT 5 NAMES — ONLY THESE EXIST):
+thriving | healthy | atrisk (At Risk) | polarised | critical
+Cluster count: {cluster_lines}
+CRITICAL: If a user asks about any cluster name NOT in the above 5 (e.g. "Open Conflict", "High Tension", "Engaged"), do NOT invent it or describe it.
+Say: "That cluster name is not in our system. The ABG Vibes 2026 system has 5 clusters: Thriving, Healthy, At Risk, Polarised, and Critical. Which would you like to explore?"
 AGE-TO-GENERATION MAPPING (survey year 2026): <21=Gen Z, 21-25=Gen Z, 25-30=Gen Z/Gen Y, 30-35=Gen Y, 35-40=Gen Y, 40-45=Gen X, 45-50=Gen X, 50-55=Gen X/Baby Boomer, >55=Baby Boomer
 GENDER BREAKDOWN: {gender_line}
 GENERATION BREAKDOWN (Gen Z / Gen Y / Gen X / Baby Boomer — NOT age bands): {generation_line}
@@ -572,7 +575,7 @@ def _compute_full_chat_data(user=None):
     # Sample individual records so the LLM can show real employee profiles
     _DISPLAY_KEYS = ['business', 'generation', 'gender', 'job_level', 'tenure', 'is_manager',
                      'engagement', 'leadership', 'performance_culture', 'development_and_career',
-                     'manager_effectiveness', 'onboarding', 'overall']
+                     'manager_effectiveness', 'overall']
     def _sample(key, val):
         row = next((r for r in responses if r.get(key) == val), None)
         return {k: row[k] for k in _DISPLAY_KEYS if k in row} if row else None
@@ -613,10 +616,58 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
     focus_line   = f"\nACTIVE FOCUS AREA: {req.focusArea} — prioritise answers about this theme." if req.focusArea else ""
     company_line = f"\nACTIVE COMPANY FILTER: {req.companyFilter} — answer only about this company unless explicitly asked otherwise." if req.companyFilter else ""
 
+    # Screen-reference detection — must happen BEFORE prior_context_block is built.
+    # Instead of an exhaustive keyword list, use two semantic rules:
+    #   Rule A — explicit location questions ("what tab", "where am I", "what am I looking at")
+    #   Rule B — "this" + a UI word in any order ("what is this screen about",
+    #             "explain this page", "thie scrieen about", typos included)
+    #   Rule C — standalone short messages that always mean "what am I seeing now?"
+    import re as _re2
+    _msg_lc = req.message.lower().strip()
+
+    _UI_WORDS   = r"tab|page|screen|section|view|dashboard|panel"
+    _RULE_A = bool(_re2.search(
+        r"what (tab|page|screen|am i (on|looking at)|is on (screen|this))|"
+        r"which (tab|page|screen)|where am i|what am i on",
+        _msg_lc
+    ))
+    # "this" within 6 words of a UI word (handles typos, reorderings)
+    _RULE_B = bool(
+        _re2.search(r"\bthis\b", _msg_lc) and
+        _re2.search(_UI_WORDS, _msg_lc)
+    )
+    # Explain/describe requests about the current view
+    _RULE_B = _RULE_B or bool(_re2.search(
+        r"\b(explain|describe|tell me about|show me)\b.{0,40}\b(" + _UI_WORDS + r")\b",
+        _msg_lc
+    ))
+    _SCREEN_REF_SHORT = {"now", "now?", "and now?", "what now", "what now?"}
+    _RULE_C = _msg_lc in _SCREEN_REF_SHORT
+
+    _is_screen_ref = _RULE_A or _RULE_B or _RULE_C
+
+    # Also treat as screen-ref if the user NAVIGATED since the last AI response.
+    # Detect this by comparing the tab the AI last mentioned with the current active_context.tab.
+    # If they differ, history is stale for tab purposes — strip it.
+    if not _is_screen_ref and req.active_context and req.history:
+        import re as _re
+        _cur_tab_label = req.active_context.get("tab", "").replace("_", " ").lower()
+        _clean_h = [m for m in req.history if m.get("content", "").strip()]
+        for _m in reversed(_clean_h):
+            if _m["role"] == "assistant":
+                _last_ai = _m["content"].lower()
+                _tab_m = _re.search(r"(?:on the|navigated to the)\s+([a-z][a-z\s]+?)\s+tab", _last_ai)
+                if _tab_m:
+                    _mentioned = _tab_m.group(1).strip()
+                    if _mentioned != _cur_tab_label:
+                        _is_screen_ref = True  # tab changed — strip stale history
+                break
+
     # Build a "PRIOR CONTEXT" pin from the last 2 exchange pairs so the model
     # doesn't drop the active subject on short follow-up questions.
+    # Skip for screen-ref questions — stale tab mentions in prior context poison the answer.
     prior_context_block = ""
-    if req.history:
+    if req.history and not _is_screen_ref:
         clean_hist = [m for m in req.history if m.get("content", "").strip()]
         pairs = []
         i = len(clean_hist) - 1
@@ -643,10 +694,14 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
         tab = req.active_context.get("tab", "unknown").replace("_", " ").title()
         ctx_json = _json.dumps(req.active_context, indent=2)
         screen_block = f"""
-IMPORTANT — USER IS ON THE "{tab}" TAB.
-WHAT IS ON THEIR SCREEN RIGHT NOW:
+=== CURRENT SCREEN — AUTHORITATIVE, OVERRIDES ALL PRIOR MESSAGES ===
+The user is RIGHT NOW on the "{tab}" tab.
+If any previous assistant message mentioned a different tab, IGNORE IT — the user has navigated since then.
+When asked "what tab am I on", "what am I looking at", "where am I" — always answer with "{tab}".
+SCREEN DATA:
 {ctx_json}
 When the user says "this persona", "this analysis", "these results", "what I'm looking at" — they mean the above context.
+=== END CURRENT SCREEN ===
 """
     else:
         screen_block = ""
@@ -752,6 +807,54 @@ You answer questions conversationally, like a senior HR consultant who knows thi
 {prior_context_block}
 
 {role_block}
+--- CLUSTER NAMES — NON-NEGOTIABLE RULE ---
+This system has EXACTLY 5 engagement clusters, no more:
+  1. Thriving   2. Healthy   3. At Risk (atrisk)   4. Polarised   5. Critical
+
+THESE CLUSTER NAMES DO NOT EXIST IN THIS SYSTEM — DO NOT DESCRIBE THEM:
+"Open Conflict", "High Tension", "Disengaged", "Productive", "Engaged",
+"Under Pressure", "Burnout", "Stable", "Recovering", "Mixed" — and any other
+cluster name a user might invent.
+
+MANDATORY RESPONSE for any unknown cluster name:
+"[name] is not one of our clusters. ABG Vibes 2026 uses exactly 5 clusters:
+Thriving, Healthy, At Risk, Polarised, and Critical. Which would you like to explore?"
+
+DO NOT: describe what the cluster "might" mean, map it to a real cluster, or use
+the invented cluster name as if it exists. Refuse and list the 5 real clusters.
+
+--- SCOPE GUARDRAIL — READ FIRST ---
+You are STRICTLY an HR engagement data analyst for the ABG Vibes 2026 survey.
+ONLY use the scope refusal ("I'm your HR engagement data analyst...") for questions that have
+ZERO relation to HR, employees, or engagement — for example: technology questions, programming,
+sports results, news events, general knowledge, or requests to write code.
+DO NOT use the scope refusal for:
+- HR or employee questions the survey doesn't cover (eNPS, attrition, headcount, turnover) — just
+  say "this survey doesn't include [metric]" and offer what you DO have
+- Improvement/trend questions (no historical data) — just say "this system only has 2026 data"
+- Vague HR terms like "disengaged", "polarization", "polarisation", "variance", "spread",
+  "unhappy employees", "morale", "attrition risk" — these ARE survey-related; interpret them
+  using available data. "Polarization" and "polarised" mean BUs with high score variance
+  (large gap between highest and lowest category scores) — always answer using variance data,
+  never say "polarization is not a metric in this survey".
+- Any question about businesses, employees, scores, categories, demographics, or HR topics —
+  even if phrased indirectly or using slang (comms = communication, vibe = engagement, etc.)
+The scope refusal is ONLY for: coding questions, sports, news, science, non-HR general knowledge.
+
+--- WHEN DATA DOES NOT EXIST IN THIS SYSTEM ---
+This system contains ONLY the ABG Vibes 2026 survey — a single wave snapshot.
+There is NO historical data, NO 2024/2025 scores, NO monthly data, NO last-year comparison.
+When a user asks about improvement over time, historical trends, last year, previous surveys,
+or month-on-month comparison:
+- NEVER say "this tab doesn't include historical comparisons" — that's misleading
+- ALWAYS say clearly: "This system only has the 2026 ABG Vibes survey — no historical
+  data exists for comparison."
+- Then immediately pivot to what you CAN offer: current rankings, category breakdowns,
+  identifying today's highest/lowest performers, or cohort analysis within 2026.
+When a user asks about a metric not in this survey (eNPS, attrition rate, headcount by location):
+- Just say "the ABG Vibes 2026 survey doesn't include [metric]" — no scope refusal preamble
+- Then offer the closest available metric (e.g., Engagement category scores instead of eNPS)
+
 --- WHO YOU ARE ---
 - You know the ABG Vibes 2026 survey data completely
 - You answer about what the user is currently looking at on screen
@@ -782,7 +885,11 @@ ABSOLUTE PROHIBITION: NEVER write "1.56" or "1.37" or any number produced by sub
 
 Answer questions about this screen first when the user says things like:
 "explain this", "what does this mean", "why is this number", "what am I looking at"
-If active_context shows data_status "not_available" say exactly: "This tab does not have real data connected yet." Do not make up scores or analysis for it.
+If active_context shows data_status "not_available" AND the user is asking about this tab's
+content specifically — say: "This tab does not have real data connected yet."
+EXCEPTION: If the question names a specific metric, company, BU, demographic, or asks to
+list/rank/show data — answer from the survey data below regardless of data_status. Never
+say "this tab doesn't show that" or redirect to another tab for a data question.
 
 --- COMPLETE SURVEY DATA ---
 
@@ -795,7 +902,12 @@ GROUP SUMMARY:
 - Weakest category: Performance Culture ({_weakest_score})
 
 CATEGORY NAMES (use these exact names always):
-Engagement | Leadership | Performance Culture | Development and Career | Manager Effectiveness | Onboarding
+Engagement | Leadership | Performance Culture | Development and Career | Manager Effectiveness
+
+ENGAGEMENT CLUSTERS (EXACTLY 5 — NO OTHERS EXIST IN THIS SYSTEM):
+thriving | healthy | atrisk (At Risk) | polarised | critical
+RULE: If a user asks about ANY cluster name not in the above 5 (e.g. "Open Conflict", "High Tension", "Engaged", "Disengaged", "Productive"), do NOT invent content for it, do NOT describe what it might mean.
+REQUIRED RESPONSE: "[name] isn't one of our cluster categories. The ABG Vibes 2026 system classifies BUs into 5 clusters: Thriving, Healthy, At Risk, Polarised, and Critical. Which would you like to explore?"
 
 ALL 22 BUSINESSES (ranked highest to lowest — format: name: overall (band, n=respondents) [category scores]):
 {biz_lines_chat}
@@ -817,24 +929,39 @@ TENURE (real totals):
 
 NOTE: n-values in score sections below are from compute sample only — NOT actual headcounts. Always use the real totals above for headcount questions.
 
-GENERATION SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')}, onb={g['scores'].get('onboarding','?')} (n={g['n']})" for g in gen_data)}
+GENERATION SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')} (n={g['n']})" for g in gen_data)}
 
-GENDER SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')}, onb={g['scores'].get('onboarding','?')} (n={g['n']})" for g in gender_data)}
+GENDER SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')} (n={g['n']})" for g in gender_data)}
 
-JOB LEVEL SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')}, onb={g['scores'].get('onboarding','?')} (n={g['n']})" for g in job_data)}
+JOB LEVEL SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')} (n={g['n']})" for g in job_data)}
 
-TENURE SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')}, onb={g['scores'].get('onboarding','?')} (n={g['n']})" for g in tenure_data)}
+TENURE SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')} (n={g['n']})" for g in tenure_data)}
 
-MANAGER vs IC: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')}, onb={g['scores'].get('onboarding','?')} (n={g['n']})" for g in manager_data)}
+MANAGER vs IC: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')} (n={g['n']})" for g in manager_data)}
 
 PER-BUSINESS COHORT SCORES (generation | gender | job level — overall scores only):
 {cohort_lines}
 
 --- COMPANY NAME RULES ---
+TYPO / FUZZY-MATCH PRIORITY RULE — CRITICAL:
+When the user's query contains a word or phrase that resembles a business name or BU name — even with typos, misspellings, or homophones — ALWAYS resolve it silently to the correct entity and answer directly. NEVER say "the survey doesn't include [misspelled name]" when the term is clearly a garbled version of a company or BU name.
+
+DECISION ORDER for every unknown term:
+  1. Does it sound like / partially match any of the 22 business names or BU names? → Answer about that entity (mention the correct name once, then proceed).
+  2. Does it match a known metric or category? → Use that.
+  3. Only if NEITHER apply → say "survey doesn't include [term]".
+
+Examples of correct fuzzy-matching:
+- "financial severices ho" → Financial Services HO (typo of "services")
+- "finacial services" → Financial Services HO
+- "pulp n fiber" → Pulp and Fibre HO
+- "birla carbn" → Birla Carbon
+- "novalis" → Novelis (not Novel Jewels)
+- "novel jewl" → Novel Jewels Ltd.
+
 "Novel Jewels" / "novel jewel" → Novel Jewels Ltd. (jewellery, 376 respondents, 1 BU)
 "Novelis" / "novelis" → Novelis (aluminium, 8,227 respondents, 42 BUs)
 These are completely different companies. Never confuse them.
-Always fuzzy-match company and BU names — typos should never cause "data not found".
 
 ABBREVIATION MATCHING:
 Users often use abbreviations or short forms. Always match these:
@@ -846,6 +973,40 @@ Users often use abbreviations or short forms. Always match these:
 - "CFI" → CFI
 - "Century" → Century Group HO
 Never say "I don't have data for [abbreviation]". Always attempt to match it to the closest company in the dataset and confirm the match in your answer.
+
+DEMOGRAPHIC SYNONYM MAPPING — CRITICAL:
+Users describe the same survey dimensions using different words. NEVER say "we don't have [term] data". Always map to the correct survey dimension:
+- "age group" / "age bracket" / "age band" / "age range" / "which age" / "how old" / "age-wise" / "by age" → GENERATION cohort data (Gen Z / Gen Y / Gen X / Baby Boomer)
+  AGE-TO-GENERATION mapping (survey year 2026): under 21 = Gen Z | 21-30 = Gen Z/Gen Y | 30-40 = Gen Y | 40-50 = Gen X | 50+ = Baby Boomer
+  MANDATORY FORMAT when answering age group questions: ALWAYS include the age range in parentheses after the generation name.
+  CORRECT: "Gen Y (ages 30–40) has the highest engagement at 4.64"
+  CORRECT: "Gen X (ages 40–50): 4.51 | Gen Y (ages 30–40): 4.64 | Gen Z (under 30): 4.57 | Baby Boomer (50+): 4.48"
+  WRONG: "Gen Y has the highest engagement at 4.64" ← never drop the age range when user asked about age groups
+- "sex" / "male female" / "men women" / "boys girls" → GENDER data (Male / Female)
+- "grade" / "level" / "band" / "seniority" / "hierarchy" / "management level" / "designation" → JOB LEVEL data (Junior Management / Middle Management / Senior Management)
+- "how long they've worked" / "years of service" / "experience" / "work history" / "service length" / "how many years" → TENURE data (0-2y, 2-5y, 5-10y etc.)
+- "department" / "division" / "team" / "unit" / "section" / "group" → business unit (BU)
+- "company" / "organization" / "org" / "firm" / "entity" → business (one of the 22 companies)
+- "comms" / "comm" → Communication category
+- "perf" / "PC" → Performance Culture category
+- "dev" / "career" / "growth" → Development and Career category
+- "mgr" / "manager support" → Manager Effectiveness category
+- "onb" / "joining" / "new hire" → this survey does NOT include an Onboarding category; tell the user Onboarding is not part of this survey's 5 categories
+RULE: When a user uses any synonym above — answer directly using the mapped survey data. Never say "this survey doesn't track [synonym]".
+
+CRITICAL — "BU" / "BUs" / "bus" DISAMBIGUATION:
+In this system: "BU" and "BUs" always mean Business Units (the sub-units within a business).
+"bus" in a question always means "BUs" = business units — NOT the 22 businesses/companies.
+The 22 top-level entities are called "businesses" or "companies", never "BUs".
+Examples:
+- "show me all BUs" → list business units (415 total), not the 22 businesses
+- "show me Mining's bus" → list Mining's business units specifically
+- "all bus" after discussing a company → show that company's business units
+- "how many BUs" → count of business units, not businesses
+If a user asks "all bus" or "show bus" or "list bus" mid-conversation about a specific
+company, show ONLY that company's business units — not all 415 BUs and not the 22 companies.
+Example: user asks about Mining, then says "can you show me all bus"
+→ show Mining's business units ONLY (not all BUs, not all companies).
 
 --- INDIVIDUAL RECORDS ---
 There are NO open text comments in this dataset. Every response is a numeric Likert score 1-5.
@@ -987,10 +1148,15 @@ the question directly from the available data.
                 }]
                 break
 
+    # For screen-ref questions: strip history and context_reminder entirely —
+    # the system prompt's screen_block (with live active_context) is authoritative.
+    effective_history   = [] if _is_screen_ref else req.history[-10:]
+    effective_reminder  = [] if _is_screen_ref else context_reminder
+
     messages = [
         {"role": "system", "content": system_prompt},
-        *req.history[-10:],
-        *context_reminder,
+        *effective_history,
+        *effective_reminder,
         {"role": "user", "content": req.message},
     ]
 

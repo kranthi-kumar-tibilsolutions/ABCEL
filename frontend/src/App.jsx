@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import Lottie from 'lottie-react';
 import loaderAnim from './assets/loader.json';
 import { AppContext }      from './context/AppContext';
-import { setActiveContext } from './context/ActiveContextStore';
 import { getAuth, setAuth, apiFetch } from './utils/api';
 import AppHeader           from './components/layout/AppHeader';
 import Sidebar             from './components/layout/Sidebar';
@@ -100,22 +99,23 @@ export default function App() {
   const [meta,           setMeta]           = useState(null);
   const [summaryData,    setSummaryData]    = useState(null);
   const [insightsData,   setInsightsData]   = useState(null);
+  const [insightsFailed, setInsightsFailed] = useState(false);
   const [focusAreasData, setFocusAreasData] = useState(null);
   const [saCache,              setSaCache]              = useState(null);
   const [activeScreenContext,  setActiveScreenContext]  = useState(null);
   const [dataLoaded,           setDataLoaded]           = useState(false);
-
-  // Keep the plain-JS store in sync so ChatWithData can read synchronously
-  useEffect(() => {
-    if (activeScreenContext) setActiveContext(activeScreenContext);
-  }, [activeScreenContext]);
 
   const navigate = useCallback((nextPage, params = {}) => {
     setNavHistory(prev => [...prev, page]);
     if (params.business !== undefined) setSelectedBusiness(params.business);
     if (params.unit     !== undefined) setSelectedBU(params.unit);
     if (params.cluster  !== undefined) setSelectedCluster(params.cluster);
-    if (nextPage !== page) setBreadcrumb([]);
+    if (nextPage !== page) {
+      setBreadcrumb([]);
+      // Set minimal context immediately so chat always reads the correct tab,
+      // even before the target page's component mounts and fires its useEffect.
+      setActiveScreenContext({ tab: nextPage.replace(/-/g, '_') });
+    }
     setPage(nextPage);
   }, [page]);
 
@@ -147,10 +147,11 @@ export default function App() {
       setDataLoaded(true);
 
       // Auto-fetch right-panel insights (non-blocking)
+      setInsightsFailed(false);
       apiFetch('/api/insights', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
-        .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d && !d.error) setInsightsData(d); })
-        .catch(() => {});
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(d => { if (d && !d.error) setInsightsData(d); else setInsightsFailed(true); })
+        .catch(() => setInsightsFailed(true));
     } catch (e) {
       console.error('Failed to fetch data', e);
     }
@@ -199,6 +200,7 @@ export default function App() {
       setDataLoaded(false);
       setSummaryData(null);
       setInsightsData(null);
+      setInsightsFailed(false);
       setFocusAreasData(null);
       setSaCache(null);
       setPage('upload');
@@ -231,6 +233,7 @@ export default function App() {
   const handleUploadComplete = useCallback(() => {
     setSummaryData(null);
     setInsightsData(null);
+    setInsightsFailed(false);
     setFocusAreasData(null);
     setVisitedPages(new Set());
     fetchData().then(() => setPage('overview'));
@@ -255,6 +258,8 @@ export default function App() {
     activeFilters, setActiveFilters,
     summaryData,    setSummaryData,
     insightsData,   setInsightsData,
+    insightsFailed,
+    retryInsights: fetchData,
     focusAreasData, setFocusAreasData,
     user: auth?.user ?? null,
     logout: handleLogout,
