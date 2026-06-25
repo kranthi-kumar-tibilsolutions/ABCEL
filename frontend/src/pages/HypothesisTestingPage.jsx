@@ -785,7 +785,7 @@ function formatFilters(f) {
 
 /* ── Page ────────────────────────────────────────────────── */
 export default function HypothesisTestingPage() {
-  const { setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
+  const { setBreadcrumb, setActiveScreenContext, page } = useContext(AppContext);
 
   useEffect(() => {
     setBreadcrumb([{ label: 'Explore' }, { label: 'Hypothesis Testing' }]);
@@ -804,6 +804,7 @@ export default function HypothesisTestingPage() {
 
   // Broadcast screen context
   useEffect(() => {
+    if (page !== 'hypothesis-testing') return;
     setActiveScreenContext({
       tab: 'hypothesis_testing',
       hypothesis_text: input || null,
@@ -816,7 +817,7 @@ export default function HypothesisTestingPage() {
         columns_used: result.columns_used,
       } : null,
     });
-  }, [input, parsed, result]);
+  }, [page, input, parsed, result]);
 
   const loadHistory = useCallback(async () => {
     try {

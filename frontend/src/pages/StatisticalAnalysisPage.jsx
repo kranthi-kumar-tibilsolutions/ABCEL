@@ -362,7 +362,7 @@ const TILE_CONFIG = [
 
 /* ── page ─────────────────────────────────────────────────────── */
 export default function StatisticalAnalysisPage() {
-  const { setBreadcrumb, saFilters, saCache, setSaCache, meta, user, setActiveScreenContext } = useContext(AppContext);
+  const { setBreadcrumb, saFilters, saCache, setSaCache, meta, user, setActiveScreenContext, page } = useContext(AppContext);
 
   // Ref keeps the cache readable inside fetchQuestionData without adding it to deps
   const saCacheRef = useRef(saCache);
@@ -390,6 +390,7 @@ export default function StatisticalAnalysisPage() {
 
   // Broadcast screen context to chatbot
   useEffect(() => {
+    if (page !== 'statistical-analysis') return;
     const selQ = questions.find(q => q.id === selectedQId);
     setActiveScreenContext({
       tab: 'statistical_analysis',
@@ -398,7 +399,7 @@ export default function StatisticalAnalysisPage() {
       data_basis: dataBasis,
       filters: saFilters,
     });
-  }, [selectedQId, correlations, saFilters, dataBasis, questions]);
+  }, [page, selectedQId, correlations, saFilters, dataBasis, questions]);
 
   // Fetch questions on mount; don't override selectedQId if already set from cache
   useEffect(() => {

@@ -12,12 +12,24 @@ const SUGGESTED = [
 
 const TAB_LABELS = {
   overview:                'Overview',
+  business_overview:       'Business Overview',
+  business_detail:         'Business Detail',
+  bu_detail:               'BU Detail',
+  bu_explorer:             'BU Explorer',
+  cluster_detail:          'Cluster Detail',
   dynamic_persona_builder: 'Persona Builder',
   statistical_analysis:    'Statistical Analysis',
   hypothesis_testing:      'Hypothesis Testing',
   sentiment_analysis:      'Sentiment Analysis',
-  bu_explorer:             'BU Explorer',
-  business_overview:       'Business Overview',
+  focus_spotlight:         'Focus Spotlight',
+  ai_insights:             'AI Insights',
+  benchmarks:              'Benchmarks',
+  employee_voice:          'Employee Voice',
+  insights_studio:         'Insights Studio',
+  outliers_alerts:         'Outliers & Alerts',
+  reports:                 'Reports',
+  trends:                  'Trends',
+  settings:                'Settings',
 };
 
 const FOCUS_AREAS = [

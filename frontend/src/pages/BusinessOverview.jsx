@@ -27,7 +27,7 @@ function SortArrow({ dir }) {
 }
 
 export default function BusinessOverview() {
-  const { businesses, filteredBusinesses, navigate, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
+  const { businesses, filteredBusinesses, navigate, setBreadcrumb, setActiveScreenContext, page } = useContext(AppContext);
 
   useEffect(() => {
     setBreadcrumb([
@@ -42,6 +42,7 @@ export default function BusinessOverview() {
   const list = filteredBusinesses ?? businesses ?? [];
 
   useEffect(() => {
+    if (page !== 'business-overview') return;
     setActiveScreenContext({
       tab: 'business_overview',
       visible_businesses: list.slice(0, 15).map(b => ({
@@ -49,7 +50,7 @@ export default function BusinessOverview() {
       })),
       sort: { field: sortField, dir: sortDir },
     });
-  }, [list, sortField, sortDir]);
+  }, [page, list, sortField, sortDir]);
 
   if (!list.length) return (
     <div className="page-container">

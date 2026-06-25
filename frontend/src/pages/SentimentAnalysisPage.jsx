@@ -287,7 +287,7 @@ function TrendIcon({ t }) {
 
 /* ── Page ────────────────────────────────────────────────────── */
 export default function SentimentAnalysisPage() {
-  const { rightPanelCollapsed, setBreadcrumb, setActiveScreenContext } = useContext(AppContext);
+  const { rightPanelCollapsed, setBreadcrumb, setActiveScreenContext, page } = useContext(AppContext);
   const compact = !rightPanelCollapsed; // right panel is open → use compact sizes
 
   useEffect(() => {
@@ -310,13 +310,14 @@ export default function SentimentAnalysisPage() {
 
   // Broadcast screen context
   useEffect(() => {
+    if (page !== 'sentiment-analysis') return;
     setActiveScreenContext({
       tab: 'sentiment_analysis',
       period,
       active_filter: activeSentiment,
       visible_topics: filteredTopics,
     });
-  }, [period, activeSentiment]);
+  }, [page, period, activeSentiment]);
 
   return (
     <div className="page-container">
