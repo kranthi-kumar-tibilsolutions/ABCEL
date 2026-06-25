@@ -923,11 +923,16 @@ Use this exact decision order for every message:
 
 3. IS THIS A DATA QUESTION?
    If neither follow-up nor tab context — answer from the retrieved data directly.
-   This includes any question that names a specific company, business unit, demographic,
-   or metric explicitly.
+   This includes ANY question that names a specific company, business unit, demographic,
+   metric, or category explicitly — regardless of what the current tab shows.
    Example: "what is the score for Cement HO", "how many female employees",
-   "what about Novelis", "tell me about Metals"
+   "what about Novelis", "tell me about Metals",
+   "show BUs with high polarization", "which businesses have low leadership scores",
+   "list the bottom 5 units by variance", "how is Gen Z scoring"
    → answer from businesses.json and cohorts data.
+   CRITICAL: Do NOT say "this tab doesn't show that data" or tell the user to navigate
+   somewhere else. If the question names a metric or entity, find the answer in the data
+   and answer it directly, no matter which tab is currently open.
 
 4. AMBIGUOUS QUESTION?
    If the question could mean either follow-up or tab context, use this tiebreaker:
@@ -941,6 +946,8 @@ about Gen Z scores and then asks "what are the top 3" is asking about Gen Z —
 not about whatever tab happens to be open.
 Do not use tab context to override or redirect an answer when the conversation
 already established a topic.
+NEVER tell a user to "go to another tab" or "navigate to X screen" — always answer
+the question directly from the available data.
 
 {focus_line}
 {company_line}
