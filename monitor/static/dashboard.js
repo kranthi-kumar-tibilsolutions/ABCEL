@@ -140,14 +140,14 @@ function renderTimeseries(rows) {
 async function refreshAll() {
   try {
     const [summary, users, pages, recent, timeseries, companies, requests, flow] = await Promise.all([
-      api('/api/summary'),
-      api('/api/users'),
-      api('/api/pages'),
-      api('/api/recent?limit=50'),
-      api('/api/timeseries?hours=24'),
-      api('/api/companies'),
-      api('/api/requests?hours=24'),
-      api('/api/flow'),
+      api('api/summary'),
+      api('api/users'),
+      api('api/pages'),
+      api('api/recent?limit=50'),
+      api('api/timeseries?hours=24'),
+      api('api/companies'),
+      api('api/requests?hours=24'),
+      api('api/flow'),
     ]);
     renderSummary(summary);
     renderUsers(users);
@@ -168,7 +168,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   const password = document.getElementById('login-password').value;
   const errorEl  = document.getElementById('login-error');
   try {
-    const res = await fetch('/login', {
+    const res = await fetch('login', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ password }),
@@ -182,9 +182,9 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 });
 
 document.getElementById('logout-btn').addEventListener('click', async () => {
-  await fetch('/logout', { method: 'POST' });
+  await fetch('logout', { method: 'POST' });
   showLogin();
 });
 
 // On load, probe auth state.
-api('/api/summary').then(showDashboard).catch(() => {});
+api('api/summary').then(showDashboard).catch(() => {});
