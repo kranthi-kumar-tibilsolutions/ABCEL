@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABCEL Activity Monitor</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div id="login-screen" class="login-screen hidden">
+  <form id="login-form" class="login-card">
+    <h1>ABCEL Activity Monitor</h1>
+    <input id="login-password" type="password" placeholder="Password" autocomplete="current-password" required>
+    <button type="submit">Sign in</button>
+    <p id="login-error" class="error hidden">Invalid password</p>
+  </form>
+</div>
+
+<div id="dashboard" class="dashboard hidden">
+  <header>
+    <h1>ABCEL Activity Monitor</h1>
+    <div class="header-right">
+      <span id="updated-at" class="updated-at"></span>
+      <button id="logout-btn">Sign out</button>
+    </div>
+  </header>
+
+  <section class="cards">
+    <div class="card">
+      <div class="card-label">Active now</div>
+      <div class="card-value" id="stat-active">–</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Unique users (all-time)</div>
+      <div class="card-value" id="stat-users">–</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Sessions (last 24h)</div>
+      <div class="card-value" id="stat-sessions">–</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Avg. session length</div>
+      <div class="card-value" id="stat-avg">–</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Sessions per hour (last 24h)</h2>
+    <canvas id="timeseries-chart" height="80"></canvas>
+  </section>
+
+  <section class="grid-2">
+    <div class="panel">
+      <h2>Users</h2>
+      <table id="users-table">
+        <thead><tr><th>Email</th><th>Sessions</th><th>Total time</th><th>Last seen</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h2>Pages</h2>
+      <table id="pages-table">
+        <thead><tr><th>Page</th><th>Visits</th><th>Time spent</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Recent activity</h2>
+    <table id="recent-table">
+      <thead><tr><th>Time</th><th>Type</th><th>User</th><th>Page / Path</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+</div>
+
+<script src="/static/dashboard.js"></script>
+</body>
+</html>

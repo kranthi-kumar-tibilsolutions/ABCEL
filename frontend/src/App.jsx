@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Lottie from 'lottie-react';
 import loaderAnim from './assets/loader.json';
 import { AppContext }      from './context/AppContext';
 import { getAuth, setAuth, apiFetch } from './utils/api';
+import { trackEvent, trackEventBeacon } from './utils/tracking';
 import AppHeader           from './components/layout/AppHeader';
 import Sidebar             from './components/layout/Sidebar';
 import TopBar              from './components/layout/TopBar';
@@ -105,6 +106,11 @@ export default function App() {
   const [activeScreenContext,  setActiveScreenContext]  = useState(null);
   const [dataLoaded,           setDataLoaded]           = useState(false);
 
+  // Tracks the latest page without forcing tracking effects to depend on it,
+  // since they fire from intervals/listeners that would otherwise see stale values.
+  const pageRef = useRef(page);
+  useEffect(() => { pageRef.current = page; }, [page]);
+
   const navigate = useCallback((nextPage, params = {}) => {
     setNavHistory(prev => [...prev, page]);
     if (params.business !== undefined) setSelectedBusiness(params.business);
@@ -185,9 +191,11 @@ export default function App() {
     const next = { user, token };
     setAuth(next);
     setAuthState(next);
+    trackEvent('session_start', pageRef.current);
   }, []);
 
   const handleLogout = useCallback(() => {
+    trackEvent('session_end', pageRef.current);
     setLoggingOut(true);
     setTimeout(() => {
       setAuth(null);
@@ -229,6 +237,37 @@ export default function App() {
       });
     }
   }, [page]);
+
+  // Activity tracking for the standalone monitor dashboard.
+  useEffect(() => {
+    if (auth) trackEvent('pageview', page);
+  }, [page, auth]);
+
+  useEffect(() => {
+    if (!auth) return;
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        trackEvent('heartbeat', pageRef.current);
+      }
+    }, 20000);
+    return () => clearInterval(interval);
+  }, [auth]);
+
+  useEffect(() => {
+    if (!auth) return;
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        trackEventBeacon('session_end', pageRef.current);
+      }
+    };
+    const handlePagehide = () => trackEventBeacon('session_end', pageRef.current);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('pagehide', handlePagehide);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('pagehide', handlePagehide);
+    };
+  }, [auth]);
 
   const handleUploadComplete = useCallback(() => {
     setSummaryData(null);

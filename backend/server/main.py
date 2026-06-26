@@ -1,12 +1,17 @@
 import os
+import time
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import uvicorn
+
+from routes.auth import get_current_user
+from lib.activity_log import log_event
 
 # == Line 1 of index.js: require('dotenv').config() ==
 load_dotenv()
@@ -22,6 +27,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+class ActivityLogMiddleware(BaseHTTPMiddleware):
+    """Logs every request (except static assets) for the standalone monitor service."""
+
+    async def dispatch(self, request: Request, call_next):
+        start = time.time()
+        response = await call_next(request)
+        if not request.url.path.startswith("/assets"):
+            user = get_current_user(request.headers.get("authorization"))
+            log_event({
+                "type":        "request",
+                "method":      request.method,
+                "path":        request.url.path,
+                "status":      response.status_code,
+                "duration_ms": round((time.time() - start) * 1000, 1),
+                "email":       user.get("email"),
+                "role":        user.get("role"),
+                "company":     user.get("company"),
+                "ip":          request.client.host if request.client else None,
+                "user_agent":  request.headers.get("user-agent"),
+            })
+        return response
+
+
+app.add_middleware(ActivityLogMiddleware)
+
 # == Lines 11-17: app.use('/api/...', require('./routes/...')) ==
 from routes.upload      import router as upload_router
 from routes.data        import router as data_router
@@ -32,8 +63,10 @@ from routes.persona     import router as persona_router
 from routes.hypothesis       import router as hypothesis_router
 from routes.focus_spotlight  import router as focus_spotlight_router
 from routes.auth             import router as auth_router
+from routes.track            import router as track_router
 
 app.include_router(auth_router,        prefix="/api/auth")
+app.include_router(track_router,       prefix="/api/track")
 app.include_router(upload_router,      prefix="/api/upload")
 app.include_router(data_router,        prefix="/api")
 app.include_router(ai_router,          prefix="/api")
