@@ -131,7 +131,28 @@ th { color: #8b949e; font-weight: 500; }
 .pill-heartbeat      { background: #30363d; color: #8b949e; }
 .pill-request        { background: #30363d; color: #c9d1d9; }
 
+.panel h2 .updated-at { font-weight: 400; }
+
+.error-count {
+  color: #f85149;
+  font-weight: 600;
+}
+
+.flow-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+
+.flow-grid h3 {
+  font-size: 12px;
+  color: #8b949e;
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+
 @media (max-width: 800px) {
   .cards { grid-template-columns: repeat(2, 1fr); }
   .grid-2 { grid-template-columns: 1fr; }
+  .flow-grid { grid-template-columns: 1fr; }
 }

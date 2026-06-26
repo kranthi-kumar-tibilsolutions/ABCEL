@@ -4,6 +4,7 @@ import json
 import os
 import sqlite3
 import time
+from itertools import groupby
 from pathlib import Path
 from contextlib import contextmanager
 
@@ -205,15 +206,17 @@ def _session_active_seconds(conn, since_ts: float):
     """Per-session active time: sums consecutive event gaps, dropping any gap
     wider than GAP_CAP so a tab left open/idle doesn't inflate the duration."""
     rows = conn.execute(
-        "SELECT session_id, ts, email FROM events WHERE ts >= ? AND session_id IS NOT NULL ORDER BY session_id, ts",
+        "SELECT session_id, ts, email, company FROM events WHERE ts >= ? AND session_id IS NOT NULL ORDER BY session_id, ts",
         (since_ts,),
     ).fetchall()
     sessions = {}
     prev_session = prev_ts = None
-    for session_id, ts, email in rows:
-        s = sessions.setdefault(session_id, {"email": email, "seconds": 0.0, "last": ts})
+    for session_id, ts, email, company in rows:
+        s = sessions.setdefault(session_id, {"email": email, "company": company, "seconds": 0.0, "last": ts})
         if email:
             s["email"] = email
+        if company:
+            s["company"] = company
         s["last"] = ts
         if prev_session == session_id:
             gap = ts - prev_ts
@@ -252,13 +255,16 @@ async def api_users():
         for s in sessions.values():
             if not s["email"]:
                 continue
-            u = by_user.setdefault(s["email"], {"sessions": 0, "seconds": 0.0, "last_seen": 0.0})
+            u = by_user.setdefault(s["email"], {"company": s.get("company"), "sessions": 0, "seconds": 0.0, "last_seen": 0.0})
+            if s.get("company"):
+                u["company"] = s["company"]
             u["sessions"] += 1
             u["seconds"] += s["seconds"]
             u["last_seen"] = max(u["last_seen"], s["last"])
         rows = [
             {
                 "email":         email,
+                "company":       v.get("company") or "—",
                 "sessions":      v["sessions"],
                 "total_minutes": round(v["seconds"] / 60, 1),
                 "last_seen":     v["last_seen"],
@@ -267,6 +273,89 @@ async def api_users():
         ]
         rows.sort(key=lambda r: r["last_seen"], reverse=True)
         return rows
+
+
+@app.get("/api/companies", dependencies=[Depends(require_auth)])
+async def api_companies():
+    with db() as conn:
+        sessions = _session_active_seconds(conn, 0)
+        by_company = {}
+        for s in sessions.values():
+            company = s.get("company") or "Unknown"
+            c = by_company.setdefault(company, {"users": set(), "sessions": 0, "seconds": 0.0})
+            if s["email"]:
+                c["users"].add(s["email"])
+            c["sessions"] += 1
+            c["seconds"] += s["seconds"]
+        rows = [
+            {
+                "company":       company,
+                "users":         len(v["users"]),
+                "sessions":      v["sessions"],
+                "total_minutes": round(v["seconds"] / 60, 1),
+            }
+            for company, v in by_company.items()
+        ]
+        rows.sort(key=lambda r: r["total_minutes"], reverse=True)
+        return rows
+
+
+@app.get("/api/requests", dependencies=[Depends(require_auth)])
+async def api_requests(hours: int = 24):
+    since = time.time() - hours * 3600
+    with db() as conn:
+        total = conn.execute(
+            "SELECT COUNT(*) FROM events WHERE type = 'request' AND ts >= ?", (since,)
+        ).fetchone()[0]
+        errors = conn.execute(
+            "SELECT COUNT(*) FROM events WHERE type = 'request' AND ts >= ? AND status >= 400", (since,)
+        ).fetchone()[0]
+        rows = conn.execute(
+            """SELECT path, COUNT(*), AVG(duration_ms), MAX(duration_ms),
+                      SUM(CASE WHEN status >= 400 THEN 1 ELSE 0 END)
+               FROM events
+               WHERE type = 'request' AND ts >= ? AND path IS NOT NULL
+               GROUP BY path
+               ORDER BY AVG(duration_ms) DESC
+               LIMIT 20""",
+            (since,),
+        ).fetchall()
+        endpoints = [
+            {"path": path, "count": cnt, "avg_ms": round(avg_ms or 0, 1), "max_ms": round(max_ms or 0, 1), "errors": errs}
+            for path, cnt, avg_ms, max_ms, errs in rows
+        ]
+        return {
+            "total_requests": total,
+            "error_count":    errors,
+            "error_rate":     round((errors / total * 100) if total else 0, 1),
+            "endpoints":      endpoints,
+        }
+
+
+@app.get("/api/flow", dependencies=[Depends(require_auth)])
+async def api_flow():
+    with db() as conn:
+        rows = conn.execute(
+            """SELECT session_id, page FROM events
+               WHERE type = 'pageview' AND page IS NOT NULL AND session_id IS NOT NULL
+               ORDER BY session_id, ts"""
+        ).fetchall()
+        entry_pages, exit_pages, transitions = {}, {}, {}
+        for _, group in groupby(rows, key=lambda r: r[0]):
+            pages = [page for _, page in group]
+            if not pages:
+                continue
+            entry_pages[pages[0]] = entry_pages.get(pages[0], 0) + 1
+            exit_pages[pages[-1]] = exit_pages.get(pages[-1], 0) + 1
+            for a, b in zip(pages, pages[1:]):
+                if a != b:
+                    key = f"{a} → {b}"
+                    transitions[key] = transitions.get(key, 0) + 1
+        return {
+            "entry_pages": sorted(({"page": k, "count": v} for k, v in entry_pages.items()), key=lambda r: -r["count"]),
+            "exit_pages":  sorted(({"page": k, "count": v} for k, v in exit_pages.items()), key=lambda r: -r["count"]),
+            "transitions": sorted(({"flow": k, "count": v} for k, v in transitions.items()), key=lambda r: -r["count"])[:15],
+        }
 
 
 @app.get("/api/pages", dependencies=[Depends(require_auth)])

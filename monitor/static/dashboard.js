@@ -49,11 +49,53 @@ function renderUsers(rows) {
   tbody.innerHTML = rows.map(r => `
     <tr>
       <td>${r.email}</td>
+      <td>${r.company}</td>
       <td>${r.sessions}</td>
       <td>${fmtMinutes(r.total_minutes)}</td>
       <td>${fmtTime(r.last_seen)}</td>
     </tr>
+  `).join('') || '<tr><td colspan="5" class="empty">No data yet</td></tr>';
+}
+
+function renderCompanies(rows) {
+  const tbody = document.querySelector('#companies-table tbody');
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.company}</td>
+      <td>${r.users}</td>
+      <td>${r.sessions}</td>
+      <td>${fmtMinutes(r.total_minutes)}</td>
+    </tr>
   `).join('') || '<tr><td colspan="4" class="empty">No data yet</td></tr>';
+}
+
+function renderRequests(data) {
+  document.getElementById('requests-summary').textContent =
+    `${data.total_requests} requests in 24h · ${data.error_rate}% errors`;
+  const tbody = document.querySelector('#requests-table tbody');
+  tbody.innerHTML = data.endpoints.map(r => `
+    <tr>
+      <td>${r.path}</td>
+      <td>${r.count}</td>
+      <td>${r.avg_ms}ms</td>
+      <td>${r.max_ms}ms</td>
+      <td>${r.errors ? `<span class="error-count">${r.errors}</span>` : '0'}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" class="empty">No data yet</td></tr>';
+}
+
+function renderFlow(data) {
+  const entryBody = document.querySelector('#entry-table tbody');
+  entryBody.innerHTML = data.entry_pages.map(r => `<tr><td>${r.page}</td><td>${r.count}</td></tr>`).join('')
+    || '<tr><td colspan="2" class="empty">No data yet</td></tr>';
+
+  const exitBody = document.querySelector('#exit-table tbody');
+  exitBody.innerHTML = data.exit_pages.map(r => `<tr><td>${r.page}</td><td>${r.count}</td></tr>`).join('')
+    || '<tr><td colspan="2" class="empty">No data yet</td></tr>';
+
+  const transBody = document.querySelector('#transitions-table tbody');
+  transBody.innerHTML = data.transitions.map(r => `<tr><td>${r.flow}</td><td>${r.count}</td></tr>`).join('')
+    || '<tr><td colspan="2" class="empty">No data yet</td></tr>';
 }
 
 function renderPages(rows) {
@@ -97,18 +139,24 @@ function renderTimeseries(rows) {
 
 async function refreshAll() {
   try {
-    const [summary, users, pages, recent, timeseries] = await Promise.all([
+    const [summary, users, pages, recent, timeseries, companies, requests, flow] = await Promise.all([
       api('/api/summary'),
       api('/api/users'),
       api('/api/pages'),
       api('/api/recent?limit=50'),
       api('/api/timeseries?hours=24'),
+      api('/api/companies'),
+      api('/api/requests?hours=24'),
+      api('/api/flow'),
     ]);
     renderSummary(summary);
     renderUsers(users);
     renderPages(pages);
     renderRecent(recent);
     renderTimeseries(timeseries);
+    renderCompanies(companies);
+    renderRequests(requests);
+    renderFlow(flow);
     document.getElementById('updated-at').textContent = `Updated ${new Date().toLocaleTimeString()}`;
   } catch (e) {
     // showLogin() already handled the 401 case inside api()

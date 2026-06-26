@@ -55,7 +55,7 @@
     <div class="panel">
       <h2>Users</h2>
       <table id="users-table">
-        <thead><tr><th>Email</th><th>Sessions</th><th>Total time</th><th>Last seen</th></tr></thead>
+        <thead><tr><th>Email</th><th>Company</th><th>Sessions</th><th>Total time</th><th>Last seen</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -65,6 +65,50 @@
         <thead><tr><th>Page</th><th>Visits</th><th>Time spent</th></tr></thead>
         <tbody></tbody>
       </table>
+    </div>
+  </section>
+
+  <section class="grid-2">
+    <div class="panel">
+      <h2>By company</h2>
+      <table id="companies-table">
+        <thead><tr><th>Company</th><th>Users</th><th>Sessions</th><th>Total time</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h2>Requests &amp; errors <span class="updated-at" id="requests-summary"></span></h2>
+      <table id="requests-table">
+        <thead><tr><th>Endpoint</th><th>Calls</th><th>Avg</th><th>Max</th><th>Errors</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>User flow</h2>
+    <div class="flow-grid">
+      <div>
+        <h3>Entry pages</h3>
+        <table id="entry-table">
+          <thead><tr><th>Page</th><th>Sessions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div>
+        <h3>Exit pages</h3>
+        <table id="exit-table">
+          <thead><tr><th>Page</th><th>Sessions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div>
+        <h3>Top transitions</h3>
+        <table id="transitions-table">
+          <thead><tr><th>Flow</th><th>Count</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </section>
 
