@@ -205,7 +205,7 @@ def _session_active_seconds(conn, since_ts: float):
     """Per-session active time: sums consecutive event gaps, dropping any gap
     wider than GAP_CAP so a tab left open/idle doesn't inflate the duration."""
     rows = conn.execute(
-        "SELECT session_id, ts, email FROM events WHERE ts >= ? ORDER BY session_id, ts",
+        "SELECT session_id, ts, email FROM events WHERE ts >= ? AND session_id IS NOT NULL ORDER BY session_id, ts",
         (since_ts,),
     ).fetchall()
     sessions = {}
@@ -299,7 +299,8 @@ async def api_timeseries(hours: int = 24):
     since = now - hours * 3600
     with db() as conn:
         rows = conn.execute(
-            "SELECT session_id, MIN(ts) FROM events WHERE ts >= ? GROUP BY session_id", (since,)
+            "SELECT session_id, MIN(ts) FROM events WHERE ts >= ? AND session_id IS NOT NULL GROUP BY session_id",
+            (since,),
         ).fetchall()
         buckets = {}
         for _, start in rows:
