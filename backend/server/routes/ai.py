@@ -482,7 +482,7 @@ def _compute_full_chat_data(user=None):
                  for bname, bus in _biz_units_map.items()}
 
     if not responses:
-        return businesses, [], [], [], [], [], {}, biz_units, {}, {}
+        return businesses, [], [], [], [], [], {}, biz_units, {}, {}, []
 
     def group_scores(rows, label):
         if len(rows) < 10:
@@ -588,7 +588,7 @@ def _compute_full_chat_data(user=None):
     }
 
     result = (businesses, gen_data, gender_data, job_data, tenure_data, manager_data,
-              biz_cohorts, biz_units, real_totals, sample_rows)
+              biz_cohorts, biz_units, real_totals, sample_rows, responses)
 
     # Cache full result for group (non-scoped) users so next request is instant
     if not is_company_user:
@@ -611,7 +611,7 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
     # Compute full data at request time so new uploads are always reflected
     (businesses, gen_data, gender_data, job_data,
      tenure_data, manager_data, biz_cohorts, biz_units,
-     real_totals, sample_rows) = _compute_full_chat_data(user)
+     real_totals, sample_rows, responses) = _compute_full_chat_data(user)
 
     focus_line   = f"\nACTIVE FOCUS AREA: {req.focusArea} — prioritise answers about this theme." if req.focusArea else ""
     company_line = f"\nACTIVE COMPANY FILTER: {req.companyFilter} — answer only about this company unless explicitly asked otherwise." if req.companyFilter else ""
@@ -667,8 +667,80 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
     # doesn't drop the active subject on short follow-up questions.
     # Skip for screen-ref questions — stale tab mentions in prior context poison the answer.
     prior_context_block = ""
+    _active_entity      = None   # company or BU name detected from history or current message
+    _active_entity_type = None   # "company" or "bu"
+
+    # Build sorted name lists once — longest first to avoid partial matches
+    _all_units   = [u for bus in biz_units.values() for u in bus]
+    _bu_names    = sorted([u['name'] for u in _all_units if u.get('name')],  key=len, reverse=True)
+    _biz_names   = sorted([b['name'] for b in businesses if b.get('name')],  key=len, reverse=True)
+
+    # Always check current message first for an explicit entity
+    _msg_lc = req.message.lower()
+    for bname in _bu_names:
+        if bname.lower() in _msg_lc:
+            _active_entity      = bname
+            _active_entity_type = "bu"
+            break
+    if not _active_entity:
+        for bname in _biz_names:
+            if bname.lower() in _msg_lc:
+                _active_entity      = bname
+                _active_entity_type = "company"
+                break
+
+    # Word-based fuzzy match: if any significant word from the message appears in a business name.
+    # Handles typos like "birl carbon" → "carbon" is in "Birla Carbon" → detected.
+    if not _active_entity:
+        _SKIP = {'what', 'show', 'give', 'tell', 'list', 'from', 'with', 'that', 'this',
+                 'them', 'they', 'have', 'more', 'than', 'when', 'which', 'would', 'could',
+                 'about', 'your', 'want', 'need', 'data', 'score', 'scores', 'response',
+                 'responses', 'overall', 'high', 'highest', 'lowest', 'bottom', 'compare',
+                 'average', 'total', 'group', 'company', 'business', 'each', 'some', 'most',
+                 'does', 'their', 'also', 'here', 'there', 'these', 'those', 'very', 'much',
+                 'only', 'just', 'best', 'same', 'make', 'take', 'look', 'unit', 'units'}
+        _msg_words = {w for w in _re2.findall(r'\b[a-z]{4,}\b', _msg_lc)} - _SKIP
+        if _msg_words:
+            _best_biz   = None
+            _best_score = 0
+            for bname in _biz_names:
+                bname_words = set(_re2.findall(r'\b[a-z]{4,}\b', bname.lower()))
+                # Substring match: "estate" hits "estates", "novel" hits "novelis"
+                overlap = sum(
+                    1 for mw in _msg_words
+                    if any(mw in bw or bw in mw for bw in bname_words)
+                )
+                if overlap > _best_score:
+                    _best_score = overlap
+                    _best_biz   = bname
+                elif overlap == _best_score and overlap > 0:
+                    _best_biz = None  # tie → ambiguous, skip
+            if _best_biz:
+                _active_entity      = _best_biz
+                _active_entity_type = "company"
+
     if req.history and not _is_screen_ref:
         clean_hist = [m for m in req.history if m.get("content", "").strip()]
+
+        # If not found in current message, scan last 10 AI responses for entity
+        if not _active_entity:
+            for m in reversed(clean_hist[-10:]):
+                if m['role'] == 'assistant':
+                    _cl = m['content'].lower()
+                    for bname in _bu_names:
+                        if bname.lower() in _cl:
+                            _active_entity      = bname
+                            _active_entity_type = "bu"
+                            break
+                    if not _active_entity:
+                        for bname in _biz_names:
+                            if bname.lower() in _cl:
+                                _active_entity      = bname
+                                _active_entity_type = "company"
+                                break
+                if _active_entity:
+                    break
+
         pairs = []
         i = len(clean_hist) - 1
         while i >= 1 and len(pairs) < 5:
@@ -680,14 +752,194 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
             else:
                 i -= 1
         if pairs:
+            entity_line = (
+                f"\nACTIVE ENTITY: {_active_entity} ({_active_entity_type}) — "
+                f"all follow-up questions refer to {_active_entity} unless the user explicitly names a different entity.\n"
+            ) if _active_entity else ""
             prior_context_block = (
                 "\n\n--- PRIOR CONTEXT (PIN THIS — read before answering) ---\n"
-                "The conversation so far was about:\n"
+                + entity_line
+                + "Conversation history (most recent last):\n"
                 + "\n\n".join(reversed(pairs))
                 + "\n\nIf the current question is a follow-up (no company/topic named explicitly), "
                 "CONTINUE from this context. Do NOT switch to org-wide answers unless the user explicitly asks."
                 "\n--- END PRIOR CONTEXT ---"
             )
+
+    # ── Inject actual individual response records filtered to active entity or demographic ──
+    response_chunk = ""
+    _direct_response = ""   # if set, stream this directly — skip LLM
+    _q_map = {}
+    try:
+        _questions = _json.loads((_DATA / "questions.json").read_text(encoding="utf-8"))
+        _q_map = {q["id"]: q["text"] for q in _questions}
+    except Exception:
+        pass
+
+    # Demographic detection — for queries like "top 5 responses of Gen Z"
+    _demo_field = None
+    _demo_value = None
+    _demo_label = None
+    for _kw, _fld, _val, _lbl in [
+            ('gen z',        'generation', 'Gen Z',        'Gen Z'),
+            ('gen y',        'generation', 'Gen Y',        'Gen Y'),
+            ('gen x',        'generation', 'Gen X',        'Gen X'),
+            ('millennial',   'generation', 'Gen Y',        'Gen Y (Millennials)'),
+            ('baby boomer',  'generation', 'Baby Boomer',  'Baby Boomers'),
+            ('female',       'gender',     'Female',       'Female employees'),
+            ('women',        'gender',     'Female',       'Female employees'),
+            ('male',         'gender',     'Male',         'Male employees'),
+        ]:
+            if _kw in _msg_lc:
+                _demo_field = _fld
+                _demo_value = _val
+                _demo_label = _lbl
+                break
+
+    # Overall/all-dataset detection — fires when no entity/demographic named
+    # but message asks for top/bottom responses across the whole group.
+    _use_all_responses = False
+    if not _active_entity and not _demo_field:
+        _has_response_ask = bool(_re2.search(r'\b(to+p|botto\w+)\s+\d+\b', _msg_lc) and _re2.search(r'\bresponse', _msg_lc))
+        _has_overall_kw   = bool(_re2.search(r'\b(overall|everyone|all|whole|entire|group|dataset|organisation|organization)\b', _msg_lc))
+        if _has_response_ask and _has_overall_kw:
+            _use_all_responses = True
+        elif _has_response_ask and not _has_overall_kw:
+            # No entity, no demographic, no "overall" → set flag so LLM asks for clarification
+            _use_all_responses = False   # don't load data; let system prompt rule handle it
+
+    if (_active_entity or _demo_field or _use_all_responses) and responses and _q_map:
+        if _active_entity:
+            if _active_entity_type == "bu":
+                _chunk_rows = [r for r in responses
+                               if r.get("unit") == _active_entity or r.get("name") == _active_entity]
+            else:
+                _chunk_rows = [r for r in responses if r.get("business") == _active_entity]
+            # Also apply demographic filter if both entity + demographic were named
+            if _demo_field:
+                _chunk_rows = [r for r in _chunk_rows if r.get(_demo_field) == _demo_value]
+                _entity_label = f"{_active_entity} — {_demo_label}"
+            else:
+                _entity_label = _active_entity
+        elif _demo_field:
+            _chunk_rows   = [r for r in responses if r.get(_demo_field) == _demo_value]
+            _entity_label = _demo_label
+        else:
+            _chunk_rows   = list(responses)
+            _entity_label = "Overall (All Employees)"
+
+        _total_entity = len(_chunk_rows)
+        # Send top 8 + bottom 8 so the LLM can answer both "top N" and "bottom N" questions.
+        # 16 records × ~875 tokens ≈ 14K tokens; combined with existing data safe within 32K.
+        _sorted_all = sorted(_chunk_rows, key=lambda r: r.get("overall") or 0, reverse=True)
+        _top    = _sorted_all[:8]
+        _bottom = _sorted_all[-8:] if len(_sorted_all) > 8 else []
+        # Deduplicate in case the company has fewer than 16 respondents
+        _seen_ids = {r.get("employee_id") for r in _top}
+        _bottom   = [r for r in _bottom if r.get("employee_id") not in _seen_ids]
+        _chunk_rows = _top + _bottom
+
+        if _chunk_rows:
+            _rec_lines = []
+            for idx, r in enumerate(_chunk_rows, 1):
+                _demo = (
+                    f"  Demographics: {r.get('generation','?')}, {r.get('gender','?')}, "
+                    f"{r.get('job_level','?')}, tenure={r.get('tenure','?')}, "
+                    f"age={r.get('age_group','?')}, country={r.get('country','?')}, "
+                    f"manager={'Yes' if r.get('is_manager')=='Yes' else 'No'}"
+                )
+                _scores_obj = r.get("scores") or {}
+                _q_lines = [
+                    f"    {qid} [{_q_map.get(qid, qid)}]: {score}"
+                    for qid, score in sorted(_scores_obj.items())
+                    if score is not None
+                ]
+                _cat = (
+                    f"  Category scores: engagement={r.get('engagement','?')}, "
+                    f"leadership={r.get('leadership','?')}, "
+                    f"performance_culture={r.get('performance_culture','?')}, "
+                    f"development_and_career={r.get('development_and_career','?')}, "
+                    f"manager_effectiveness={r.get('manager_effectiveness','?')}, "
+                    f"overall={r.get('overall','?')}"
+                )
+                _rec_lines.append(
+                    f"Respondent {idx} (ID: {r.get('employee_id','?')}, overall={r.get('overall','?')}):\n"
+                    + _demo + "\n"
+                    + "  Question scores (show these — they ARE the response):\n"
+                    + "\n".join(_q_lines)
+                )
+
+            response_chunk = (
+                f"\n\n=== INDIVIDUAL EMPLOYEE RESPONSES: {_entity_label} "
+                f"(top {len(_top)} + bottom {len(_bottom)} of {_total_entity} total) ===\n"
+                + "\n\n".join(_rec_lines)
+                + f"\n=== END RESPONSES: {_entity_label} ==="
+            )
+
+            # Detect "top N" / "bottom N" request and build a direct Python response
+            # so the LLM cannot summarise or abbreviate it.
+            import re as _re_n
+            _top_m = _re_n.search(r'\bto+p\s+(\d+)\b', _msg_lc)
+            _bot_m = _re_n.search(r'\bbotto\w*\s+(\d+)\b', _msg_lc)
+            _wants_show = bool(
+                _top_m or _bot_m or
+                _re_n.search(r'\b(show|list|give|display)\b.*\bresponse', _msg_lc) or
+                _re_n.search(r'\bresponse\b', _msg_lc)
+            )
+            if _wants_show:
+                _req_n = int((_top_m or _bot_m).group(1)) if (_top_m or _bot_m) else 5
+                _want_all = bool(_re_n.search(r'\b(all|full|complete|every)\b', _msg_lc))
+                if _bot_m and not _top_m:
+                    _show_rows = _bottom[:_req_n]
+                    _label_prefix = f"Bottom {_req_n}"
+                else:
+                    _show_rows = _top[:_req_n]
+                    _label_prefix = f"Top {_req_n}"
+
+                _dr_parts = [f"**[Scope: {_entity_label}]** — {_label_prefix} responses ({_total_entity} total)\n"]
+                for _i, _r in enumerate(_show_rows, 1):
+                    _s = _r.get("scores") or {}
+                    _demo = (
+                        f"{_r.get('generation','?')} · {_r.get('gender','?')} · "
+                        f"{_r.get('job_level','?')} · {_r.get('tenure','?')}yr · {_r.get('country','?')}"
+                    )
+                    if _want_all:
+                        _score_lines = [
+                            f"  {qid} [{_q_map[qid]}]: {sc}"
+                            for qid, sc in sorted(_s.items())
+                            if sc is not None and qid in _q_map
+                        ]
+                        _score_block = "\n".join(_score_lines)
+                    else:
+                        # Only mapped OP IDs, non-5.0 scores
+                        _low = [
+                            (qid, sc) for qid, sc in sorted(_s.items())
+                            if sc is not None and sc < 5.0 and qid in _q_map
+                        ]
+                        if _low:
+                            _fmt = []
+                            for qid, sc in _low:
+                                _qtxt = _q_map[qid]
+                                _short = (_qtxt[:33] + "..") if len(_qtxt) > 35 else _qtxt
+                                _fmt.append(f"{qid} [{_short}]: **{sc}**")
+                            _lines = ["  " + " | ".join(_fmt[j:j+2]) for j in range(0, len(_fmt), 2)]
+                            _score_block = "  Gaps:\n" + "\n".join(_lines)
+                        else:
+                            _score_block = "  All scores: 5.0 ✓"
+
+                    _dr_parts.append(
+                        f"**#{_i}** · overall **{_r.get('overall','?')}**\n"
+                        f"  {_demo}\n{_score_block}"
+                    )
+                _opp = "bottom" if _label_prefix.startswith("Top") else "top"
+                _follow = (
+                    f"\n**Follow-up options — type the number or the phrase:**\n"
+                    f"**1.** \"{_opp} {_req_n} {_entity_label} responses\" — see {_opp} scorers\n"
+                    f"**2.** \"show all scores for respondent 1\" — every OP question for #1\n"
+                    f"**3.** \"top {_req_n} Birla Carbon {_entity_label} responses\" — filter by company"
+                )
+                _dr_parts.append(_follow)
+                _direct_response = "\n\n".join(_dr_parts)
 
     # Screen context block
     if req.active_context:
@@ -932,7 +1184,8 @@ REQUIRED RESPONSE: "[name] isn't one of our cluster categories. The ABG Vibes 20
 ALL 22 BUSINESSES (ranked highest to lowest — format: name: overall (band, n=respondents) [category scores]):
 {biz_lines_chat}
 
-BUSINESS UNITS BY COMPANY (format: company: BU=score(n=respondents), ...):
+BUSINESS UNITS BY COMPANY (format: company: BU=overall[eng,lead,perf,dev,mgr](n=respondents)):
+IMPORTANT: Every company that has BU data is listed here. NEVER say a company has no BU breakdown or that BU data is unavailable — always look up this section first before answering any BU question.
 {bu_block}
 
 GENDER (real totals from full dataset — never count sample rows):
@@ -959,7 +1212,8 @@ TENURE SCORES: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?
 
 MANAGER vs IC: {" | ".join(f"{g['label']}: overall={g['scores'].get('overall','?')}, eng={g['scores'].get('engagement','?')}, lead={g['scores'].get('leadership','?')}, perf={g['scores'].get('performance_culture','?')}, dev={g['scores'].get('development_and_career','?')}, mgr={g['scores'].get('manager_effectiveness','?')} (n={g['n']})" for g in manager_data)}
 
-PER-BUSINESS COHORT SCORES (generation | gender | job level — overall scores only):
+PER-BUSINESS COHORT SCORES (generation | gender | job level | tenure | age band — all theme scores per company):
+IMPORTANT: Every company's demographic breakdown is listed here. For any follow-up demographic question about a specific company, look up that company's row here — do NOT use the group-wide scores above.
 {cohort_lines}
 
 --- COMPANY NAME RULES ---
@@ -1030,6 +1284,18 @@ Example: user asks about Mining, then says "can you show me all bus"
 
 --- INDIVIDUAL RECORDS ---
 There are NO open text comments in this dataset. Every response is a numeric Likert score 1-5.
+
+CRITICAL DISTINCTION:
+- If asked "show me responses of [company/BU]", "top N responses", "bottom N responses", or "individual responses" for a SPECIFIC entity → use the MANDATORY ACTUAL INDIVIDUAL EMPLOYEE RESPONSES section at the very bottom of this prompt. It has real per-employee records with all 47 question scores. Do NOT show category averages.
+- If the user asks "top N responses", "bottom N responses", "show responses" and does NOT name a company, BU, generation, or gender → you MUST reply ONLY with:
+  "Which group? Examples:
+  - Company: Birla Carbon, Novelis, Hindalco
+  - Generation: Gen Z, Gen Y, Gen X, Baby Boomer
+  - Gender: Female, Male
+  - Or say 'overall' for the full dataset"
+  Do NOT show business unit scores. Do NOT guess. The word "responses" means individual employee survey records.
+- If asked for a generic demographic example (e.g. "show me a Gen Z employee", "what does a female response look like") → use the sample rows below.
+
 When asked to show a female / male / Gen Z / Gen Y employee response — use the exact sample rows below. Show them as a readable human profile (demographics first, then scores). Do NOT redirect to Sentiment Analysis.
 
 SAMPLE ROWS (use verbatim when asked to show an individual response):
@@ -1040,6 +1306,7 @@ Gen Y: {_json.dumps(sample_rows.get('Gen Y'))}
 
 --- RESPONSE LENGTH AND FORMAT — MANDATORY ---
 - Default response length is 3 to 5 sentences. No more unless the user explicitly asks for a full breakdown, detailed analysis, or complete list.
+- EXCEPTION: When the INDIVIDUAL EMPLOYEE RESPONSES section is present and the user asks for top/bottom N responses, output ALL OP score lines for each respondent verbatim — the 3-5 sentence rule does NOT apply. Every single OP line must appear. Do NOT summarise, do NOT write "key highlights", do NOT abbreviate.
 - Never use headers (###) for conversational answers. Headers are only for when the user says "give me a report" or "full breakdown" or "detailed analysis".
 - Never use emojis unless the user used one first.
 - Never use horizontal rules (---).
@@ -1139,9 +1406,14 @@ Do not use tab context to override or redirect an answer when the conversation
 already established a topic.
 NEVER tell a user to "go to another tab" or "navigate to X screen" — always answer
 the question directly from the available data.
+If the user says only "yes", "ok", "sure", "yeah" or any single-word affirmative after
+a response that listed numbered follow-up options — reply ONLY with:
+"Which option? Type 1, 2, or 3 — or just ask your question directly."
+Do NOT guess what they meant. Do NOT dump data. Do NOT show all records.
 
 {focus_line}
 {company_line}
+{response_chunk}
 """
 
     # Inject a context-reminder as a system turn right before the user's message.
@@ -1182,6 +1454,15 @@ the question directly from the available data.
 
     async def generate():
         try:
+            # If we built a direct Python response (individual records), stream it
+            # without calling the LLM — prevents summarisation.
+            if _direct_response:
+                chunk_size = 80
+                for _ci in range(0, len(_direct_response), chunk_size):
+                    yield f'data: {_json.dumps({"text": _direct_response[_ci:_ci+chunk_size]})}\n\n'
+                yield 'data: [DONE]\n\n'
+                return
+
             mistral_ok = False
 
             # -- Try Mistral streaming (primary) --
@@ -1197,7 +1478,7 @@ the question directly from the available data.
                         json={
                             "model":       "mistral-small-latest",
                             "messages":    messages,
-                            "max_tokens":  800,
+                            "max_tokens":  6000,
                             "stream":      True,
                             "temperature": 0.3,
                         },
@@ -1244,7 +1525,7 @@ the question directly from the available data.
                         json={
                             "model":       os.getenv("CEREBRAS_MODEL", "llama3.1-70b"),
                             "messages":    messages,
-                            "max_tokens":  800,
+                            "max_tokens":  6000,
                             "stream":      True,
                             "temperature": 0.3,
                         },
@@ -1289,7 +1570,7 @@ the question directly from the available data.
                         json={
                             "model":       "mistral-small-latest",
                             "messages":    messages,
-                            "max_tokens":  800,
+                            "max_tokens":  6000,
                             "stream":      True,
                             "temperature": 0.3,
                         },
