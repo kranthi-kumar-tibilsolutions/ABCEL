@@ -35,6 +35,39 @@ THEME_KEYS = [
 ]
 
 
+# ── Dashboard tab registry ────────────────────────────────────────────────────
+# Single source of truth for what every tab is called and what it shows.
+# Used to (a) describe the CURRENT tab even when active_context is minimal
+# (right after navigation), and (b) answer questions about ANY tab by name.
+TAB_INFO = {
+    "overview":                {"label": "Overview",                "desc": "Group-wide landing dashboard: overall KPIs, engagement heatmap across the 22 businesses, cluster cards (Thriving/Healthy/At Risk/Polarised/Critical), decomposition tree, top and bottom performers, and an AI executive summary."},
+    "business_overview":       {"label": "Business Overview",      "desc": "All 22 companies ranked by score with bands, respondent counts, and category scores — filterable and sortable."},
+    "business_detail":         {"label": "Business Detail",        "desc": "Deep-dive into one company: its business units, cohort breakdowns (generation, gender, job level, tenure), and an AI narrative."},
+    "bu_detail":               {"label": "BU Detail",              "desc": "Deep-dive into one business unit: question-level scores and demographic breakdowns."},
+    "bu_explorer":             {"label": "BU Explorer",            "desc": "Cross-company comparison of all 415 business units with filters."},
+    "cluster_detail":          {"label": "Cluster Detail",         "desc": "One engagement cluster (Thriving, Healthy, At Risk, Polarised, or Critical): all member units and what they have in common."},
+    "ai_insights":             {"label": "AI Insights",            "desc": "AI-generated executive summary, top trends, and outlier alerts for the whole group."},
+    "outliers":                {"label": "Outliers & Alerts",      "desc": "Business units and questions with extreme scores or unusually high variance — the group's biggest red flags."},
+    "insights_studio":         {"label": "Insights Studio",        "desc": "Free-form analysis workspace for custom cross-dimension exploration of engagement drivers."},
+    "trends":                  {"label": "Trends",                 "desc": "Score trends across survey waves. NOTE: only the 2026 wave exists in this system — no historical comparison data."},
+    "employee_voice":          {"label": "Employee Voice",         "desc": "Cohort-level voice analysis: qualitative feedback themes with sentiment."},
+    "reports":                 {"label": "Reports",                "desc": "Downloadable engagement reports for businesses, business units, and clusters."},
+    "benchmarks":              {"label": "Benchmarks",             "desc": "Engagement scores compared against peer, industry, and regional benchmark norms."},
+    "hypothesis_testing":      {"label": "Hypothesis Testing",     "desc": "Type a hypothesis in plain English (e.g. 'Gen Z scores lower on leadership than Gen X'); the system parses it, runs a two-sample Z-test on the real data, and returns the p-value, significance badge, and effect size."},
+    "statistical_analysis":    {"label": "Statistical Analysis",   "desc": "Correlation matrix, correlogram, and network graph showing which survey questions move together and which are engagement 'hubs'."},
+    "sentiment_analysis":      {"label": "Sentiment Analysis",     "desc": "Sentiment distribution across responses with sample breakdowns."},
+    "dynamic_persona_builder": {"label": "Persona Builder",        "desc": "Build any employee segment from filters (generation, gender, country, job level, tenure...), then compare its 5 theme scores against the group average or any cohort with Z-test significance badges."},
+    "focus_spotlight":         {"label": "Focus Spotlight",        "desc": "Surfaces which demographic segments are most at-risk on any chosen theme."},
+    "settings":                {"label": "Settings",               "desc": "Platform settings and preferences."},
+    "upload":                  {"label": "Upload",                 "desc": "Upload the survey Excel file and manage data loading."},
+}
+
+
+def _tab_label(slug: str) -> str:
+    info = TAB_INFO.get(slug or "")
+    return info["label"] if info else (slug or "unknown").replace("_", " ").title()
+
+
 def _read(file: str):
     fp = _DATA / file
     if not fp.exists():
@@ -646,22 +679,30 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
 
     _is_screen_ref = _RULE_A or _RULE_B or _RULE_C
 
-    # Also treat as screen-ref if the user NAVIGATED since the last AI response.
-    # Detect this by comparing the tab the AI last mentioned with the current active_context.tab.
-    # If they differ, history is stale for tab purposes — strip it.
-    if not _is_screen_ref and req.active_context and req.history:
-        import re as _re
-        _cur_tab_label = req.active_context.get("tab", "").replace("_", " ").lower()
-        _clean_h = [m for m in req.history if m.get("content", "").strip()]
-        for _m in reversed(_clean_h):
-            if _m["role"] == "assistant":
-                _last_ai = _m["content"].lower()
-                _tab_m = _re.search(r"(?:on the|navigated to the)\s+([a-z][a-z\s]+?)\s+tab", _last_ai)
-                if _tab_m:
-                    _mentioned = _tab_m.group(1).strip()
-                    if _mentioned != _cur_tab_label:
-                        _is_screen_ref = True  # tab changed — strip stale history
-                break
+    # Navigation detection — every history message carries the tab it was sent
+    # from (frontend tags them). Compare the last history tab with the current
+    # tab directly instead of regex-parsing the AI's prose (which broke on
+    # markdown bold and rephrasing).
+    _cur_tab_slug = (req.active_context or {}).get("tab", "")
+    _prev_tab_slug = None
+    for _m in reversed(req.history or []):
+        if _m.get("tab"):
+            _prev_tab_slug = _m["tab"]
+            break
+    _navigated = bool(_prev_tab_slug and _cur_tab_slug and _prev_tab_slug != _cur_tab_slug)
+
+    # Shorthand screen-ref messages ("now", "and now?") reach the LLM with all
+    # history stripped, so a bare "now" reads as small talk and gets a greeting.
+    # Rewrite them into the explicit question they stand for.
+    _effective_message = req.message
+    if _RULE_C:
+        _effective_message = (
+            f'{req.message}\n'
+            f'(The user typed this shorthand right after a tab question — it means: '
+            f'"Which tab am I looking at NOW, and what does it show?" '
+            f'Answer about the CURRENT tab from the CURRENT SCREEN section. '
+            f'This is NOT a greeting.)'
+        )
 
     # Build a "PRIOR CONTEXT" pin from the last 2 exchange pairs so the model
     # doesn't drop the active subject on short follow-up questions.
@@ -747,7 +788,9 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
             if clean_hist[i]["role"] == "assistant" and clean_hist[i - 1]["role"] == "user":
                 u_text = clean_hist[i - 1]["content"].strip()
                 a_text = clean_hist[i]["content"].strip()[:600]
-                pairs.append(f'User: "{u_text}"\nYou: "{a_text}{"…" if len(clean_hist[i]["content"]) > 600 else ""}"')
+                u_tab  = clean_hist[i - 1].get("tab")
+                u_who  = f'User (on {_tab_label(u_tab)} tab)' if u_tab else "User"
+                pairs.append(f'{u_who}: "{u_text}"\nYou: "{a_text}{"…" if len(clean_hist[i]["content"]) > 600 else ""}"')
                 i -= 2
             else:
                 i -= 1
@@ -756,9 +799,16 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
                 f"\nACTIVE ENTITY: {_active_entity} ({_active_entity_type}) — "
                 f"all follow-up questions refer to {_active_entity} unless the user explicitly names a different entity.\n"
             ) if _active_entity else ""
+            nav_line = (
+                f"\nNAVIGATION NOTE: The user was on the \"{_tab_label(_prev_tab_slug)}\" tab during the last "
+                f"exchange but has since moved to the \"{_tab_label(_cur_tab_slug)}\" tab. Any tab mentioned in "
+                f"the history is STALE — \"this tab/page/screen\" now means \"{_tab_label(_cur_tab_slug)}\". "
+                "The data topic being discussed (companies, cohorts, scores) still carries over normally.\n"
+            ) if _navigated else ""
             prior_context_block = (
                 "\n\n--- PRIOR CONTEXT (PIN THIS — read before answering) ---\n"
                 + entity_line
+                + nav_line
                 + "Conversation history (most recent last):\n"
                 + "\n\n".join(reversed(pairs))
                 + "\n\nIf the current question is a follow-up (no company/topic named explicitly), "
@@ -943,16 +993,24 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
 
     # Screen context block
     if req.active_context:
-        tab = req.active_context.get("tab", "unknown").replace("_", " ").title()
+        _tab_slug = req.active_context.get("tab", "unknown")
+        tab       = _tab_label(_tab_slug)
+        _tab_desc = TAB_INFO.get(_tab_slug, {}).get("desc", "")
+        _desc_line = f'\nWhat the "{tab}" tab shows: {_tab_desc}' if _tab_desc else ""
         ctx_json = _json.dumps(req.active_context, indent=2)
         screen_block = f"""
 === CURRENT SCREEN — AUTHORITATIVE, OVERRIDES ALL PRIOR MESSAGES ===
 The user is RIGHT NOW on the "{tab}" tab.
 If any previous assistant message mentioned a different tab, IGNORE IT — the user has navigated since then.
-When asked "what tab am I on", "what am I looking at", "where am I" — always answer with "{tab}".
-SCREEN DATA:
+When asked "what tab am I on", "what am I looking at", "where am I" — always answer with "{tab}".{_desc_line}
+SCREEN DATA (live state of what is rendered on the user's screen right now):
 {ctx_json}
 When the user says "this persona", "this analysis", "these results", "what I'm looking at" — they mean the above context.
+NAMING RULE: If SCREEN DATA contains a name the user gave to something (persona_name,
+hypothesis name, segment name, etc.), ALWAYS refer to it by that exact name — e.g. say
+"the lavanya persona", never "a custom persona" or a renamed version. Users name things
+deliberately and expect the assistant to use their name. (Exception: if the name is still
+the default "Custom Persona", just call it "this persona".)
 === END CURRENT SCREEN ===
 """
     else:
@@ -1059,6 +1117,10 @@ Answer any question about any business, BU, or cohort freely.
          for b in businesses if b.get('categories')), '4.32'
     )
 
+    _tab_lines = "\n".join(
+        f"- {v['label']}: {v['desc']}" for k, v in TAB_INFO.items() if k != "upload"
+    )
+
     system_prompt = f"""You are ARIA — ABG's AI Analyst for the ABG Vibes 2026 Employee Engagement Survey.
 You are embedded inside the ABG analytics dashboard. You have complete knowledge of the survey data.
 You answer questions conversationally, like a senior HR consultant who knows this data inside out.
@@ -1070,7 +1132,8 @@ Format: **[Scope: <label>]**
 - If answering about a specific BU → **[Scope: <BU Name> (<Company>)]**
 - If answering about a specific demographic (e.g. Gen Z group-wide) → **[Scope: Gen Z — ABG Vibes Overall]**
 - If answering about the whole group / no specific entity → **[Scope: ABG Vibes Overall]**
-- If answering about the current tab/screen → **[Scope: Current Screen]**
+- If answering about the tab the user is currently on → **[Scope: Current Tab — <Tab Name>]** e.g. **[Scope: Current Tab — Persona Builder]**
+- If answering about a DIFFERENT tab the user named (not the one they're on) → **[Scope: <Tab Name> Tab]** e.g. **[Scope: Hypothesis Testing Tab]**
 - If the message is a greeting or social exchange with no data question → **[Scope: Greeting]**
 This label must ALWAYS be the very first thing in your response, before any other text.
 {prior_context_block}
@@ -1162,6 +1225,25 @@ content specifically — say: "This tab does not have real data connected yet."
 EXCEPTION: If the question names a specific metric, company, BU, demographic, or asks to
 list/rank/show data — answer from the survey data below regardless of data_status. Never
 say "this tab doesn't show that" or redirect to another tab for a data question.
+
+--- ALL DASHBOARD TABS (so you can answer about ANY tab, not just the current one) ---
+{_tab_lines}
+
+QUESTION SCOPE — decide which of THREE scopes every question belongs to:
+1. CURRENT TAB — the user asks about what they are looking at ("this tab", "this page",
+   "what am I seeing", "explain this chart"). Answer from the CURRENT SCREEN section above.
+   Scope label: **[Scope: Current Tab — <tab name>]**
+2. ANOTHER TAB — the user NAMES a tab or dashboard feature that is not the current tab
+   ("what does the persona builder do", "where can I test a hypothesis", "what's in focus
+   spotlight"). Answer from the tab list above — do NOT confuse it with the current tab and
+   do NOT say "you are on that tab" unless they actually are.
+   Scope label: **[Scope: <Tab Name> Tab]**
+3. GLOBAL DATA — the question is about survey data (companies, BUs, scores, demographics,
+   clusters). The current tab is IRRELEVANT — answer from the survey data sections below.
+   Scope label: company/BU/demographic/overall labels as defined above.
+FOLLOW-UPS inherit the scope of what they follow: a follow-up to a tab explanation stays on
+that tab; a follow-up to a data answer stays on that data topic — even if the user has
+switched tabs in between (the PRIOR CONTEXT section notes any navigation).
 
 --- COMPLETE SURVEY DATA ---
 
@@ -1406,10 +1488,20 @@ Do not use tab context to override or redirect an answer when the conversation
 already established a topic.
 NEVER tell a user to "go to another tab" or "navigate to X screen" — always answer
 the question directly from the available data.
-If the user says only "yes", "ok", "sure", "yeah" or any single-word affirmative after
-a response that listed numbered follow-up options — reply ONLY with:
-"Which option? Type 1, 2, or 3 — or just ask your question directly."
-Do NOT guess what they meant. Do NOT dump data. Do NOT show all records.
+"YES" / AFFIRMATIVE HANDLING — read your own last answer first:
+When the user replies only "yes", "ok", "sure", "yeah", "go ahead" or similar:
+- If your last answer offered exactly ONE follow-up ("Want me to X?") → "yes" means DO X. Do it now.
+- If your last answer offered a CHOICE ("Want X or Y?") → restate the actual choices in your own
+  words and ask which one, e.g. "Sure — the BU comparison or the demographic breakdown?"
+- If your last answer offered NUMBERED options → ask which number, listing them again briefly.
+NEVER invent options you did not actually offer. NEVER say "Type 1, 2, or 3" unless your last
+answer really contained three numbered options. If asked later "what were those options",
+quote ONLY what your last answer actually said — never fabricate a list.
+Do NOT dump data. Do NOT show all records on a bare "yes".
+
+COUNTS — NEVER state a count alongside a list unless you counted the items you are listing.
+If you write "4 business units" and then list them, the number MUST equal the items listed.
+When unsure of a count, list the items without a number — the list speaks for itself.
 
 {focus_line}
 {company_line}
@@ -1426,6 +1518,12 @@ Do NOT guess what they meant. Do NOT dump data. Do NOT show all records.
             if clean_hist[i]["role"] == "assistant" and clean_hist[i - 1]["role"] == "user":
                 prev_q = clean_hist[i - 1]["content"].strip()
                 prev_a = clean_hist[i]["content"].strip()[:600]
+                _nav_note = (
+                    f"\nIMPORTANT: The user has NAVIGATED since that exchange — they are now on the "
+                    f"\"{_tab_label(_cur_tab_slug)}\" tab (they were on \"{_tab_label(_prev_tab_slug)}\"). "
+                    "Any tab mentioned in the history is stale; 'this tab/page/screen' means the current tab. "
+                    "The data topic still carries over for follow-ups."
+                ) if _navigated else ""
                 context_reminder = [{
                     "role": "system",
                     "content": (
@@ -1436,20 +1534,27 @@ Do NOT guess what they meant. Do NOT dump data. Do NOT show all records.
                         "business unit, or topic — treat it as a follow-up to this same subject. "
                         "EXCEPTION: If the user says 'the whole group', 'overall', 'across all', "
                         "'everyone', 'org-wide', or names a completely different entity — answer that new scope directly."
+                        + _nav_note
                     ),
                 }]
                 break
 
     # For screen-ref questions: strip history and context_reminder entirely —
     # the system prompt's screen_block (with live active_context) is authoritative.
-    effective_history   = [] if _is_screen_ref else req.history[-10:]
+    # History messages carry an extra "tab" key for our own scope tracking —
+    # strip it down to role/content before sending to the LLM API.
+    effective_history   = [] if _is_screen_ref else [
+        {"role": m["role"], "content": m["content"]}
+        for m in req.history[-10:]
+        if m.get("role") and m.get("content")
+    ]
     effective_reminder  = [] if _is_screen_ref else context_reminder
 
     messages = [
         {"role": "system", "content": system_prompt},
         *effective_history,
         *effective_reminder,
-        {"role": "user", "content": req.message},
+        {"role": "user", "content": _effective_message},
     ]
 
     async def generate():

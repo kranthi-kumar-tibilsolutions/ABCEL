@@ -1,5 +1,86 @@
 [
   {
+    "id": "H-1784539163916",
+    "hypothesis": "Female employees rate Manager Effectiveness higher than Male employees.",
+    "result": "rejected",
+    "test_type": "two_sample_z",
+    "p_value": 0.0408,
+    "filters_applied": {},
+    "date_tested": "Jul 20, 2026",
+    "params": {
+      "hypothesis_type": "group_comparison",
+      "parseable": true,
+      "parse_error": null,
+      "group_a": {
+        "field": "gender",
+        "value": "Female",
+        "label": "Female employees",
+        "confidence": 0.99
+      },
+      "group_b": {
+        "field": "gender",
+        "value": "Male",
+        "label": "Male employees",
+        "confidence": 0.99
+      },
+      "outcome": {
+        "source": "theme",
+        "field": "manager_effectiveness",
+        "question_id": null,
+        "label": "Manager Effectiveness Score",
+        "confidence": 0.99
+      },
+      "x_var": null,
+      "y_var": null,
+      "group": null,
+      "baseline": null,
+      "baseline_value": null,
+      "h0": "Female employees do not rate Manager Effectiveness higher than Male employees.",
+      "h1": "Female employees rate Manager Effectiveness higher than Male employees.",
+      "test_recommended": "two_sample_t",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
+    "id": "H-1782467438437",
+    "hypothesis": "Gen Y employees have higher Engagement scores than the company average.",
+    "result": "validated",
+    "test_type": "one_sample_z",
+    "p_value": 0.0,
+    "filters_applied": {},
+    "date_tested": "Jun 26, 2026",
+    "params": {
+      "hypothesis_type": "one_sample",
+      "parseable": true,
+      "parse_error": null,
+      "group": {
+        "field": "generation",
+        "value": "Gen Y",
+        "label": "Gen Y employees",
+        "confidence": 0.99
+      },
+      "outcome": {
+        "source": "theme",
+        "field": "engagement",
+        "question_id": null,
+        "label": "Engagement Score",
+        "confidence": 0.99
+      },
+      "baseline": "group_average",
+      "baseline_value": 4.44,
+      "group_a": null,
+      "group_b": null,
+      "x_var": null,
+      "y_var": null,
+      "h0": "Gen Y employees have an Engagement score equal to or less than the company average (4.44).",
+      "h1": "Gen Y employees have an Engagement score greater than the company average (4.44).",
+      "test_recommended": "one_sample_z",
+      "direction": "greater",
+      "group_avg": 4.44
+    }
+  },
+  {
     "id": "H-1782293040582",
     "hypothesis": "People Managers have higher trust in Leadership than Individual Contributors.",
     "result": "inconclusive",

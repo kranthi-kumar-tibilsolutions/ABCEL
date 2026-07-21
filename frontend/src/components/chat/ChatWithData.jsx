@@ -25,7 +25,7 @@ const TAB_LABELS = {
   benchmarks:              'Benchmarks',
   employee_voice:          'Employee Voice',
   insights_studio:         'Insights Studio',
-  outliers_alerts:         'Outliers & Alerts',
+  outliers:                'Outliers & Alerts',
   reports:                 'Reports',
   trends:                  'Trends',
   settings:                'Settings',
@@ -107,9 +107,11 @@ export default function ChatWithData() {
     const msg = text || input.trim();
     if (!msg || loading) return;
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: msg }]);
+    // Tag each message with the tab it was sent from — the backend compares
+    // these to detect navigation between messages (no prose parsing).
+    setMessages(prev => [...prev, { role: 'user', content: msg, tab: currentTab }]);
     setLoading(true);
-    setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+    setMessages(prev => [...prev, { role: 'assistant', content: '', tab: currentTab }]);
 
     try {
       const res = await apiFetch('/api/chat', {
@@ -117,7 +119,7 @@ export default function ChatWithData() {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
           message:        msg,
-          history:        messages.filter(m => m.content && m.content.trim() && !m.content.includes('AI is unavailable') && !m.content.includes('something went wrong')).slice(-10).map(m => ({ role: m.role, content: m.content })),
+          history:        messages.filter(m => m.content && m.content.trim() && !m.content.includes('AI is unavailable') && !m.content.includes('something went wrong')).slice(-10).map(m => ({ role: m.role, content: m.content, tab: m.tab })),
           dimension:      ctxDimension,
           focusArea:      focusArea || null,
           companyFilter:  companyFilter || null,
