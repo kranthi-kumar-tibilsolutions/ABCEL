@@ -1,6 +1,20 @@
 import { apiFetch } from './api';
 
-const SESSION_ID = crypto.randomUUID();
+// crypto.randomUUID() only exists in secure contexts (HTTPS, or
+// http://localhost) — fall back to a plain UUID v4 elsewhere so an
+// insecure-context visit doesn't crash the whole app before it renders.
+function generateSessionId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+const SESSION_ID = generateSessionId();
 
 export function trackEvent(type, page) {
   apiFetch('/api/track/event', {
